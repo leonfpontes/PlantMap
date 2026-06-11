@@ -38,14 +38,17 @@ export default function EditPlantPage() {
       })
   }, [id])
 
+  const canEdit = user !== null && occurrence !== null && (
+    user.id === occurrence.user_id || user.email === 'leonfpontes@gmail.com'
+  )
+
   useEffect(() => {
-    // Redireciona para o mapa se o usuário não for o dono da ocorrência
     if (!loading && !userLoading) {
-      if (!user || !occurrence || occurrence.user_id !== user.id) {
+      if (!user || !occurrence || !canEdit) {
         router.push('/map')
       }
     }
-  }, [user, userLoading, occurrence, loading, router])
+  }, [user, userLoading, occurrence, loading, canEdit, router])
 
   if (loading || userLoading) {
     return (
@@ -59,7 +62,7 @@ export default function EditPlantPage() {
     )
   }
 
-  if (!occurrence || !user || occurrence.user_id !== user.id) {
+  if (!occurrence || !user || !canEdit) {
     return null
   }
 
