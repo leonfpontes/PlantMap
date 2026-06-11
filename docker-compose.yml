@@ -164,16 +164,11 @@ services:
   plantmap:
     build: .
     restart: unless-stopped
-    depends_on:
-      migrate:
-        condition: service_completed_successfully
-      kong:
-        condition: service_started
     ports:
       - "3000:3000"
     environment:
-      NEXT_PUBLIC_SUPABASE_URL: http://localhost:8000       # browser → host
-      SUPABASE_URL_INTERNAL: http://kong:8000               # SSR → rede Docker
+      NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
+      SUPABASE_URL_INTERNAL: ${NEXT_PUBLIC_SUPABASE_URL}
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
       NEXT_PUBLIC_MAPBOX_TOKEN: ${NEXT_PUBLIC_MAPBOX_TOKEN}
       NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL}
