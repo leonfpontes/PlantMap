@@ -101,6 +101,9 @@ export default function PlantDetailPage() {
     }
   }
 
+  const canEdit = !!user
+  const canDelete = !!user
+
   const condition = conditionConfig[occurrence.condition] || conditionConfig.healthy
   const isFav = favorites.has(occurrence.id)
 
@@ -110,7 +113,7 @@ export default function PlantDetailPage() {
         title={occurrence.species?.common_name || 'Planta'}
         right={
           <div className="flex items-center gap-1">
-            {user && occurrence.user_id === user.id && (
+            {canEdit && (
               <Link
                 href={`/plant/${occurrence.id}/edit`}
                 className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-gray-100 transition-colors text-gray-500"
@@ -216,7 +219,7 @@ export default function PlantDetailPage() {
             Compartilhar
           </Button>
 
-          {user && occurrence.user_id === user.id && (
+          {canDelete && (
             <Button
               variant="secondary"
               className="w-full !text-red-600 !border-red-200 hover:!bg-red-50"

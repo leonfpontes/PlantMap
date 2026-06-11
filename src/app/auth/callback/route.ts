@@ -37,6 +37,16 @@ export async function GET(request: Request) {
 
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     if (!error) {
+      const allowedEmails = (process.env.ALLOWED_EMAILS ?? '').split(',').map(e => e.trim()).filter(Boolean)
+      if (allowedEmails.length > 0) {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user?.email || !allowedEmails.includes(user.email)) {
+          await supabase.auth.signOut()
+          return NextResponse.redirect(
+            `${origin}/auth/login?error=access_denied&message=${encodeURIComponent('Acesso não autorizado para este e-mail.')}`
+          )
+        }
+      }
       return response
     }
 

@@ -4,9 +4,12 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Map, Plus, Search, User } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useUser } from '@/hooks/useUser'
 
 export default function BottomNav() {
   const pathname = usePathname()
+  const { user, loading } = useUser()
+  const isAdmin = !loading && !!user
 
   const active = (href: string) =>
     href === '/map' ? pathname === href : pathname.startsWith(href)
@@ -17,29 +20,39 @@ export default function BottomNav() {
 
         <NavItem href="/map" icon={Map} label="Mapa" active={active('/map')} />
 
-        {/* Botão Registrar — elevado como FAB */}
-        <div className="flex flex-col items-center gap-1" style={{ marginTop: '-18px' }}>
-          <Link
-            href="/plant/register"
-            className={cn(
-              'flex h-14 w-14 items-center justify-center rounded-full shadow-md ring-4 ring-white transition-transform active:scale-95',
-              active('/plant/register') ? 'bg-green-800' : 'bg-green-700 hover:bg-green-800'
-            )}
-            aria-label="Registrar planta"
-          >
-            <Plus className="h-7 w-7 text-white stroke-[2.5]" />
-          </Link>
-          <span className={cn(
-            'text-[10px] font-medium',
-            active('/plant/register') ? 'text-green-700' : 'text-gray-400'
-          )}>
-            Registrar
-          </span>
-        </div>
+        {isAdmin ? (
+          /* Botão Registrar — elevado como FAB, somente para admin */
+          <div className="flex flex-col items-center gap-1" style={{ marginTop: '-18px' }}>
+            <Link
+              href="/plant/register"
+              className={cn(
+                'flex h-14 w-14 items-center justify-center rounded-full shadow-md ring-4 ring-white transition-transform active:scale-95',
+                active('/plant/register') ? 'bg-green-800' : 'bg-green-700 hover:bg-green-800'
+              )}
+              aria-label="Registrar planta"
+            >
+              <Plus className="h-7 w-7 text-white stroke-[2.5]" />
+            </Link>
+            <span className={cn(
+              'text-[10px] font-medium',
+              active('/plant/register') ? 'text-green-700' : 'text-gray-400'
+            )}>
+              Registrar
+            </span>
+          </div>
+        ) : (
+          /* Espaço reservado para manter layout simétrico quando não logado */
+          <div className="w-14" />
+        )}
 
         <NavItem href="/search" icon={Search} label="Buscar" active={active('/search')} />
 
-        <NavItem href="/profile" icon={User} label="Perfil" active={active('/profile')} />
+        {isAdmin ? (
+          <NavItem href="/profile" icon={User} label="Perfil" active={active('/profile')} />
+        ) : (
+          /* Espaço reservado para manter layout simétrico quando não logado */
+          <div className="w-14" />
+        )}
 
       </div>
     </nav>

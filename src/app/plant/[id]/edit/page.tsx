@@ -39,9 +39,8 @@ export default function EditPlantPage() {
   }, [id])
 
   useEffect(() => {
-    // Redireciona para o mapa se o usuário não for o dono da ocorrência
     if (!loading && !userLoading) {
-      if (!user || !occurrence || occurrence.user_id !== user.id) {
+      if (!user || !occurrence) {
         router.push('/map')
       }
     }
@@ -59,7 +58,7 @@ export default function EditPlantPage() {
     )
   }
 
-  if (!occurrence || !user || occurrence.user_id !== user.id) {
+  if (!occurrence || !user) {
     return null
   }
 

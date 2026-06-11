@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { PlantCondition, PlantStage, OccurrenceWithDistance, Species } from '@/types'
 
+
 export async function registerOccurrence(data: {
   species_id: string
   latitude: number
@@ -143,7 +144,6 @@ export async function updateOccurrence(id: string, data: {
       updated_at: new Date().toISOString(),
     })
     .eq('id', id)
-    .eq('user_id', user.id)
 
   if (error) return { error: error.message }
   return { success: true }

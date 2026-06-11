@@ -12,7 +12,7 @@ import { signOut } from '@/lib/actions/auth'
 export default async function ProfilePage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/auth/login')
+  if (!user) redirect('/map')
 
   const [profile, stats] = await Promise.all([
     getProfile(),
