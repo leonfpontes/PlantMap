@@ -51,7 +51,7 @@ function LoginForm() {
     setSuccessMsg(null)
     try {
       const supabase = createClient()
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL || (typeof window !== 'undefined' ? window.location.origin : '')
+      const appUrl = typeof window !== 'undefined' ? window.location.origin : (process.env.NEXT_PUBLIC_APP_URL || '')
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
