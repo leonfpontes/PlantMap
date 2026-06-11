@@ -34,8 +34,8 @@ export default function BottomNav() {
 
   /* ── Autenticado: Mapa | Registrar (FAB) | Buscar | Perfil ── */
   return (
-    <nav className="flex-shrink-0 border-t border-gray-100 bg-white shadow-[0_-1px_8px_rgba(0,0,0,0.06)]">
-      <div className="flex items-end justify-around px-2 pb-2">
+    <nav className="flex-shrink-0 border-t border-gray-100 bg-white shadow-[0_-1px_8px_rgba(0,0,0,0.06)] overflow-visible">
+      <div className="flex items-end justify-around px-2 pb-2 overflow-visible">
 
         <NavItem href="/map"     icon={Map}    label="Mapa"   active={active('/map')} />
 

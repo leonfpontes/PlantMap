@@ -63,6 +63,7 @@ export default function PlantMap({
         }}
         cursor={onMapClick ? 'crosshair' : 'grab'}
         style={{ width: '100%', height: '100%' }}
+        attributionControl={false}
       >
         <NavigationControl position="top-right" showCompass={false} />
 
