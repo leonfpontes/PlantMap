@@ -101,10 +101,8 @@ export default function PlantDetailPage() {
     }
   }
 
-  const isAdmin = user?.email === 'leonfpontes@gmail.com'
-  const isOwner = user?.id === occurrence.user_id
-  const canEdit = isAdmin || isOwner
-  const canDelete = isAdmin
+  const canEdit = !!user
+  const canDelete = !!user
 
   const condition = conditionConfig[occurrence.condition] || conditionConfig.healthy
   const isFav = favorites.has(occurrence.id)

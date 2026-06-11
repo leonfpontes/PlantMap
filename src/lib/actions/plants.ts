@@ -3,7 +3,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { PlantCondition, PlantStage, OccurrenceWithDistance, Species } from '@/types'
 
-const ADMIN_EMAIL = 'leonfpontes@gmail.com'
 
 export async function registerOccurrence(data: {
   species_id: string
@@ -133,7 +132,7 @@ export async function updateOccurrence(id: string, data: {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Não autenticado' }
 
-  const updateQuery = supabase
+  const { error } = await supabase
     .from('occurrences')
     .update({
       species_id: data.species_id,
@@ -145,10 +144,6 @@ export async function updateOccurrence(id: string, data: {
       updated_at: new Date().toISOString(),
     })
     .eq('id', id)
-
-  const { error } = user.email === ADMIN_EMAIL
-    ? await updateQuery
-    : await updateQuery.eq('user_id', user.id)
 
   if (error) return { error: error.message }
   return { success: true }
