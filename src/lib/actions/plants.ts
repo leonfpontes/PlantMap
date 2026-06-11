@@ -117,3 +117,34 @@ export async function searchSpecies(query: string): Promise<Species[]> {
     .limit(20)
   return data || []
 }
+
+export async function updateOccurrence(id: string, data: {
+  species_id: string
+  latitude: number
+  longitude: number
+  condition: PlantCondition
+  stage: PlantStage
+  notes?: string
+  photo_url?: string
+}) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Não autenticado' }
+
+  const { error } = await supabase
+    .from('occurrences')
+    .update({
+      species_id: data.species_id,
+      location: `SRID=4326;POINT(${data.longitude} ${data.latitude})`,
+      condition: data.condition,
+      stage: data.stage,
+      notes: data.notes || null,
+      photo_url: data.photo_url || null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', id)
+    .eq('user_id', user.id)
+
+  if (error) return { error: error.message }
+  return { success: true }
+}

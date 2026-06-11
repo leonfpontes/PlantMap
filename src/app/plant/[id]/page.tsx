@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
-import { Heart, Share2, CheckCircle, Leaf, MapPin, Calendar } from 'lucide-react'
+import Link from 'next/link'
+import { Heart, Share2, CheckCircle, Leaf, MapPin, Calendar, Edit } from 'lucide-react'
 import dynamic from 'next/dynamic'
 import MobileShell from '@/components/layout/MobileShell'
 import PageHeader from '@/components/layout/PageHeader'
@@ -93,12 +94,22 @@ export default function PlantDetailPage() {
       <PageHeader
         title={occurrence.species?.common_name || 'Planta'}
         right={
-          <button
-            onClick={() => toggle(occurrence.id)}
-            className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
-          >
-            <Heart className={`h-5 w-5 ${isFav ? 'fill-red-500 text-red-500' : 'text-gray-400'}`} />
-          </button>
+          <div className="flex items-center gap-1">
+            {user && occurrence.user_id === user.id && (
+              <Link
+                href={`/plant/${occurrence.id}/edit`}
+                className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-gray-100 transition-colors text-gray-500"
+              >
+                <Edit className="h-5 w-5" />
+              </Link>
+            )}
+            <button
+              onClick={() => toggle(occurrence.id)}
+              className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
+            >
+              <Heart className={`h-5 w-5 ${isFav ? 'fill-red-500 text-red-500' : 'text-gray-400'}`} />
+            </button>
+          </div>
         }
       />
 
