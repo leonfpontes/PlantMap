@@ -1,50 +1,16 @@
 'use client'
 
 import { useState, Suspense } from 'react'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
 import { Leaf } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
-import { signInWithEmail, signUp } from '@/lib/actions/auth'
 import { createClient } from '@/lib/supabase/client'
-import Button from '@/components/ui/Button'
-import Input from '@/components/ui/Input'
-
-const loginSchema = z.object({
-  email: z.string().email('Email inválido'),
-  password: z.string().min(6, 'Mínimo 6 caracteres'),
-  name: z.string().optional(),
-})
-
-type LoginData = z.infer<typeof loginSchema>
 
 function LoginForm() {
-  const [mode, setMode] = useState<'login' | 'signup'>('login')
   const [serverError, setServerError] = useState<string | null>(null)
-  const [successMsg, setSuccessMsg] = useState<string | null>(null)
   const searchParams = useSearchParams()
 
   const errorParam = searchParams.get('error')
   const messageParam = searchParams.get('message')
-
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<LoginData>({
-    resolver: zodResolver(loginSchema),
-  })
-
-  const onSubmit = async (data: LoginData) => {
-    setServerError(null)
-    setSuccessMsg(null)
-
-    if (mode === 'login') {
-      const result = await signInWithEmail(data.email, data.password)
-      if (result?.error) setServerError(result.error)
-    } else {
-      const result = await signUp(data.email, data.password, data.name || '')
-      if (result?.error) setServerError(result.error)
-      else if (result?.success) setSuccessMsg(result.message || 'Cadastro realizado!')
-    }
-  }
 
   const handleGoogleLogin = async () => {
     setServerError(null)
@@ -102,60 +68,9 @@ function LoginForm() {
         </button>
 
 
-        <div className="relative my-6 flex items-center gap-3">
-          <div className="flex-1 border-t border-gray-200" />
-          <span className="text-xs text-gray-400">ou</span>
-          <div className="flex-1 border-t border-gray-200" />
-        </div>
-
-        {/* Email form */}
-        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3">
-          {mode === 'signup' && (
-            <Input
-              label="Nome"
-              {...register('name')}
-              placeholder="Seu nome completo"
-              error={errors.name?.message}
-            />
-          )}
-          <Input
-            label="Email"
-            type="email"
-            {...register('email')}
-            placeholder="seu@email.com"
-            error={errors.email?.message}
-            autoComplete="email"
-          />
-          <Input
-            label="Senha"
-            type="password"
-            {...register('password')}
-            placeholder="••••••••"
-            error={errors.password?.message}
-            autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-          />
-
-          {serverError && (
-            <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{serverError}</p>
-          )}
-          {successMsg && (
-            <p className="rounded-lg bg-green-50 px-3 py-2 text-sm text-green-700">{successMsg}</p>
-          )}
-
-          <Button type="submit" size="lg" loading={isSubmitting} className="w-full mt-1">
-            {mode === 'login' ? 'Entrar' : 'Criar conta'}
-          </Button>
-        </form>
-
-        <p className="mt-4 text-center text-sm text-gray-500">
-          {mode === 'login' ? 'Não tem conta?' : 'Já tem conta?'}{' '}
-          <button
-            onClick={() => { setMode(mode === 'login' ? 'signup' : 'login'); setServerError(null) }}
-            className="font-medium text-green-700 hover:underline"
-          >
-            {mode === 'login' ? 'Criar conta' : 'Entrar'}
-          </button>
-        </p>
+        {serverError && (
+          <p className="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{serverError}</p>
+        )}
       </div>
     </div>
   )
