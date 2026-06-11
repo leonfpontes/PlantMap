@@ -2,57 +2,65 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Map, Plus, Search, User } from 'lucide-react'
+import { Map, Plus, Search, User, LogIn } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useUser } from '@/hooks/useUser'
 
 export default function BottomNav() {
   const pathname = usePathname()
   const { user, loading } = useUser()
-  const isAdmin = !loading && !!user
 
   const active = (href: string) =>
     href === '/map' ? pathname === href : pathname.startsWith(href)
 
+  if (loading) {
+    return (
+      <nav className="flex-shrink-0 border-t border-gray-100 bg-white shadow-[0_-1px_8px_rgba(0,0,0,0.06)] h-14" />
+    )
+  }
+
+  /* ── Visitante: Mapa | Buscar | Login ── */
+  if (!user) {
+    return (
+      <nav className="flex-shrink-0 border-t border-gray-100 bg-white shadow-[0_-1px_8px_rgba(0,0,0,0.06)]">
+        <div className="flex items-center justify-around px-4 pb-2 pt-1">
+          <NavItem href="/map"         icon={Map}   label="Mapa"   active={active('/map')} />
+          <NavItem href="/search"      icon={Search} label="Buscar" active={active('/search')} />
+          <NavItem href="/auth/login"  icon={LogIn}  label="Login"  active={active('/auth/login')} />
+        </div>
+      </nav>
+    )
+  }
+
+  /* ── Autenticado: Mapa | Registrar (FAB) | Buscar | Perfil ── */
   return (
     <nav className="flex-shrink-0 border-t border-gray-100 bg-white shadow-[0_-1px_8px_rgba(0,0,0,0.06)]">
       <div className="flex items-end justify-around px-2 pb-2">
 
-        <NavItem href="/map" icon={Map} label="Mapa" active={active('/map')} />
+        <NavItem href="/map"     icon={Map}    label="Mapa"   active={active('/map')} />
 
-        {isAdmin ? (
-          /* Botão Registrar — elevado como FAB, somente para admin */
-          <div className="flex flex-col items-center gap-1" style={{ marginTop: '-18px' }}>
-            <Link
-              href="/plant/register"
-              className={cn(
-                'flex h-14 w-14 items-center justify-center rounded-full shadow-md ring-4 ring-white transition-transform active:scale-95',
-                active('/plant/register') ? 'bg-green-800' : 'bg-green-700 hover:bg-green-800'
-              )}
-              aria-label="Registrar planta"
-            >
-              <Plus className="h-7 w-7 text-white stroke-[2.5]" />
-            </Link>
-            <span className={cn(
-              'text-[10px] font-medium',
-              active('/plant/register') ? 'text-green-700' : 'text-gray-400'
-            )}>
-              Registrar
-            </span>
-          </div>
-        ) : (
-          /* Espaço reservado para manter layout simétrico quando não logado */
-          <div className="w-14" />
-        )}
+        {/* Botão Registrar elevado (FAB) */}
+        <div className="flex flex-col items-center gap-1" style={{ marginTop: '-18px' }}>
+          <Link
+            href="/plant/register"
+            className={cn(
+              'flex h-14 w-14 items-center justify-center rounded-full shadow-md ring-4 ring-white transition-transform active:scale-95',
+              active('/plant/register') ? 'bg-green-800' : 'bg-green-700 hover:bg-green-800'
+            )}
+            aria-label="Registrar planta"
+          >
+            <Plus className="h-7 w-7 text-white stroke-[2.5]" />
+          </Link>
+          <span className={cn(
+            'text-[10px] font-medium',
+            active('/plant/register') ? 'text-green-700' : 'text-gray-400'
+          )}>
+            Registrar
+          </span>
+        </div>
 
-        <NavItem href="/search" icon={Search} label="Buscar" active={active('/search')} />
-
-        {isAdmin ? (
-          <NavItem href="/profile" icon={User} label="Perfil" active={active('/profile')} />
-        ) : (
-          /* Espaço reservado para manter layout simétrico quando não logado */
-          <div className="w-14" />
-        )}
+        <NavItem href="/search"  icon={Search} label="Buscar" active={active('/search')} />
+        <NavItem href="/profile" icon={User}   label="Perfil" active={active('/profile')} />
 
       </div>
     </nav>
