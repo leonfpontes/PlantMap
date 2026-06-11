@@ -14,6 +14,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useUser } from '@/hooks/useUser'
 import { useFavorites } from '@/hooks/useFavorites'
 import { PlantOccurrence } from '@/types'
+import { parseEWKBPoint } from '@/lib/utils'
 
 const PlantMap = dynamic(() => import('@/components/map/PlantMap'), { ssr: false })
 
@@ -48,7 +49,14 @@ export default function PlantDetailPage() {
       .eq('id', id)
       .single()
       .then(({ data }) => {
-        setOccurrence(data)
+        if (data) {
+          const coords = parseEWKBPoint(data.location)
+          if (coords) {
+            data.latitude = coords.latitude
+            data.longitude = coords.longitude
+          }
+        }
+        setOccurrence(data as any)
         setLoading(false)
       })
   }, [id])

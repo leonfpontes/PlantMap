@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useCallback } from 'react'
-import Map, { NavigationControl } from 'react-map-gl/mapbox'
-import 'mapbox-gl/dist/mapbox-gl.css'
+import Map, { NavigationControl, Marker } from 'react-map-gl/maplibre'
+import 'maplibre-gl/dist/maplibre-gl.css'
 import { LocateFixed } from 'lucide-react'
 import { PlantOccurrence } from '@/types'
 import PlantPin from './PlantPin'
@@ -21,8 +21,8 @@ interface PlantMapProps {
 
 export default function PlantMap({
   occurrences = [],
-  initialLat = -15.77972,
-  initialLng = -47.92972,
+  initialLat = -21.1767,
+  initialLng = -47.8208,
   initialZoom = 12,
   onMapClick,
   selectedLocation,
@@ -34,29 +34,27 @@ export default function PlantMap({
     latitude: initialLat,
     zoom: initialZoom,
   })
-  const { getLocation, loading: locLoading } = useGeolocation()
+  const { latitude: userLat, longitude: userLng, getLocation, loading: locLoading } = useGeolocation()
 
   const handleLocate = useCallback(() => {
-    getLocation()
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition((pos) => {
-        setViewState((v) => ({
-          ...v,
-          longitude: pos.coords.longitude,
-          latitude: pos.coords.latitude,
-          zoom: 15,
-        }))
-      })
+    if (userLat && userLng) {
+      setViewState((v) => ({
+        ...v,
+        longitude: userLng,
+        latitude: userLat,
+        zoom: 15,
+      }))
+    } else {
+      getLocation()
     }
-  }, [getLocation])
+  }, [userLat, userLng, getLocation])
 
   return (
     <div className="relative h-full w-full">
       <Map
         {...viewState}
         onMove={(e) => setViewState(e.viewState)}
-        mapStyle="mapbox://styles/mapbox/outdoors-v12"
-        mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN}
+        mapStyle="https://tiles.openfreemap.org/styles/liberty"
         onClick={(e) => {
           if (onMapClick) {
             onMapClick(e.lngLat.lat, e.lngLat.lng)
@@ -67,6 +65,15 @@ export default function PlantMap({
         style={{ width: '100%', height: '100%' }}
       >
         <NavigationControl position="top-right" showCompass={false} />
+
+        {userLat && userLng && (
+          <Marker longitude={userLng} latitude={userLat} anchor="center">
+            <div className="relative flex h-6 w-6 items-center justify-center">
+              <div className="absolute h-full w-full animate-ping rounded-full bg-blue-400 opacity-75"></div>
+              <div className="relative h-3 w-3 rounded-full bg-blue-500 border-2 border-white shadow-md"></div>
+            </div>
+          </Marker>
+        )}
 
         {occurrences.map((occ) => (
           <PlantPin

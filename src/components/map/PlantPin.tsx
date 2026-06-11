@@ -1,6 +1,6 @@
 'use client'
 
-import { Marker } from 'react-map-gl/mapbox'
+import { Marker } from 'react-map-gl/maplibre'
 import { PlantOccurrence } from '@/types'
 import { cn } from '@/lib/utils'
 

@@ -29,14 +29,31 @@ export default function SearchPage() {
       await new Promise<void>((resolve) => {
         if (navigator.geolocation) {
           navigator.geolocation.getCurrentPosition(
-            (pos) => { lat = pos.coords.latitude; lng = pos.coords.longitude; resolve() },
-            () => resolve()
+            (pos) => {
+              lat = pos.coords.latitude
+              lng = pos.coords.longitude
+              resolve()
+            },
+            () => {
+              // Fallback para Ribeirão Preto caso o usuário negue/falhe a permissão
+              lat = -21.1767
+              lng = -47.8208
+              resolve()
+            }
           )
-        } else resolve()
+        } else {
+          // Fallback se geolocalização não for suportada
+          lat = -21.1767
+          lng = -47.8208
+          resolve()
+        }
       })
     }
 
-    if (!lat || !lng) { setLoading(false); return }
+    if (!lat || !lng) {
+      lat = -21.1767
+      lng = -47.8208
+    }
 
     try {
       const data = await searchNearby(lat, lng, radius * 1000)
