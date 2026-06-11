@@ -154,11 +154,7 @@ export async function deleteOccurrence(id: string) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Não autenticado' }
 
-  const { error } = await supabase
-    .from('occurrences')
-    .update({ deleted_at: new Date().toISOString() })
-    .eq('id', id)
-    .eq('user_id', user.id)
+  const { error } = await supabase.rpc('soft_delete_occurrence', { occurrence_id: id })
 
   if (error) return { error: error.message }
   return { success: true }
