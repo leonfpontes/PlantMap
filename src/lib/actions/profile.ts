@@ -9,6 +9,13 @@ export async function getProfile(): Promise<UserProfile | null> {
   if (!user) return null
 
   const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single()
+  if (!data) return null
+
+  const oauthAvatar = user.user_metadata?.avatar_url || user.user_metadata?.picture || null
+  if (oauthAvatar && !data.avatar_url) {
+    await supabase.from('profiles').update({ avatar_url: oauthAvatar }).eq('id', user.id)
+    return { ...data, avatar_url: oauthAvatar }
+  }
   return data
 }
 
