@@ -148,3 +148,18 @@ export async function updateOccurrence(id: string, data: {
   if (error) return { error: error.message }
   return { success: true }
 }
+
+export async function deleteOccurrence(id: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Não autenticado' }
+
+  const { error } = await supabase
+    .from('occurrences')
+    .update({ deleted_at: new Date().toISOString() })
+    .eq('id', id)
+    .eq('user_id', user.id)
+
+  if (error) return { error: error.message }
+  return { success: true }
+}

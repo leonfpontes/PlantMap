@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
-import { Heart, Share2, CheckCircle, Leaf, MapPin, Calendar, Edit } from 'lucide-react'
+import { Heart, Share2, CheckCircle, Leaf, MapPin, Calendar, Edit, Trash2 } from 'lucide-react'
 import dynamic from 'next/dynamic'
 import MobileShell from '@/components/layout/MobileShell'
 import PageHeader from '@/components/layout/PageHeader'
@@ -11,6 +11,7 @@ import BottomNav from '@/components/layout/BottomNav'
 import Badge from '@/components/ui/Badge'
 import Button from '@/components/ui/Button'
 import ShareSheet from '@/components/plant/ShareSheet'
+import { deleteOccurrence } from '@/lib/actions/plants'
 import { createClient } from '@/lib/supabase/client'
 import { useUser } from '@/hooks/useUser'
 import { useFavorites } from '@/hooks/useFavorites'
@@ -42,6 +43,8 @@ export default function PlantDetailPage() {
   const [loading, setLoading] = useState(true)
   const [shareOpen, setShareOpen] = useState(false)
   const [photoOpen, setPhotoOpen] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
     const supabase = createClient()
@@ -85,6 +88,17 @@ export default function PlantDetailPage() {
         <BottomNav />
       </MobileShell>
     )
+  }
+
+  const handleDelete = async () => {
+    setDeleting(true)
+    const result = await deleteOccurrence(occurrence.id)
+    if (result?.error) {
+      setDeleting(false)
+      setConfirmDelete(false)
+    } else {
+      window.location.href = '/map'
+    }
   }
 
   const condition = conditionConfig[occurrence.condition] || conditionConfig.healthy
@@ -201,10 +215,43 @@ export default function PlantDetailPage() {
             <Share2 className="h-4 w-4" />
             Compartilhar
           </Button>
+
+          {user && occurrence.user_id === user.id && (
+            <Button
+              variant="secondary"
+              className="w-full !text-red-600 !border-red-200 hover:!bg-red-50"
+              onClick={() => setConfirmDelete(true)}
+            >
+              <Trash2 className="h-4 w-4" />
+              Excluir registro
+            </Button>
+          )}
         </div>
       </div>
 
       <BottomNav />
+
+      {confirmDelete && (
+        <>
+          <div className="fixed inset-0 z-40 bg-black/40" onClick={() => setConfirmDelete(false)} />
+          <div className="fixed bottom-0 left-1/2 z-50 w-full max-w-[430px] -translate-x-1/2 rounded-t-2xl bg-white p-5 shadow-xl">
+            <h2 className="font-semibold text-gray-900 mb-1">Excluir registro?</h2>
+            <p className="text-sm text-gray-500 mb-5">Esta ação não pode ser desfeita. O registro será removido do mapa.</p>
+            <div className="flex gap-3">
+              <Button variant="secondary" className="flex-1" onClick={() => setConfirmDelete(false)}>
+                Cancelar
+              </Button>
+              <Button
+                className="flex-1 !bg-red-600 hover:!bg-red-700"
+                loading={deleting}
+                onClick={handleDelete}
+              >
+                Excluir
+              </Button>
+            </div>
+          </div>
+        </>
+      )}
 
       {photoOpen && occurrence.photo_url && (
         <div
