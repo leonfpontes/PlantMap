@@ -41,6 +41,7 @@ export default function PlantDetailPage() {
   const [occurrence, setOccurrence] = useState<PlantOccurrence | null>(null)
   const [loading, setLoading] = useState(true)
   const [shareOpen, setShareOpen] = useState(false)
+  const [photoOpen, setPhotoOpen] = useState(false)
 
   useEffect(() => {
     const supabase = createClient()
@@ -126,8 +127,10 @@ export default function PlantDetailPage() {
 
         {/* Photo */}
         {occurrence.photo_url && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={occurrence.photo_url} alt="Foto da planta" className="w-full h-48 object-cover" />
+          <button onClick={() => setPhotoOpen(true)} className="w-full block">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={occurrence.photo_url} alt="Foto da planta" className="w-full h-48 object-cover" />
+          </button>
         )}
 
         <div className="p-4 flex flex-col gap-4">
@@ -202,6 +205,20 @@ export default function PlantDetailPage() {
       </div>
 
       <BottomNav />
+
+      {photoOpen && occurrence.photo_url && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90"
+          onClick={() => setPhotoOpen(false)}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={occurrence.photo_url}
+            alt="Foto da planta"
+            className="max-h-full max-w-full object-contain"
+          />
+        </div>
+      )}
 
       {shareOpen && (
         <ShareSheet

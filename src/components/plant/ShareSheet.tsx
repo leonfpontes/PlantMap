@@ -52,7 +52,7 @@ export default function ShareSheet({ occurrenceId, latitude, longitude, onClose 
             {copied ? <Check className="h-5 w-5 text-green-600" /> : <Copy className="h-5 w-5 text-gray-500" />}
             <div>
               <p className="text-sm font-medium text-gray-900">{copied ? 'Link copiado!' : 'Copiar link'}</p>
-              <p className="text-xs text-gray-500 truncate">{shareUrl}</p>
+              <p className="text-xs text-gray-500 break-all">{shareUrl}</p>
             </div>
           </button>
 
