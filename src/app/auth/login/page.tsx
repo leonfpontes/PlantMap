@@ -14,7 +14,6 @@ function LoginForm() {
 
   const handleGoogleLogin = async () => {
     setServerError(null)
-    setSuccessMsg(null)
     try {
       const supabase = createClient()
       const appUrl = typeof window !== 'undefined' ? window.location.origin : (process.env.NEXT_PUBLIC_APP_URL || '')
