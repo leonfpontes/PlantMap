@@ -1,36 +1,82 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# PlantMap
 
-## Getting Started
+Plataforma colaborativa para mapeamento de ocorrências de plantas medicinais, rituais e alimentares. Usuários registram localizações no mapa, fotografam e acompanham o estado das plantas ao longo do tempo.
 
-First, run the development server:
+## Funcionalidades
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- Mapa interativo com marcadores coloridos por condição da planta
+- Registro de ocorrências com foto, espécie, condição e estágio
+- Busca por espécie com debounce
+- Soft delete de registros (dados preservados no banco)
+- Log de auditoria automático para todas as alterações
+- Favoritos por usuário
+- Compartilhamento de ocorrência via link
+- Autenticação exclusiva via Google OAuth
+- Interface responsiva com bottom navigation adaptada para visitantes e usuários autenticados
+
+## Stack
+
+| Camada | Tecnologia |
+|---|---|
+| Framework | Next.js 15 (App Router) |
+| Banco de dados | Supabase (PostgreSQL + PostGIS) |
+| Autenticação | Supabase Auth (Google OAuth / PKCE) |
+| Storage | Supabase Storage |
+| Mapa | MapLibre GL / react-map-gl |
+| Estilização | Tailwind CSS v4 |
+| Formulários | react-hook-form + Zod v4 |
+| Testes | Vitest + Testing Library |
+
+## Estrutura do projeto
+
+```
+src/
+  app/              # Páginas (App Router)
+  components/
+    layout/         # MobileShell, BottomNav, PageHeader
+    map/            # PlantMap, PlantPin, PlantTooltip
+    plant/          # PlantCard, RegisterForm, EditForm, ShareSheet
+    ui/             # Badge, Button, Input, BottomSheet
+  constants/
+    plant.ts        # Configs centralizadas de condição, estágio e origem
+  hooks/
+    useUser.ts
+    useFavorites.ts
+    useSpeciesSearch.ts   # Busca com debounce
+    usePhotoUpload.ts     # Upload para Supabase Storage
+  lib/
+    actions/        # Server Actions (plants, auth)
+    supabase/       # Clients SSR e browser
+    utils.ts
+  test/             # Testes unitários (Vitest)
+  types/            # Tipos TypeScript globais
+supabase/
+  migrations/       # Histórico de migrations SQL
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Variáveis de ambiente
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```env
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Desenvolvimento local
 
-## Learn More
+```bash
+npm install
+npm run dev
+```
 
-To learn more about Next.js, take a look at the following resources:
+Acesse [http://localhost:3000](http://localhost:3000).
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Testes
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npm test          # roda uma vez
+npm run test:watch  # modo watch
+```
 
-## Deploy on Vercel
+## Deploy
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+O projeto é publicado automaticamente na Vercel a cada push na branch `master`.
