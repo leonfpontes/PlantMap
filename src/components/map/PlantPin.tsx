@@ -2,19 +2,13 @@
 
 import { Marker } from 'react-map-gl/maplibre'
 import { PlantOccurrence } from '@/types'
+import { CONDITION_PIN_CLASS } from '@/constants/plant'
 import { cn } from '@/lib/utils'
 
 interface PlantPinProps {
   occurrence: PlantOccurrence
   onClick: (occurrence: PlantOccurrence) => void
   selected?: boolean
-}
-
-const conditionColor: Record<string, string> = {
-  healthy: 'bg-green-500 border-green-700',
-  fair: 'bg-yellow-400 border-yellow-600',
-  poor: 'bg-orange-400 border-orange-600',
-  dead: 'bg-gray-400 border-gray-600',
 }
 
 export default function PlantPin({ occurrence, onClick, selected }: PlantPinProps) {
@@ -32,7 +26,7 @@ export default function PlantPin({ occurrence, onClick, selected }: PlantPinProp
         <div
           className={cn(
             'h-5 w-5 rounded-full border-2 shadow-md transition-transform',
-            conditionColor[occurrence.condition] || conditionColor.healthy,
+            CONDITION_PIN_CLASS[occurrence.condition] ?? CONDITION_PIN_CLASS.healthy,
             selected && 'scale-150 shadow-lg'
           )}
         />

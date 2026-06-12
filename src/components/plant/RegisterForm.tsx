@@ -5,13 +5,15 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useRouter } from 'next/navigation'
-import { Camera, MapPin, Loader2 } from 'lucide-react'
-import { registerOccurrence, searchSpecies } from '@/lib/actions/plants'
-import { createClient } from '@/lib/supabase/client'
+import { Camera, MapPin } from 'lucide-react'
+import { registerOccurrence } from '@/lib/actions/plants'
 import { Species, PlantCondition, PlantStage } from '@/types'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 import dynamic from 'next/dynamic'
+import { useSpeciesSearch } from '@/hooks/useSpeciesSearch'
+import { usePhotoUpload } from '@/hooks/usePhotoUpload'
+import { CONDITION_OPTIONS, STAGE_OPTIONS } from '@/constants/plant'
 
 const PlantMap = dynamic(() => import('@/components/map/PlantMap'), { ssr: false })
 
@@ -26,16 +28,18 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>
 
+/**
+ * Formulário de registro de ocorrência de planta.
+ * Usa useSpeciesSearch para busca com debounce e usePhotoUpload para upload de foto.
+ */
 export default function RegisterForm() {
   const router = useRouter()
-  const [speciesQuery, setSpeciesQuery] = useState('')
-  const [speciesList, setSpeciesList] = useState<Species[]>([])
+  const [speciesQuery, setSpeciesQuery]       = useState('')
   const [selectedSpecies, setSelectedSpecies] = useState<Species | null>(null)
-  const [photoFile, setPhotoFile] = useState<File | null>(null)
-  const [photoPreview, setPhotoPreview] = useState<string | null>(null)
-  const [uploading, setUploading] = useState(false)
-  const [serverError, setServerError] = useState<string | null>(null)
-  const [searchTimer, setSearchTimer] = useState<ReturnType<typeof setTimeout> | null>(null)
+  const [serverError, setServerError]         = useState<string | null>(null)
+
+  const { results: speciesList } = useSpeciesSearch(speciesQuery)
+  const { upload, uploading, preview, pickFile } = usePhotoUpload()
 
   const { register, handleSubmit, setValue, watch, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -45,29 +49,17 @@ export default function RegisterForm() {
   const lat = watch('latitude')
   const lng = watch('longitude')
 
-  const handleSpeciesSearch = (query: string) => {
-    setSpeciesQuery(query)
-    if (searchTimer) clearTimeout(searchTimer)
-    if (query.length < 2) { setSpeciesList([]); return }
-    const timer = setTimeout(async () => {
-      const results = await searchSpecies(query)
-      setSpeciesList(results)
-    }, 300)
-    setSearchTimer(timer)
-  }
-
   const selectSpecies = (species: Species) => {
     setSelectedSpecies(species)
     setValue('species_id', species.id)
     setSpeciesQuery(species.common_name)
-    setSpeciesList([])
   }
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-    setPhotoFile(file)
-    setPhotoPreview(URL.createObjectURL(file))
+    const err = pickFile(file)
+    if (err) setServerError(err)
   }
 
   const handleMapClick = useCallback((clickLat: number, clickLng: number) => {
@@ -77,25 +69,14 @@ export default function RegisterForm() {
 
   const onSubmit = async (data: FormData) => {
     setServerError(null)
-    let photo_url: string | undefined
-
-    if (photoFile) {
-      setUploading(true)
-      const supabase = createClient()
-      const ext = photoFile.name.split('.').pop()
-      const path = `occurrences/${Date.now()}.${ext}`
-      const { error: uploadError } = await supabase.storage.from('plant-photos').upload(path, photoFile)
-      if (uploadError) { setServerError(uploadError.message); setUploading(false); return }
-      const { data: urlData } = supabase.storage.from('plant-photos').getPublicUrl(path)
-      photo_url = urlData.publicUrl
-      setUploading(false)
-    }
+    const { url: photo_url, error: uploadError } = await upload()
+    if (uploadError) { setServerError(uploadError); return }
 
     const result = await registerOccurrence({
       ...data,
       condition: data.condition as PlantCondition,
       stage: data.stage as PlantStage,
-      photo_url,
+      photo_url: photo_url ?? undefined,
     })
 
     if (result?.error) { setServerError(result.error); return }
@@ -135,7 +116,7 @@ export default function RegisterForm() {
         <Input
           label="Espécie *"
           value={speciesQuery}
-          onChange={(e) => handleSpeciesSearch(e.target.value)}
+          onChange={(e) => setSpeciesQuery(e.target.value)}
           placeholder="Buscar por nome comum ou científico..."
           error={errors.species_id?.message}
         />
@@ -169,10 +150,9 @@ export default function RegisterForm() {
             {...register('condition')}
             className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-700"
           >
-            <option value="healthy">Saudável</option>
-            <option value="fair">Regular</option>
-            <option value="poor">Ruim</option>
-            <option value="dead">Morta</option>
+            {CONDITION_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>{o.label}</option>
+            ))}
           </select>
         </div>
         <div>
@@ -181,10 +161,9 @@ export default function RegisterForm() {
             {...register('stage')}
             className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-700"
           >
-            <option value="seedling">Muda</option>
-            <option value="juvenile">Jovem</option>
-            <option value="adult">Adulta</option>
-            <option value="unknown">Desconhecido</option>
+            {STAGE_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>{o.label}</option>
+            ))}
           </select>
         </div>
       </div>
@@ -193,9 +172,9 @@ export default function RegisterForm() {
       <div>
         <label className="mb-1 block text-sm font-medium text-gray-700">Foto (opcional)</label>
         <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-200 p-4 hover:border-green-400 hover:bg-green-50 transition-colors">
-          {photoPreview ? (
+          {preview ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={photoPreview} alt="Preview" className="h-32 w-full object-cover rounded-lg" />
+            <img src={preview} alt="Preview" className="h-32 w-full object-cover rounded-lg" />
           ) : (
             <>
               <Camera className="h-8 w-8 text-gray-400" />

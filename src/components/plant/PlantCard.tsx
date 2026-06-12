@@ -3,21 +3,15 @@ import Image from 'next/image'
 import { MapPin, CheckCircle, Leaf } from 'lucide-react'
 import { PlantOccurrence, OccurrenceWithDistance } from '@/types'
 import Badge from '@/components/ui/Badge'
+import { CONDITION_CONFIG } from '@/constants/plant'
 import { formatDistance } from '@/lib/utils'
 
 interface PlantCardProps {
   occurrence: PlantOccurrence | OccurrenceWithDistance
 }
 
-const conditionConfig: Record<string, { label: string; variant: 'green' | 'yellow' | 'red' | 'gray' }> = {
-  healthy: { label: 'Saudável', variant: 'green' },
-  fair: { label: 'Regular', variant: 'yellow' },
-  poor: { label: 'Ruim', variant: 'red' },
-  dead: { label: 'Morta', variant: 'gray' },
-}
-
 export default function PlantCard({ occurrence }: PlantCardProps) {
-  const condition = conditionConfig[occurrence.condition] || conditionConfig.healthy
+  const condition = CONDITION_CONFIG[occurrence.condition] ?? CONDITION_CONFIG.healthy
   const distance = (occurrence as OccurrenceWithDistance).distance_m
 
   return (

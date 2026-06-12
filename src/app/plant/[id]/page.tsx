@@ -11,29 +11,16 @@ import BottomNav from '@/components/layout/BottomNav'
 import Badge from '@/components/ui/Badge'
 import Button from '@/components/ui/Button'
 import ShareSheet from '@/components/plant/ShareSheet'
+import BottomSheet from '@/components/ui/BottomSheet'
 import { deleteOccurrence } from '@/lib/actions/plants'
 import { createClient } from '@/lib/supabase/client'
 import { useUser } from '@/hooks/useUser'
 import { useFavorites } from '@/hooks/useFavorites'
 import { PlantOccurrence } from '@/types'
 import { parseEWKBPoint } from '@/lib/utils'
+import { CONDITION_CONFIG, STAGE_LABEL, ORIGIN_LABEL } from '@/constants/plant'
 
 const PlantMap = dynamic(() => import('@/components/map/PlantMap'), { ssr: false })
-
-const conditionConfig: Record<string, { label: string; variant: 'green' | 'yellow' | 'red' | 'gray' }> = {
-  healthy: { label: 'Saudável', variant: 'green' },
-  fair: { label: 'Regular', variant: 'yellow' },
-  poor: { label: 'Ruim', variant: 'red' },
-  dead: { label: 'Morta', variant: 'gray' },
-}
-
-const stageLabel: Record<string, string> = {
-  seedling: 'Muda', juvenile: 'Jovem', adult: 'Adulta', unknown: 'Desconhecido',
-}
-
-const originLabel: Record<string, string> = {
-  native: 'Nativa', exotic: 'Exótica', naturalized: 'Naturalizada',
-}
 
 export default function PlantDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -104,7 +91,7 @@ export default function PlantDetailPage() {
   const canEdit = !!user
   const canDelete = !!user
 
-  const condition = conditionConfig[occurrence.condition] || conditionConfig.healthy
+  const condition = CONDITION_CONFIG[occurrence.condition] ?? CONDITION_CONFIG.healthy
   const isFav = favorites.has(occurrence.id)
 
   return (
@@ -170,9 +157,9 @@ export default function PlantDetailPage() {
           {/* Badges */}
           <div className="flex flex-wrap gap-2">
             <Badge variant={condition.variant}>{condition.label}</Badge>
-            <Badge variant="gray">{stageLabel[occurrence.stage] || occurrence.stage}</Badge>
+            <Badge variant="gray">{STAGE_LABEL[occurrence.stage] ?? occurrence.stage}</Badge>
             {occurrence.species?.origin && (
-              <Badge variant="blue">{originLabel[occurrence.species.origin]}</Badge>
+              <Badge variant="blue">{ORIGIN_LABEL[occurrence.species.origin] ?? occurrence.species.origin}</Badge>
             )}
             {occurrence.species?.family && (
               <Badge variant="gray">{occurrence.species.family}</Badge>
@@ -234,27 +221,25 @@ export default function PlantDetailPage() {
 
       <BottomNav />
 
-      {confirmDelete && (
-        <>
-          <div className="fixed inset-0 z-40 bg-black/40" onClick={() => setConfirmDelete(false)} />
-          <div className="fixed bottom-0 left-1/2 z-50 w-full max-w-[430px] -translate-x-1/2 rounded-t-2xl bg-white p-5 shadow-xl">
-            <h2 className="font-semibold text-gray-900 mb-1">Excluir registro?</h2>
-            <p className="text-sm text-gray-500 mb-5">Esta ação não pode ser desfeita. O registro será removido do mapa.</p>
-            <div className="flex gap-3">
-              <Button variant="secondary" className="flex-1" onClick={() => setConfirmDelete(false)}>
-                Cancelar
-              </Button>
-              <Button
-                className="flex-1 !bg-red-600 hover:!bg-red-700"
-                loading={deleting}
-                onClick={handleDelete}
-              >
-                Excluir
-              </Button>
-            </div>
-          </div>
-        </>
-      )}
+      <BottomSheet
+        title="Excluir registro?"
+        open={confirmDelete}
+        onClose={() => setConfirmDelete(false)}
+      >
+        <p className="text-sm text-gray-500 mb-5">Esta ação não pode ser desfeita. O registro será removido do mapa.</p>
+        <div className="flex gap-3">
+          <Button variant="secondary" className="flex-1" onClick={() => setConfirmDelete(false)}>
+            Cancelar
+          </Button>
+          <Button
+            className="flex-1 !bg-red-600 hover:!bg-red-700"
+            loading={deleting}
+            onClick={handleDelete}
+          >
+            Excluir
+          </Button>
+        </div>
+      </BottomSheet>
 
       {photoOpen && occurrence.photo_url && (
         <div
