@@ -15,6 +15,10 @@ interface GeolocationContextType extends GeoState {
 
 const GeolocationContext = createContext<GeolocationContextType | undefined>(undefined)
 
+/**
+ * Provider que expõe o estado de geolocalização do navegador para a aplicação.
+ * Ao montar no cliente, tenta obter as coordenadas de latitude/longitude do dispositivo.
+ */
 export function GeolocationProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<GeoState>({
     latitude: null,
@@ -59,6 +63,10 @@ export function GeolocationProvider({ children }: { children: React.ReactNode })
   )
 }
 
+/**
+ * Hook customizado para consumir o contexto de geolocalização.
+ * Deve ser obrigatoriamente utilizado dentro de um `<GeolocationProvider>`.
+ */
 export function useGeolocation() {
   const context = useContext(GeolocationContext)
   if (context === undefined) {

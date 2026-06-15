@@ -1,5 +1,8 @@
 # PlantMap
 
+> [!TIP]
+> **Novo no projeto?** Acesse o nosso [Guia de Onboarding](file:///E:/Dev/PlantMap/ONBOARDING.md) para entender a arquitetura da stack local e configurar seu ambiente rapidamente!
+
 Plataforma colaborativa para mapeamento de ocorrências de plantas medicinais, rituais e alimentares. Usuários registram localizações no mapa, fotografam e acompanham o estado das plantas ao longo do tempo.
 
 ## Funcionalidades

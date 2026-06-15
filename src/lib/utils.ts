@@ -17,6 +17,20 @@ export function generateShareUrl(occurrenceId: string): string {
   return `${baseUrl}/plant/${occurrenceId}`
 }
 
+/**
+ * Decodifica uma string hexadecimal representando uma geometria Point no formato EWKB
+ * (Extended Well-Known Binary) gerada pelo PostGIS (SRID 4326).
+ *
+ * O formato EWKB do PostGIS para um Point 2D com SRID contém 25 bytes (50 caracteres hexadecimais):
+ * - Byte 0 (1 byte): Endianness (01 para Little Endian, 00 para Big Endian).
+ * - Bytes 1-4 (4 bytes): Tipo da geometria (0x20000001 indica POINT com flag SRID ativa).
+ * - Bytes 5-8 (4 bytes): SRID (geralmente 4326 para WGS 84).
+ * - Bytes 9-16 (8 bytes): Longitude (Double Precision Float de 64 bits / X).
+ * - Bytes 17-24 (8 bytes): Latitude (Double Precision Float de 64 bits / Y).
+ *
+ * @param ewkbHex String hexadecimal retornada pelo banco de dados (ex: '0101000020e6100000...').
+ * @returns Um objeto contendo latitude e longitude decimais, ou null caso o formato seja inválido.
+ */
 export function parseEWKBPoint(ewkbHex: string): { latitude: number; longitude: number } | null {
   if (!ewkbHex || typeof ewkbHex !== 'string') return null
   
