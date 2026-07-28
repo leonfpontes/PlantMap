@@ -34,7 +34,7 @@ export async function getUserStats(userId: string) {
 
   const [occurrencesResult, favoritesResult] = await Promise.all([
     supabase.from('occurrences').select('id', { count: 'exact', head: true }).eq('user_id', userId),
-    supabase.from('favorites').select('id', { count: 'exact', head: true }).eq('user_id', userId),
+    supabase.from('favorites').select('*', { count: 'exact', head: true }).eq('user_id', userId),
   ])
 
   const { data: speciesData } = await supabase
