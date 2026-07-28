@@ -5,6 +5,7 @@ import { X, CheckCircle } from 'lucide-react'
 import { PlantOccurrence } from '@/types'
 import Badge from '@/components/ui/Badge'
 import SpeciesAvatar from '@/components/plant/SpeciesAvatar'
+import ImageLightbox from '@/components/plant/ImageLightbox'
 
 interface PlantTooltipProps {
   occurrence: PlantOccurrence
@@ -25,11 +26,17 @@ export default function PlantTooltip({ occurrence, onClose }: PlantTooltipProps)
     <div className="absolute bottom-20 left-4 right-4 z-10 rounded-2xl bg-white p-4 shadow-xl border border-gray-100">
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-3">
-          <SpeciesAvatar
-            imageUrl={occurrence.species?.image_url}
-            alt={occurrence.species?.common_name || 'Espécie'}
-            size={40}
-          />
+          {occurrence.species?.image_url ? (
+            <ImageLightbox
+              src={occurrence.species.image_url}
+              alt={occurrence.species.common_name}
+              className="flex-shrink-0 cursor-zoom-in"
+            >
+              <SpeciesAvatar imageUrl={occurrence.species.image_url} alt={occurrence.species.common_name} size={40} />
+            </ImageLightbox>
+          ) : (
+            <SpeciesAvatar imageUrl={null} alt={occurrence.species?.common_name || 'Espécie'} size={40} />
+          )}
           <div>
             <p className="font-semibold text-gray-900 text-sm">
               {occurrence.species?.common_name || 'Espécie desconhecida'}

@@ -12,6 +12,7 @@ import Badge from '@/components/ui/Badge'
 import Button from '@/components/ui/Button'
 import ShareSheet from '@/components/plant/ShareSheet'
 import SpeciesAvatar from '@/components/plant/SpeciesAvatar'
+import ImageLightbox from '@/components/plant/ImageLightbox'
 import BottomSheet from '@/components/ui/BottomSheet'
 import { deleteOccurrence } from '@/lib/actions/plants'
 import { createClient } from '@/lib/supabase/client'
@@ -146,11 +147,17 @@ export default function PlantDetailPage() {
           <div>
             <div className="flex items-start justify-between gap-2">
               <div className="flex items-center gap-3">
-                <SpeciesAvatar
-                  imageUrl={occurrence.species?.image_url}
-                  alt={occurrence.species?.common_name || 'Espécie'}
-                  size={48}
-                />
+                {occurrence.species?.image_url ? (
+                  <ImageLightbox
+                    src={occurrence.species.image_url}
+                    alt={occurrence.species.common_name}
+                    className="flex-shrink-0 cursor-zoom-in"
+                  >
+                    <SpeciesAvatar imageUrl={occurrence.species.image_url} alt={occurrence.species.common_name} size={48} />
+                  </ImageLightbox>
+                ) : (
+                  <SpeciesAvatar imageUrl={null} alt={occurrence.species?.common_name || 'Espécie'} size={48} />
+                )}
                 <div>
                   <h2 className="text-xl font-bold text-gray-900">{occurrence.species?.common_name}</h2>
                   <p className="text-sm italic text-gray-500">{occurrence.species?.scientific_name}</p>
