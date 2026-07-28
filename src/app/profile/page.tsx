@@ -1,12 +1,14 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { Heart, LogOut, ChevronRight, Bell, Lock, Palette, HelpCircle, Leaf } from 'lucide-react'
+import { Heart, LogOut, ChevronRight, Bell, Lock, Palette, HelpCircle, Leaf, Sprout, ShieldCheck } from 'lucide-react'
 import MobileShell from '@/components/layout/MobileShell'
 import PageHeader from '@/components/layout/PageHeader'
 import BottomNav from '@/components/layout/BottomNav'
 import Avatar from '@/components/ui/Avatar'
+import Badge from '@/components/ui/Badge'
 import { createClient } from '@/lib/supabase/server'
 import { getProfile, getUserStats } from '@/lib/actions/profile'
+import { listPendingSpecies } from '@/lib/actions/species'
 import { signOut } from '@/lib/actions/auth'
 
 export default async function ProfilePage() {
@@ -18,6 +20,8 @@ export default async function ProfilePage() {
     getProfile(),
     getUserStats(user.id),
   ])
+
+  const pendingSpecies = profile?.is_admin ? await listPendingSpecies() : []
 
   // Ainda sem tela própria — exibidos como indisponíveis em vez de links mortos (href="#").
   const menuItems = [
@@ -82,6 +86,33 @@ export default async function ProfilePage() {
             <span className="flex-1 text-sm font-medium text-gray-900">Meus registros no mapa</span>
             <ChevronRight className="h-4 w-4 text-gray-400" />
           </Link>
+
+          <Link
+            href="/profile/species"
+            className="flex items-center gap-3 rounded-2xl bg-white border border-gray-100 px-4 py-3 hover:bg-gray-50 transition-colors shadow-sm"
+          >
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-yellow-50">
+              <Sprout className="h-5 w-5 text-yellow-600" />
+            </div>
+            <span className="flex-1 text-sm font-medium text-gray-900">Ervas que sugeri</span>
+            <ChevronRight className="h-4 w-4 text-gray-400" />
+          </Link>
+
+          {profile?.is_admin && (
+            <Link
+              href="/admin/species"
+              className="flex items-center gap-3 rounded-2xl bg-white border border-gray-100 px-4 py-3 hover:bg-gray-50 transition-colors shadow-sm"
+            >
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-50">
+                <ShieldCheck className="h-5 w-5 text-blue-600" />
+              </div>
+              <span className="flex-1 text-sm font-medium text-gray-900">Moderação de ervas</span>
+              {pendingSpecies.length > 0 && (
+                <Badge variant="yellow">{pendingSpecies.length} pendente{pendingSpecies.length !== 1 ? 's' : ''}</Badge>
+              )}
+              <ChevronRight className="h-4 w-4 text-gray-400" />
+            </Link>
+          )}
 
           {/* Menu items (ainda sem tela própria) */}
           <div className="mt-2 rounded-2xl bg-white border border-gray-100 overflow-hidden shadow-sm">

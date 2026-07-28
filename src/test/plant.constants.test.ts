@@ -7,11 +7,13 @@ import {
   ORIGIN_LABEL,
   CONDITION_OPTIONS,
   STAGE_OPTIONS,
+  SPECIES_STATUS_CONFIG,
 } from '@/constants/plant'
-import type { PlantCondition, PlantStage } from '@/types'
+import type { PlantCondition, PlantStage, SpeciesStatus } from '@/types'
 
 const CONDITIONS: PlantCondition[] = ['healthy', 'fair', 'poor', 'dead']
 const STAGES: PlantStage[]         = ['seedling', 'juvenile', 'adult', 'unknown']
+const SPECIES_STATUSES: SpeciesStatus[] = ['pending', 'approved', 'rejected']
 
 describe('CONDITION_CONFIG', () => {
   it('covers all conditions', () => {
@@ -68,5 +70,18 @@ describe('STAGE_OPTIONS', () => {
   it('has an entry for each stage', () => {
     const values = STAGE_OPTIONS.map((o) => o.value)
     STAGES.forEach((s) => expect(values).toContain(s))
+  })
+})
+
+describe('SPECIES_STATUS_CONFIG', () => {
+  it('covers all species statuses', () => {
+    SPECIES_STATUSES.forEach((s) => expect(SPECIES_STATUS_CONFIG[s]).toBeDefined())
+  })
+
+  it('has valid badge variants', () => {
+    const validVariants = ['green', 'yellow', 'red', 'gray']
+    SPECIES_STATUSES.forEach((s) =>
+      expect(validVariants).toContain(SPECIES_STATUS_CONFIG[s].variant)
+    )
   })
 })

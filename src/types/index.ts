@@ -10,15 +10,21 @@ export interface UserProfile {
 export type PlantCondition = 'healthy' | 'fair' | 'poor' | 'dead'
 export type PlantStage = 'seedling' | 'juvenile' | 'adult' | 'unknown'
 export type SpeciesOrigin = 'native' | 'exotic' | 'naturalized'
+export type SpeciesStatus = 'pending' | 'approved' | 'rejected'
 
 export interface Species {
   id: string
-  scientific_name: string
+  scientific_name: string | null
   common_name: string
   family: string | null
   origin: SpeciesOrigin
   description: string | null
   image_url: string | null
+  status: SpeciesStatus
+  submitted_by: string | null
+  reviewed_by: string | null
+  reviewed_at: string | null
+  rejection_reason: string | null
 }
 
 export interface PlantOccurrence {

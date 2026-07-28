@@ -9,9 +9,8 @@ import { Camera, MapPin } from 'lucide-react'
 import { updateOccurrence } from '@/lib/actions/plants'
 import { Species, PlantOccurrence, PlantCondition, PlantStage } from '@/types'
 import Button from '@/components/ui/Button'
-import Input from '@/components/ui/Input'
 import dynamic from 'next/dynamic'
-import { useSpeciesSearch } from '@/hooks/useSpeciesSearch'
+import SpeciesCombobox from '@/components/plant/SpeciesCombobox'
 import { usePhotoUpload } from '@/hooks/usePhotoUpload'
 import { CONDITION_OPTIONS, STAGE_OPTIONS } from '@/constants/plant'
 
@@ -38,11 +37,9 @@ interface EditFormProps {
  */
 export default function EditForm({ occurrence }: EditFormProps) {
   const router = useRouter()
-  const [speciesQuery, setSpeciesQuery]       = useState(occurrence.species?.common_name || '')
   const [selectedSpecies, setSelectedSpecies] = useState<Species | null>(occurrence.species || null)
   const [serverError, setServerError]         = useState<string | null>(null)
 
-  const { results: speciesList } = useSpeciesSearch(speciesQuery)
   const { upload, uploading, preview, pickFile } = usePhotoUpload(occurrence.photo_url)
 
   const { register, handleSubmit, setValue, watch, formState: { errors, isSubmitting } } = useForm<FormData>({
@@ -63,7 +60,6 @@ export default function EditForm({ occurrence }: EditFormProps) {
   const selectSpecies = (species: Species) => {
     setSelectedSpecies(species)
     setValue('species_id', species.id)
-    setSpeciesQuery(species.common_name)
   }
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -126,34 +122,14 @@ export default function EditForm({ occurrence }: EditFormProps) {
       </div>
 
       {/* Species search */}
-      <div className="relative">
-        <Input
-          label="Espécie *"
-          value={speciesQuery}
-          onChange={(e) => setSpeciesQuery(e.target.value)}
-          placeholder="Buscar por nome comum ou científico..."
+      <div>
+        <SpeciesCombobox
+          initialQuery={occurrence.species?.common_name}
+          selected={selectedSpecies}
+          onSelect={selectSpecies}
           error={errors.species_id?.message}
         />
         <input type="hidden" {...register('species_id')} />
-        {speciesList.length > 0 && (
-          <ul className="absolute z-10 mt-1 w-full rounded-xl border border-gray-200 bg-white shadow-lg overflow-hidden">
-            {speciesList.map((sp) => (
-              <li key={sp.id}>
-                <button
-                  type="button"
-                  onClick={() => selectSpecies(sp)}
-                  className="w-full px-4 py-2.5 text-left text-sm hover:bg-green-50 transition-colors"
-                >
-                  <span className="font-medium text-gray-900">{sp.common_name}</span>
-                  <span className="ml-2 text-xs italic text-gray-500">{sp.scientific_name}</span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-        {selectedSpecies && (
-          <p className="mt-1 text-xs text-green-700 italic">{selectedSpecies.scientific_name}</p>
-        )}
       </div>
 
       {/* Condition & Stage */}

@@ -10,8 +10,9 @@ Plataforma colaborativa para mapeamento de ocorrências de plantas medicinais, r
 - Mapa interativo com marcadores coloridos por condição da planta
 - Registro de ocorrências com foto, espécie, condição e estágio
 - Busca por espécie com debounce
+- Sugestão de novas espécies pelos usuários, com fila de moderação para admins (ver [Moderação de espécies](#moderação-de-espécies))
 - Soft delete de registros (dados preservados no banco)
-- Log de auditoria automático para todas as alterações
+- Log de auditoria automático para todas as alterações (ocorrências e espécies)
 - Favoritos por usuário
 - Compartilhamento de ocorrência via link
 - Autenticação exclusiva via Google OAuth
@@ -73,6 +74,21 @@ ALLOWED_EMAILS=   # opcional: whitelist de e-mails autorizados a logar, separado
 Ocorrências só podem ser editadas/excluídas pelo próprio dono ou por um usuário com
 `is_admin = true` em `profiles` (ver [migration 012](supabase/migrations/012_ownership_based_permissions.sql)).
 A flag `is_admin` só pode ser alterada com acesso direto ao banco (não é exposta pela API).
+
+### Moderação de espécies
+
+O catálogo de espécies (`species`) não é editável livremente: qualquer usuário autenticado pode
+**sugerir** uma espécie nova (nome popular, científico se souber, família, origem, descrição), mas
+ela nasce com `status = 'pending'` e só fica visível para quem sugeriu — a busca geral só a exibe
+depois que um admin aprova. Rejeições exigem um motivo. Todo o fluxo passa pelas RPCs
+`submit_species` / `review_species` (nunca por insert/update direto na tabela) e é auditado em
+`species_audit_log`, no mesmo padrão do log de ocorrências (ver
+[migration 013](supabase/migrations/013_species_moderation.sql)).
+
+- Sugerir uma espécie: botão "Sugerir nova erva" na busca de espécie do formulário de registro/edição.
+- Acompanhar minhas sugestões: `/profile/species`.
+- Moderar (aprovar/rejeitar) sugestões pendentes: `/admin/species`, visível no menu de perfil apenas
+  para usuários com `is_admin = true`.
 
 ## Desenvolvimento local
 

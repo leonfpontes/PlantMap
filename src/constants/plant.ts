@@ -4,7 +4,7 @@
  * usadas em formulários, cards e badges em toda a aplicação.
  */
 
-import type { PlantCondition, PlantStage } from '@/types'
+import type { PlantCondition, PlantStage, SpeciesStatus } from '@/types'
 
 /** Variante de badge mapeada para cada condição de planta. */
 export const CONDITION_CONFIG: Record<
@@ -63,3 +63,13 @@ export const STAGE_OPTIONS: { value: PlantStage; label: string }[] = [
   { value: 'seedling', label: 'Muda'         },
   { value: 'unknown',  label: 'Desconhecido' },
 ]
+
+/** Variante de badge e label para cada status de moderação de uma espécie sugerida. */
+export const SPECIES_STATUS_CONFIG: Record<
+  SpeciesStatus,
+  { label: string; variant: 'green' | 'yellow' | 'red' | 'gray' }
+> = {
+  pending:  { label: 'Aguardando aprovação', variant: 'yellow' },
+  approved: { label: 'Aprovada',             variant: 'green' },
+  rejected: { label: 'Rejeitada',            variant: 'red' },
+}
