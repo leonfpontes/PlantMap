@@ -18,7 +18,7 @@ export default function SpeciesAdminTabs({ pendingSpecies, catalogSpecies }: Spe
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex gap-1 rounded-xl bg-gray-100 p-1">
+      <div className="flex gap-1 rounded-xl bg-gray-100 p-1 dark:bg-gray-800">
         <TabButton active={tab === 'pending'} onClick={() => setTab('pending')}>
           Pendentes{pendingSpecies.length > 0 && ` (${pendingSpecies.length})`}
         </TabButton>
@@ -51,7 +51,9 @@ function TabButton({
       onClick={onClick}
       className={cn(
         'flex-1 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
-        active ? 'bg-white text-green-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+        active
+          ? 'bg-white text-green-700 shadow-sm dark:bg-gray-900 dark:text-green-400'
+          : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
       )}
     >
       {children}

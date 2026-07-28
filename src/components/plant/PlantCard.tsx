@@ -20,8 +20,8 @@ export default function PlantCard({ occurrence }: PlantCardProps) {
 
   return (
     <Link href={`/plant/${occurrence.id}`}>
-      <div className="flex gap-3 rounded-2xl border border-gray-100 bg-white p-3 shadow-sm transition-all hover:shadow-md hover:border-green-200 active:scale-[0.98]">
-        <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-xl bg-green-50 flex items-center justify-center">
+      <div className="flex gap-3 rounded-2xl border border-gray-100 bg-white p-3 shadow-sm transition-all hover:shadow-md hover:border-green-200 active:scale-[0.98] dark:border-gray-800 dark:bg-gray-900 dark:hover:border-green-800">
+        <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-xl bg-green-50 flex items-center justify-center dark:bg-green-900/30">
           {thumbnailUrl ? (
             <Image
               src={thumbnailUrl}
@@ -31,7 +31,7 @@ export default function PlantCard({ occurrence }: PlantCardProps) {
               className="h-full w-full object-cover"
             />
           ) : (
-            <Leaf className="h-7 w-7 text-green-400" />
+            <Leaf className="h-7 w-7 text-green-400 dark:text-green-600" />
           )}
           {referenceOnly && (
             <span className="absolute bottom-0 left-0 right-0 bg-black/50 px-1 py-0.5 text-center text-[9px] font-medium text-white">
@@ -42,10 +42,10 @@ export default function PlantCard({ occurrence }: PlantCardProps) {
 
         <div className="flex flex-1 flex-col justify-between min-w-0">
           <div>
-            <p className="font-semibold text-gray-900 text-sm truncate">
+            <p className="font-semibold text-gray-900 text-sm truncate dark:text-gray-100">
               {occurrence.species?.common_name || 'Espécie desconhecida'}
             </p>
-            <p className="text-xs text-gray-500 italic truncate">
+            <p className="text-xs text-gray-500 italic truncate dark:text-gray-400">
               {occurrence.species?.scientific_name}
             </p>
           </div>
@@ -62,7 +62,7 @@ export default function PlantCard({ occurrence }: PlantCardProps) {
               <Badge variant="gray">Comunidade</Badge>
             )}
             {distance !== undefined && (
-              <span className="flex items-center gap-0.5 text-xs text-gray-500">
+              <span className="flex items-center gap-0.5 text-xs text-gray-500 dark:text-gray-400">
                 <MapPin className="h-3 w-3" />
                 {formatDistance(distance)}
               </span>

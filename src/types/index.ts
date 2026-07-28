@@ -1,9 +1,14 @@
+export type ThemePreference = 'light' | 'dark' | 'system'
+export type FontScale = 'normal' | 'large' | 'xlarge'
+
 export interface UserProfile {
   id: string
   email: string
   full_name: string | null
   avatar_url: string | null
   is_admin: boolean
+  theme_preference: ThemePreference
+  font_scale: FontScale
   created_at: string
 }
 

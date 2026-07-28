@@ -33,20 +33,20 @@ function LoginForm() {
 
 
   return (
-    <div className="flex min-h-dvh w-full items-center justify-center bg-gray-100 p-4">
-      <div className="w-full max-w-[390px] rounded-3xl bg-white p-8 shadow-lg">
+    <div className="flex min-h-dvh w-full items-center justify-center bg-gray-100 p-4 dark:bg-black">
+      <div className="w-full max-w-[390px] rounded-3xl bg-white p-8 shadow-lg dark:bg-gray-900">
         {/* Logo */}
         <div className="mb-8 flex flex-col items-center gap-2">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-green-700">
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-green-700 dark:bg-green-600">
             <Leaf className="h-8 w-8 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">PlantMap</h1>
-          <p className="text-sm text-gray-500">Mapeie a flora da sua região</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">PlantMap</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Mapeie a flora da sua região</p>
         </div>
 
         {/* URL query error display */}
         {errorParam && (
-          <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600 mb-4">
+          <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600 mb-4 dark:bg-red-900/20 dark:text-red-400">
             Erro de autenticação: {messageParam || errorParam}
           </p>
         )}
@@ -55,7 +55,7 @@ function LoginForm() {
         <button
           type="button"
           onClick={handleGoogleLogin}
-          className="flex w-full items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 transition-colors"
+          className="flex w-full items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 transition-colors dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
         >
           <svg className="h-5 w-5" viewBox="0 0 24 24" aria-hidden="true">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -68,7 +68,7 @@ function LoginForm() {
 
 
         {serverError && (
-          <p className="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{serverError}</p>
+          <p className="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-400">{serverError}</p>
         )}
       </div>
     </div>
@@ -78,11 +78,11 @@ function LoginForm() {
 export default function LoginPage() {
   return (
     <Suspense fallback={
-      <div className="flex min-h-dvh w-full items-center justify-center bg-gray-100 p-4">
-        <div className="w-full max-w-[390px] rounded-3xl bg-white p-8 shadow-lg animate-pulse h-[400px]">
-          <div className="h-16 w-16 bg-gray-200 rounded-2xl mx-auto mb-4"></div>
-          <div className="h-6 bg-gray-200 rounded w-1/2 mx-auto mb-2"></div>
-          <div className="h-4 bg-gray-200 rounded w-3/4 mx-auto"></div>
+      <div className="flex min-h-dvh w-full items-center justify-center bg-gray-100 p-4 dark:bg-black">
+        <div className="w-full max-w-[390px] rounded-3xl bg-white p-8 shadow-lg animate-pulse h-[400px] dark:bg-gray-900">
+          <div className="h-16 w-16 bg-gray-200 rounded-2xl mx-auto mb-4 dark:bg-gray-800"></div>
+          <div className="h-6 bg-gray-200 rounded w-1/2 mx-auto mb-2 dark:bg-gray-800"></div>
+          <div className="h-4 bg-gray-200 rounded w-3/4 mx-auto dark:bg-gray-800"></div>
         </div>
       </div>
     }>

@@ -22,13 +22,13 @@ export default function Avatar({ src, name, size = 'md', className }: AvatarProp
     : null
 
   return (
-    <div className={cn('relative rounded-full bg-green-100 flex items-center justify-center overflow-hidden flex-shrink-0', sizes[size], className)}>
+    <div className={cn('relative rounded-full bg-green-100 dark:bg-green-900/40 flex items-center justify-center overflow-hidden flex-shrink-0', sizes[size], className)}>
       {src ? (
         <Image src={src} alt={name || 'Avatar'} fill className="object-cover" />
       ) : initials ? (
-        <span className="font-semibold text-green-700">{initials}</span>
+        <span className="font-semibold text-green-700 dark:text-green-400">{initials}</span>
       ) : (
-        <User className="h-1/2 w-1/2 text-green-600" />
+        <User className="h-1/2 w-1/2 text-green-600 dark:text-green-400" />
       )}
     </div>
   )

@@ -75,22 +75,22 @@ export default function SearchPage() {
 
       <div className="flex flex-col gap-4 p-4 flex-shrink-0">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500" />
           <input
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
             placeholder="Nome da espécie..."
-            className="w-full rounded-xl border border-gray-200 bg-white pl-9 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-700"
+            className="w-full rounded-xl border border-gray-200 bg-white pl-9 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
           />
         </div>
 
         <div>
           <div className="flex items-center justify-between mb-2">
-            <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700">
+            <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">
               <SlidersHorizontal className="h-4 w-4" />
-              Raio: <span className="text-green-700">{radius} km</span>
+              Raio: <span className="text-green-700 dark:text-green-400">{radius} km</span>
             </label>
           </div>
           <input
@@ -101,7 +101,7 @@ export default function SearchPage() {
             onChange={(e) => setRadius(Number(e.target.value))}
             className="w-full accent-green-700"
           />
-          <div className="flex justify-between text-xs text-gray-400">
+          <div className="flex justify-between text-xs text-gray-400 dark:text-gray-500">
             <span>1 km</span>
             <span>50 km</span>
           </div>
@@ -110,7 +110,7 @@ export default function SearchPage() {
         <button
           onClick={handleSearch}
           disabled={loading || locLoading}
-          className="flex items-center justify-center gap-2 rounded-xl bg-green-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-green-800 disabled:opacity-50 transition-colors"
+          className="flex items-center justify-center gap-2 rounded-xl bg-green-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-green-800 disabled:opacity-50 transition-colors dark:bg-green-600 dark:hover:bg-green-700"
         >
           {loading ? (
             <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
@@ -125,22 +125,22 @@ export default function SearchPage() {
         {loading && (
           <div className="flex flex-col gap-3">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-20 rounded-2xl bg-gray-100 animate-pulse" />
+              <div key={i} className="h-20 rounded-2xl bg-gray-100 animate-pulse dark:bg-gray-800" />
             ))}
           </div>
         )}
 
         {!loading && searched && results.length === 0 && (
           <div className="flex flex-col items-center justify-center py-16 text-center">
-            <Search className="h-12 w-12 text-gray-300 mb-3" />
-            <p className="font-medium text-gray-600">Nenhuma planta encontrada</p>
-            <p className="text-sm text-gray-400 mt-1">Tente aumentar o raio de busca</p>
+            <Search className="h-12 w-12 text-gray-300 mb-3 dark:text-gray-700" />
+            <p className="font-medium text-gray-600 dark:text-gray-300">Nenhuma planta encontrada</p>
+            <p className="text-sm text-gray-400 mt-1 dark:text-gray-500">Tente aumentar o raio de busca</p>
           </div>
         )}
 
         {!loading && results.length > 0 && (
           <>
-            <p className="mb-3 text-sm text-gray-500">
+            <p className="mb-3 text-sm text-gray-500 dark:text-gray-400">
               {results.length} resultado{results.length !== 1 ? 's' : ''} encontrado{results.length !== 1 ? 's' : ''}
             </p>
             <div className="flex flex-col gap-3">

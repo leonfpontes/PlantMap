@@ -19,7 +19,7 @@ export default function SpeciesAvatar({ imageUrl, alt, size = 40, className }: S
   return (
     <div
       className={cn(
-        'flex flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-green-50',
+        'flex flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-green-50 dark:bg-green-900/30',
         className
       )}
       style={{ width: size, height: size }}
@@ -33,7 +33,7 @@ export default function SpeciesAvatar({ imageUrl, alt, size = 40, className }: S
           className="h-full w-full object-cover"
         />
       ) : (
-        <Leaf className="text-green-400" style={{ width: size * 0.5, height: size * 0.5 }} />
+        <Leaf className="text-green-400 dark:text-green-600" style={{ width: size * 0.5, height: size * 0.5 }} />
       )}
     </div>
   )

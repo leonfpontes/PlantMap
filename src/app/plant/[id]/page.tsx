@@ -73,7 +73,7 @@ export default function PlantDetailPage() {
     return (
       <MobileShell>
         <PageHeader title="Não encontrado" />
-        <div className="flex-1 flex items-center justify-center text-gray-500">
+        <div className="flex-1 flex items-center justify-center text-gray-500 dark:text-gray-400">
           Ocorrência não encontrada
         </div>
         <BottomNav />
@@ -108,16 +108,16 @@ export default function PlantDetailPage() {
             {canEdit && (
               <Link
                 href={`/plant/${occurrence.id}/edit`}
-                className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-gray-100 transition-colors text-gray-500"
+                className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-gray-100 transition-colors text-gray-500 dark:hover:bg-gray-800 dark:text-gray-400"
               >
                 <Edit className="h-5 w-5" />
               </Link>
             )}
             <button
               onClick={() => toggle(occurrence.id)}
-              className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
+              className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-gray-100 transition-colors dark:hover:bg-gray-800"
             >
-              <Heart className={`h-5 w-5 ${isFav ? 'fill-red-500 text-red-500' : 'text-gray-400'}`} />
+              <Heart className={`h-5 w-5 ${isFav ? 'fill-red-500 text-red-500' : 'text-gray-400 dark:text-gray-500'}`} />
             </button>
           </div>
         }
@@ -159,12 +159,12 @@ export default function PlantDetailPage() {
                   <SpeciesAvatar imageUrl={null} alt={occurrence.species?.common_name || 'Espécie'} size={48} />
                 )}
                 <div>
-                  <h2 className="text-xl font-bold text-gray-900">{occurrence.species?.common_name}</h2>
-                  <p className="text-sm italic text-gray-500">{occurrence.species?.scientific_name}</p>
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">{occurrence.species?.common_name}</h2>
+                  <p className="text-sm italic text-gray-500 dark:text-gray-400">{occurrence.species?.scientific_name}</p>
                 </div>
               </div>
               {occurrence.verified && (
-                <div className="flex items-center gap-1 text-blue-600 text-xs font-medium">
+                <div className="flex items-center gap-1 text-blue-600 text-xs font-medium dark:text-blue-400">
                   <CheckCircle className="h-4 w-4" />
                   Verificado
                 </div>
@@ -185,16 +185,16 @@ export default function PlantDetailPage() {
           </div>
 
           {/* Details */}
-          <div className="rounded-2xl bg-gray-50 p-4 flex flex-col gap-3">
+          <div className="rounded-2xl bg-gray-50 p-4 flex flex-col gap-3 dark:bg-gray-800/60">
             <div className="flex items-center gap-2 text-sm">
-              <MapPin className="h-4 w-4 text-green-600 flex-shrink-0" />
-              <span className="text-gray-600">
+              <MapPin className="h-4 w-4 text-green-600 flex-shrink-0 dark:text-green-400" />
+              <span className="text-gray-600 dark:text-gray-300">
                 {occurrence.latitude.toFixed(5)}, {occurrence.longitude.toFixed(5)}
               </span>
             </div>
             <div className="flex items-center gap-2 text-sm">
-              <Calendar className="h-4 w-4 text-green-600 flex-shrink-0" />
-              <span className="text-gray-600">
+              <Calendar className="h-4 w-4 text-green-600 flex-shrink-0 dark:text-green-400" />
+              <span className="text-gray-600 dark:text-gray-300">
                 {new Date(occurrence.created_at).toLocaleDateString('pt-BR', {
                   day: '2-digit', month: 'long', year: 'numeric'
                 })}
@@ -202,16 +202,16 @@ export default function PlantDetailPage() {
             </div>
             {occurrence.species?.description && (
               <div className="flex items-start gap-2 text-sm">
-                <Leaf className="h-4 w-4 text-green-600 flex-shrink-0 mt-0.5" />
-                <p className="text-gray-600">{occurrence.species.description}</p>
+                <Leaf className="h-4 w-4 text-green-600 flex-shrink-0 mt-0.5 dark:text-green-400" />
+                <p className="text-gray-600 dark:text-gray-300">{occurrence.species.description}</p>
               </div>
             )}
           </div>
 
           {occurrence.notes && (
             <div>
-              <h3 className="text-sm font-semibold text-gray-700 mb-1">Observações</h3>
-              <p className="text-sm text-gray-600 bg-gray-50 rounded-xl p-3">{occurrence.notes}</p>
+              <h3 className="text-sm font-semibold text-gray-700 mb-1 dark:text-gray-300">Observações</h3>
+              <p className="text-sm text-gray-600 bg-gray-50 rounded-xl p-3 dark:bg-gray-800/60 dark:text-gray-300">{occurrence.notes}</p>
             </div>
           )}
 
@@ -227,7 +227,7 @@ export default function PlantDetailPage() {
           {canDelete && (
             <Button
               variant="secondary"
-              className="w-full !text-red-600 !border-red-200 hover:!bg-red-50"
+              className="w-full !text-red-600 !border-red-200 hover:!bg-red-50 dark:!text-red-400 dark:!border-red-900 dark:hover:!bg-red-900/20"
               onClick={() => setConfirmDelete(true)}
             >
               <Trash2 className="h-4 w-4" />
@@ -244,7 +244,7 @@ export default function PlantDetailPage() {
         open={confirmDelete}
         onClose={() => setConfirmDelete(false)}
       >
-        <p className="text-sm text-gray-500 mb-5">Esta ação não pode ser desfeita. O registro será removido do mapa.</p>
+        <p className="text-sm text-gray-500 mb-5 dark:text-gray-400">Esta ação não pode ser desfeita. O registro será removido do mapa.</p>
         <div className="flex gap-3">
           <Button variant="secondary" className="flex-1" onClick={() => setConfirmDelete(false)}>
             Cancelar

@@ -47,18 +47,18 @@ export default function SpeciesCombobox({ initialQuery, selected, onSelect, erro
       />
 
       {query.length >= 2 && (
-        <ul className="absolute z-10 mt-1 w-full overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg">
+        <ul className="absolute z-10 mt-1 w-full overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-900">
           {results.map((sp) => (
             <li key={sp.id}>
               <button
                 type="button"
                 onClick={() => handleSelect(sp)}
-                className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm hover:bg-green-50 transition-colors"
+                className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm hover:bg-green-50 transition-colors dark:hover:bg-green-900/20"
               >
                 <SpeciesAvatar imageUrl={sp.image_url} alt={sp.common_name} size={28} />
-                <span className="font-medium text-gray-900">{sp.common_name}</span>
+                <span className="font-medium text-gray-900 dark:text-gray-100">{sp.common_name}</span>
                 {sp.scientific_name && (
-                  <span className="text-xs italic text-gray-500">{sp.scientific_name}</span>
+                  <span className="text-xs italic text-gray-500 dark:text-gray-400">{sp.scientific_name}</span>
                 )}
                 {sp.status === 'pending' && (
                   <Badge variant="yellow" className="ml-auto flex-shrink-0">Pendente</Badge>
@@ -66,11 +66,11 @@ export default function SpeciesCombobox({ initialQuery, selected, onSelect, erro
               </button>
             </li>
           ))}
-          <li className={results.length > 0 ? 'border-t border-gray-100' : undefined}>
+          <li className={results.length > 0 ? 'border-t border-gray-100 dark:border-gray-800' : undefined}>
             <button
               type="button"
               onClick={() => setSuggestOpen(true)}
-              className="w-full px-4 py-2.5 text-left text-sm font-medium text-green-700 hover:bg-green-50 transition-colors"
+              className="w-full px-4 py-2.5 text-left text-sm font-medium text-green-700 hover:bg-green-50 transition-colors dark:text-green-400 dark:hover:bg-green-900/20"
             >
               + Não encontrou? Sugerir &quot;{query}&quot; como nova erva
             </button>
@@ -82,7 +82,7 @@ export default function SpeciesCombobox({ initialQuery, selected, onSelect, erro
         <div className="mt-1 flex flex-wrap items-center gap-2">
           <SpeciesAvatar imageUrl={selected.image_url} alt={selected.common_name} size={24} />
           {selected.scientific_name && (
-            <p className="text-xs italic text-green-700">{selected.scientific_name}</p>
+            <p className="text-xs italic text-green-700 dark:text-green-400">{selected.scientific_name}</p>
           )}
           {selected.status !== 'approved' && (
             <Badge variant={SPECIES_STATUS_CONFIG[selected.status].variant}>

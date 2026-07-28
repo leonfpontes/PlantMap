@@ -52,17 +52,17 @@ export default function BottomSheet({
         aria-modal="true"
         aria-label={title}
         className={cn(
-          'fixed bottom-0 left-1/2 z-50 w-full max-w-[430px] -translate-x-1/2 rounded-t-2xl bg-white p-5 shadow-xl',
+          'fixed bottom-0 left-1/2 z-50 w-full max-w-[430px] -translate-x-1/2 rounded-t-2xl bg-white p-5 shadow-xl dark:bg-gray-900',
           className
         )}
       >
         {title && (
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="font-semibold text-gray-900">{title}</h2>
+            <h2 className="font-semibold text-gray-900 dark:text-gray-100">{title}</h2>
             <button
               onClick={onClose}
               aria-label="Fechar"
-              className="text-gray-400 hover:text-gray-600 transition-colors"
+              className="text-gray-400 hover:text-gray-600 transition-colors dark:text-gray-500 dark:hover:text-gray-300"
             >
               <X className="h-5 w-5" />
             </button>

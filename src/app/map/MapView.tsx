@@ -7,7 +7,7 @@ import { OccurrenceWithDistance } from '@/types'
 
 const PlantMap = dynamic(() => import('@/components/map/PlantMap'), {
   ssr: false,
-  loading: () => <div className="h-full w-full bg-green-50 animate-pulse" />,
+  loading: () => <div className="h-full w-full bg-green-50 animate-pulse dark:bg-green-950/40" />,
 })
 
 export default function MapView() {
@@ -32,7 +32,7 @@ export default function MapView() {
   }, [])
 
   if (loading) {
-    return <div className="h-full w-full bg-green-50 animate-pulse" />
+    return <div className="h-full w-full bg-green-50 animate-pulse dark:bg-green-950/40" />
   }
 
   return (

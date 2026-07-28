@@ -21,7 +21,7 @@ export default async function SpeciesModerationPage() {
       <PageHeader title="Moderação de Ervas" />
 
       <div className="flex-1 overflow-y-auto p-4">
-        <p className="mb-4 text-sm text-gray-500">
+        <p className="mb-4 text-sm text-gray-500 dark:text-gray-400">
           Ervas sugeridas pelos médiuns ficam pendentes até aqui. Aprovar libera a espécie para busca
           e cadastro de todos; rejeitar exige um motivo e some da fila. No catálogo, cadastre a foto
           de referência de cada espécie — ela aparece na busca, no mapa e nos cards, distinta da foto

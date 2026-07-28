@@ -83,10 +83,10 @@ export default function RegisterForm() {
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
       {/* Location picker */}
       <div>
-        <label className="mb-1 block text-sm font-medium text-gray-700">
+        <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
           Localização <span className="text-red-500">*</span>
         </label>
-        <div className="h-48 w-full overflow-hidden rounded-xl border border-gray-200">
+        <div className="h-48 w-full overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700">
           <PlantMap
             onMapClick={handleMapClick}
             selectedLocation={lat && lng ? { lat, lng } : null}
@@ -95,15 +95,15 @@ export default function RegisterForm() {
           />
         </div>
         {lat && lng ? (
-          <p className="mt-1 flex items-center gap-1 text-xs text-green-700">
+          <p className="mt-1 flex items-center gap-1 text-xs text-green-700 dark:text-green-400">
             <MapPin className="h-3 w-3" />
             {lat.toFixed(5)}, {lng.toFixed(5)}
           </p>
         ) : (
-          <p className="mt-1 text-xs text-gray-500">Toque no mapa para marcar a localização</p>
+          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Toque no mapa para marcar a localização</p>
         )}
         {(errors.latitude || errors.longitude) && (
-          <p className="text-xs text-red-500 mt-1">{errors.latitude?.message || errors.longitude?.message}</p>
+          <p className="text-xs text-red-500 mt-1 dark:text-red-400">{errors.latitude?.message || errors.longitude?.message}</p>
         )}
       </div>
 
@@ -120,10 +120,10 @@ export default function RegisterForm() {
       {/* Condition & Stage */}
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700">Condição</label>
+          <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Condição</label>
           <select
             {...register('condition')}
-            className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-700"
+            className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
           >
             {CONDITION_OPTIONS.map((o) => (
               <option key={o.value} value={o.value}>{o.label}</option>
@@ -131,10 +131,10 @@ export default function RegisterForm() {
           </select>
         </div>
         <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700">Estágio</label>
+          <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Estágio</label>
           <select
             {...register('stage')}
-            className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-700"
+            className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
           >
             {STAGE_OPTIONS.map((o) => (
               <option key={o.value} value={o.value}>{o.label}</option>
@@ -145,15 +145,15 @@ export default function RegisterForm() {
 
       {/* Photo */}
       <div>
-        <label className="mb-1 block text-sm font-medium text-gray-700">Foto (opcional)</label>
-        <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-200 p-4 hover:border-green-400 hover:bg-green-50 transition-colors">
+        <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Foto (opcional)</label>
+        <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-200 p-4 hover:border-green-400 hover:bg-green-50 transition-colors dark:border-gray-700 dark:hover:bg-green-900/20">
           {preview ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={preview} alt="Preview" className="h-32 w-full object-cover rounded-lg" />
           ) : (
             <>
-              <Camera className="h-8 w-8 text-gray-400" />
-              <span className="text-sm text-gray-500">Adicionar foto</span>
+              <Camera className="h-8 w-8 text-gray-400 dark:text-gray-500" />
+              <span className="text-sm text-gray-500 dark:text-gray-400">Adicionar foto</span>
             </>
           )}
           <input type="file" accept="image/*" capture="environment" onChange={handlePhotoChange} className="hidden" />
@@ -162,17 +162,17 @@ export default function RegisterForm() {
 
       {/* Notes */}
       <div>
-        <label className="mb-1 block text-sm font-medium text-gray-700">Observações</label>
+        <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Observações</label>
         <textarea
           {...register('notes')}
           rows={3}
           placeholder="Descreva o local, características especiais..."
-          className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-green-700 resize-none"
+          className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-green-700 resize-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
         />
       </div>
 
       {serverError && (
-        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{serverError}</p>
+        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-400">{serverError}</p>
       )}
 
       <Button

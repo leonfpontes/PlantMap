@@ -49,11 +49,11 @@ export default function SpeciesModerationList({ initialSpecies }: SpeciesModerat
   if (items.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center">
-        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-50">
-          <Leaf className="h-8 w-8 text-green-500" />
+        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-50 dark:bg-green-900/30">
+          <Leaf className="h-8 w-8 text-green-500 dark:text-green-400" />
         </div>
-        <p className="font-medium text-gray-600">Nenhuma erva pendente</p>
-        <p className="mt-1 text-sm text-gray-400">Sugestões de novas espécies aparecem aqui</p>
+        <p className="font-medium text-gray-600 dark:text-gray-300">Nenhuma erva pendente</p>
+        <p className="mt-1 text-sm text-gray-400 dark:text-gray-500">Sugestões de novas espécies aparecem aqui</p>
       </div>
     )
   }
@@ -61,25 +61,25 @@ export default function SpeciesModerationList({ initialSpecies }: SpeciesModerat
   return (
     <div className="flex flex-col gap-3">
       {error && (
-        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>
+        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-400">{error}</p>
       )}
 
       {items.map((sp) => (
-        <div key={sp.id} className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+        <div key={sp.id} className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
-              <p className="font-semibold text-gray-900">{sp.common_name}</p>
+              <p className="font-semibold text-gray-900 dark:text-gray-100">{sp.common_name}</p>
               {sp.scientific_name && (
-                <p className="text-xs italic text-gray-500">{sp.scientific_name}</p>
+                <p className="text-xs italic text-gray-500 dark:text-gray-400">{sp.scientific_name}</p>
               )}
             </div>
             <Badge variant="gray">{ORIGIN_LABEL[sp.origin]}</Badge>
           </div>
 
-          {sp.family && <p className="mt-1 text-xs text-gray-500">Família: {sp.family}</p>}
-          {sp.description && <p className="mt-2 text-sm text-gray-600">{sp.description}</p>}
+          {sp.family && <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Família: {sp.family}</p>}
+          {sp.description && <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">{sp.description}</p>}
 
-          <p className="mt-2 text-xs text-gray-400">
+          <p className="mt-2 text-xs text-gray-400 dark:text-gray-500">
             Sugerido por {sp.submitter?.full_name || sp.submitter?.email || 'usuário removido'}
           </p>
 
@@ -90,7 +90,7 @@ export default function SpeciesModerationList({ initialSpecies }: SpeciesModerat
                 onChange={(e) => setReason(e.target.value)}
                 rows={2}
                 placeholder="Motivo da rejeição (obrigatório)"
-                className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-red-400 resize-none"
+                className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-red-400 resize-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
               />
               <div className="flex gap-2">
                 <Button

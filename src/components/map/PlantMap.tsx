@@ -109,7 +109,7 @@ export default function PlantMap({
       <button
         onClick={handleLocate}
         disabled={locLoading}
-        className="absolute bottom-4 right-4 flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-md border border-gray-200 text-green-700 hover:bg-green-50 transition-colors disabled:opacity-50"
+        className="absolute bottom-4 right-4 flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-md border border-gray-200 text-green-700 hover:bg-green-50 transition-colors disabled:opacity-50 dark:bg-gray-900 dark:border-gray-700 dark:text-green-400 dark:hover:bg-green-900/30"
       >
         <LocateFixed className="h-5 w-5" />
       </button>

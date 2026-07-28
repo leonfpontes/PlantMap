@@ -36,10 +36,10 @@ export default function ShareSheet({ occurrenceId, latitude, longitude, onClose 
   return (
     <>
       <div className="fixed inset-0 z-40 bg-black/40" onClick={onClose} />
-      <div className="fixed bottom-0 left-1/2 z-50 w-full max-w-[430px] -translate-x-1/2 rounded-t-2xl bg-white p-5 shadow-xl">
+      <div className="fixed bottom-0 left-1/2 z-50 w-full max-w-[430px] -translate-x-1/2 rounded-t-2xl bg-white p-5 shadow-xl dark:bg-gray-900">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="font-semibold text-gray-900">Compartilhar</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+          <h2 className="font-semibold text-gray-900 dark:text-gray-100">Compartilhar</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -47,33 +47,36 @@ export default function ShareSheet({ occurrenceId, latitude, longitude, onClose 
         <div className="flex flex-col gap-3">
           <button
             onClick={handleCopy}
-            className="flex items-center gap-3 rounded-xl border border-gray-200 p-3 text-left hover:bg-gray-50 transition-colors"
+            className="flex items-center gap-3 rounded-xl border border-gray-200 p-3 text-left hover:bg-gray-50 transition-colors dark:border-gray-700 dark:hover:bg-gray-800"
           >
-            {copied ? <Check className="h-5 w-5 text-green-600" /> : <Copy className="h-5 w-5 text-gray-500" />}
+            {copied ? <Check className="h-5 w-5 text-green-600 dark:text-green-400" /> : <Copy className="h-5 w-5 text-gray-500 dark:text-gray-400" />}
             <div>
-              <p className="text-sm font-medium text-gray-900">{copied ? 'Link copiado!' : 'Copiar link'}</p>
-              <p className="text-xs text-gray-500 break-all">{shareUrl}</p>
+              <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{copied ? 'Link copiado!' : 'Copiar link'}</p>
+              <p className="text-xs text-gray-500 break-all dark:text-gray-400">{shareUrl}</p>
             </div>
           </button>
 
           <button
             onClick={handleOpenMaps}
-            className="flex items-center gap-3 rounded-xl border border-gray-200 p-3 text-left hover:bg-gray-50 transition-colors"
+            className="flex items-center gap-3 rounded-xl border border-gray-200 p-3 text-left hover:bg-gray-50 transition-colors dark:border-gray-700 dark:hover:bg-gray-800"
           >
-            <Map className="h-5 w-5 text-gray-500" />
+            <Map className="h-5 w-5 text-gray-500 dark:text-gray-400" />
             <div>
-              <p className="text-sm font-medium text-gray-900">Abrir no Google Maps</p>
-              <p className="text-xs text-gray-500">{latitude.toFixed(5)}, {longitude.toFixed(5)}</p>
+              <p className="text-sm font-medium text-gray-900 dark:text-gray-100">Abrir no Google Maps</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">{latitude.toFixed(5)}, {longitude.toFixed(5)}</p>
             </div>
           </button>
 
           {qrDataUrl && (
-            <div className="flex items-center gap-3 rounded-xl border border-gray-200 p-3">
-              <QrCode className="h-5 w-5 text-gray-500 flex-shrink-0" />
+            <div className="flex items-center gap-3 rounded-xl border border-gray-200 p-3 dark:border-gray-700">
+              <QrCode className="h-5 w-5 text-gray-500 flex-shrink-0 dark:text-gray-400" />
               <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900 mb-2">QR Code</p>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={qrDataUrl} alt="QR Code" className="h-24 w-24 rounded-lg" />
+                <p className="text-sm font-medium text-gray-900 mb-2 dark:text-gray-100">QR Code</p>
+                {/* Fundo branco fixo: QR code precisa de alto contraste pra continuar escaneável no escuro. */}
+                <div className="inline-block rounded-lg bg-white p-1.5">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={qrDataUrl} alt="QR Code" className="h-24 w-24 rounded" />
+                </div>
               </div>
             </div>
           )}

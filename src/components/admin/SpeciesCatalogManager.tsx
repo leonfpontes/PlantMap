@@ -37,16 +37,16 @@ export default function SpeciesCatalogManager({ initialSpecies }: SpeciesCatalog
   return (
     <div className="flex flex-col gap-3">
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500" />
         <input
           value={query}
           onChange={(e) => handleSearch(e.target.value)}
           placeholder="Buscar espécie no catálogo..."
-          className="w-full rounded-xl border border-gray-200 bg-white pl-9 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-700"
+          className="w-full rounded-xl border border-gray-200 bg-white pl-9 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
         />
       </div>
 
-      <p className="text-xs text-gray-500">
+      <p className="text-xs text-gray-500 dark:text-gray-400">
         {searching
           ? 'Buscando...'
           : missingCount > 0
@@ -94,27 +94,27 @@ function SpeciesPhotoRow({
   }
 
   return (
-    <div className="flex items-center gap-3 rounded-2xl border border-gray-100 bg-white p-3 shadow-sm">
-      <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl bg-green-50">
+    <div className="flex items-center gap-3 rounded-2xl border border-gray-100 bg-white p-3 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+      <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl bg-green-50 dark:bg-green-900/30">
         {preview ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={preview} alt={species.common_name} className="h-full w-full object-cover" />
         ) : (
-          <ImageOff className="h-5 w-5 text-gray-300" />
+          <ImageOff className="h-5 w-5 text-gray-300 dark:text-gray-600" />
         )}
       </div>
 
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium text-gray-900">{species.common_name}</p>
+        <p className="truncate text-sm font-medium text-gray-900 dark:text-gray-100">{species.common_name}</p>
         {species.scientific_name && (
-          <p className="truncate text-xs italic text-gray-500">{species.scientific_name}</p>
+          <p className="truncate text-xs italic text-gray-500 dark:text-gray-400">{species.scientific_name}</p>
         )}
-        {error && <p className="text-xs text-red-600">{error}</p>}
+        {error && <p className="text-xs text-red-600 dark:text-red-400">{error}</p>}
       </div>
 
-      <label className="flex h-9 w-9 flex-shrink-0 cursor-pointer items-center justify-center rounded-full bg-green-50 text-green-700 transition-colors hover:bg-green-100">
+      <label className="flex h-9 w-9 flex-shrink-0 cursor-pointer items-center justify-center rounded-full bg-green-50 text-green-700 transition-colors hover:bg-green-100 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50">
         {uploading ? (
-          <span className="h-4 w-4 animate-spin rounded-full border-2 border-green-700 border-t-transparent" />
+          <span className="h-4 w-4 animate-spin rounded-full border-2 border-green-700 border-t-transparent dark:border-green-400" />
         ) : (
           <Camera className="h-4 w-4" />
         )}

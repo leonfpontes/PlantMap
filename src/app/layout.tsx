@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import { GeolocationProvider } from '@/hooks/useGeolocation'
+import AppearanceSync from '@/components/layout/AppearanceSync'
+import { NO_FLASH_SCRIPT } from '@/lib/appearance'
 
 export const metadata: Metadata = {
   title: 'PlantMap',
@@ -23,16 +25,18 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pt-BR">
+    <html lang="pt-BR" suppressHydrationWarning>
       <head>
         <link rel="manifest" href="/manifest.json" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <script dangerouslySetInnerHTML={{ __html: NO_FLASH_SCRIPT }} />
       </head>
-      <body>
+      <body suppressHydrationWarning>
         <GeolocationProvider>
           {children}
         </GeolocationProvider>
+        <AppearanceSync />
       </body>
     </html>
   )
