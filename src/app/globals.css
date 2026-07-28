@@ -48,3 +48,9 @@ body {
 .dark body {
   background: #000000;
 }
+
+/* Balanço sutil do vasinho murcho na página 404 (src/app/not-found.tsx). */
+@keyframes sway {
+  0%, 100% { transform: rotate(-3deg); }
+  50% { transform: rotate(3deg); }
+}
