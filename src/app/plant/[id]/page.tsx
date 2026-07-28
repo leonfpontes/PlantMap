@@ -16,6 +16,7 @@ import { deleteOccurrence } from '@/lib/actions/plants'
 import { createClient } from '@/lib/supabase/client'
 import { useUser } from '@/hooks/useUser'
 import { useFavorites } from '@/hooks/useFavorites'
+import { useIsAdmin } from '@/hooks/useIsAdmin'
 import { PlantOccurrence } from '@/types'
 import { parseEWKBPoint } from '@/lib/utils'
 import { CONDITION_CONFIG, STAGE_LABEL, ORIGIN_LABEL } from '@/constants/plant'
@@ -26,6 +27,7 @@ export default function PlantDetailPage() {
   const { id } = useParams<{ id: string }>()
   const { user } = useUser()
   const { favorites, toggle } = useFavorites(user?.id || null)
+  const { isAdmin } = useIsAdmin(user?.id || null)
   const [occurrence, setOccurrence] = useState<PlantOccurrence | null>(null)
   const [loading, setLoading] = useState(true)
   const [shareOpen, setShareOpen] = useState(false)
@@ -48,7 +50,7 @@ export default function PlantDetailPage() {
             data.longitude = coords.longitude
           }
         }
-        setOccurrence(data as any)
+        setOccurrence(data as unknown as PlantOccurrence)
         setLoading(false)
       })
   }, [id])
@@ -88,8 +90,9 @@ export default function PlantDetailPage() {
     }
   }
 
-  const canEdit = !!user
-  const canDelete = !!user
+  // Espelha a regra de RLS do banco: dono do registro OU admin (ver migration 012).
+  const canEdit = !!user && (user.id === occurrence.user_id || isAdmin)
+  const canDelete = canEdit
 
   const condition = CONDITION_CONFIG[occurrence.condition] ?? CONDITION_CONFIG.healthy
   const isFav = favorites.has(occurrence.id)

@@ -16,7 +16,7 @@ export default function SearchPage() {
   const [results, setResults] = useState<OccurrenceWithDistance[]>([])
   const [loading, setLoading] = useState(false)
   const [searched, setSearched] = useState(false)
-  const { latitude, longitude, getLocation, loading: locLoading } = useGeolocation()
+  const { latitude, longitude, loading: locLoading } = useGeolocation()
 
   const handleSearch = async () => {
     setLoading(true)

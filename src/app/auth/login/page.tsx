@@ -26,8 +26,8 @@ function LoginForm() {
       if (error) {
         setServerError(error.message)
       }
-    } catch (err: any) {
-      setServerError(err.message || 'Erro ao iniciar login com Google')
+    } catch (err) {
+      setServerError(err instanceof Error ? err.message : 'Erro ao iniciar login com Google')
     }
   }
 

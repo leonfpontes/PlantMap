@@ -19,11 +19,12 @@ export default async function ProfilePage() {
     getUserStats(user.id),
   ])
 
+  // Ainda sem tela própria — exibidos como indisponíveis em vez de links mortos (href="#").
   const menuItems = [
-    { icon: Bell, label: 'Notificações', href: '#' },
-    { icon: Lock, label: 'Privacidade', href: '#' },
-    { icon: Palette, label: 'Aparência', href: '#' },
-    { icon: HelpCircle, label: 'Ajuda e suporte', href: '#' },
+    { icon: Bell, label: 'Notificações' },
+    { icon: Lock, label: 'Privacidade' },
+    { icon: Palette, label: 'Aparência' },
+    { icon: HelpCircle, label: 'Ajuda e suporte' },
   ]
 
   return (
@@ -82,18 +83,18 @@ export default async function ProfilePage() {
             <ChevronRight className="h-4 w-4 text-gray-400" />
           </Link>
 
-          {/* Menu items */}
+          {/* Menu items (ainda sem tela própria) */}
           <div className="mt-2 rounded-2xl bg-white border border-gray-100 overflow-hidden shadow-sm">
-            {menuItems.map(({ icon: Icon, label, href }, i) => (
-              <Link
+            {menuItems.map(({ icon: Icon, label }, i) => (
+              <div
                 key={label}
-                href={href}
-                className={`flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors ${i > 0 ? 'border-t border-gray-100' : ''}`}
+                aria-disabled="true"
+                className={`flex items-center gap-3 px-4 py-3 opacity-50 ${i > 0 ? 'border-t border-gray-100' : ''}`}
               >
                 <Icon className="h-5 w-5 text-gray-500" />
                 <span className="flex-1 text-sm font-medium text-gray-900">{label}</span>
-                <ChevronRight className="h-4 w-4 text-gray-400" />
-              </Link>
+                <span className="text-xs text-gray-400">Em breve</span>
+              </div>
             ))}
           </div>
 

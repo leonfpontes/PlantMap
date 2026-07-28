@@ -88,23 +88,6 @@ export async function getOccurrence(id: string) {
   return data
 }
 
-export async function getAllOccurrences() {
-  const supabase = await createClient()
-  const { data, error } = await supabase
-    .from('occurrences')
-    .select(`
-      id, species_id, condition, stage, verified, created_at,
-      species (scientific_name, common_name, origin)
-    `)
-    .limit(500)
-
-  if (error) return []
-
-  // We need lat/lng - use the search_nearby with large radius as workaround,
-  // or select with st_x/st_y via raw query. Use a view approach.
-  return data || []
-}
-
 export async function toggleFavorite(occurrenceId: string): Promise<{ favorited: boolean }> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()

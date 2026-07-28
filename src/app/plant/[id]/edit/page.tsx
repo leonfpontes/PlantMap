@@ -8,6 +8,7 @@ import BottomNav from '@/components/layout/BottomNav'
 import EditForm from '@/components/plant/EditForm'
 import { createClient } from '@/lib/supabase/client'
 import { useUser } from '@/hooks/useUser'
+import { useIsAdmin } from '@/hooks/useIsAdmin'
 import { PlantOccurrence } from '@/types'
 import { parseEWKBPoint } from '@/lib/utils'
 
@@ -15,6 +16,7 @@ export default function EditPlantPage() {
   const { id } = useParams<{ id: string }>()
   const router = useRouter()
   const { user, loading: userLoading } = useUser()
+  const { isAdmin, loading: adminLoading } = useIsAdmin(user?.id || null)
   const [occurrence, setOccurrence] = useState<PlantOccurrence | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -33,20 +35,21 @@ export default function EditPlantPage() {
             data.longitude = coords.longitude
           }
         }
-        setOccurrence(data as any)
+        setOccurrence(data as unknown as PlantOccurrence)
         setLoading(false)
       })
   }, [id])
 
   useEffect(() => {
-    if (!loading && !userLoading) {
-      if (!user || !occurrence) {
+    if (!loading && !userLoading && !adminLoading) {
+      // Espelha a regra de RLS do banco: dono do registro OU admin (ver migration 012).
+      if (!user || !occurrence || (occurrence.user_id !== user.id && !isAdmin)) {
         router.push('/map')
       }
     }
-  }, [user, userLoading, occurrence, loading, router])
+  }, [user, userLoading, occurrence, loading, isAdmin, adminLoading, router])
 
-  if (loading || userLoading) {
+  if (loading || userLoading || adminLoading) {
     return (
       <MobileShell>
         <PageHeader title="Carregando..." />

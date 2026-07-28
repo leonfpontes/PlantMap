@@ -1,7 +1,7 @@
 # PlantMap
 
 > [!TIP]
-> **Novo no projeto?** Acesse o nosso [Guia de Onboarding](file:///E:/Dev/PlantMap/ONBOARDING.md) para entender a arquitetura da stack local e configurar seu ambiente rapidamente!
+> **Novo no projeto?** Acesse o nosso [Guia de Onboarding](./ONBOARDING.md) para entender a arquitetura da stack local e configurar seu ambiente rapidamente!
 
 Plataforma colaborativa para mapeamento de ocorrências de plantas medicinais, rituais e alimentares. Usuários registram localizações no mapa, fotografam e acompanham o estado das plantas ao longo do tempo.
 
@@ -59,10 +59,20 @@ supabase/
 
 ## Variáveis de ambiente
 
+Copie [.env.example](.env.example) para `.env.local` e preencha os valores:
+
 ```env
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
+NEXT_PUBLIC_APP_URL=
+ALLOWED_EMAILS=   # opcional: whitelist de e-mails autorizados a logar, separados por vírgula
 ```
+
+## Permissões
+
+Ocorrências só podem ser editadas/excluídas pelo próprio dono ou por um usuário com
+`is_admin = true` em `profiles` (ver [migration 012](supabase/migrations/012_ownership_based_permissions.sql)).
+A flag `is_admin` só pode ser alterada com acesso direto ao banco (não é exposta pela API).
 
 ## Desenvolvimento local
 
@@ -73,12 +83,15 @@ npm run dev
 
 Acesse [http://localhost:3000](http://localhost:3000).
 
-## Testes
+## Qualidade de código
 
 ```bash
-npm test          # roda uma vez
-npm run test:watch  # modo watch
+npm run lint         # ESLint
+npm test             # Vitest, roda uma vez
+npm run test:watch   # Vitest, modo watch
 ```
+
+O workflow em [.github/workflows/ci.yml](.github/workflows/ci.yml) roda lint, testes e build em cada push/PR para `master`.
 
 ## Deploy
 
