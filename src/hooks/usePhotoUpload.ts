@@ -3,7 +3,8 @@
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
-const BUCKET = 'plant-photos'
+const DEFAULT_BUCKET = 'plant-photos'
+const DEFAULT_FOLDER = 'occurrences'
 const MAX_SIZE_MB = 10
 
 interface UploadResult {
@@ -11,14 +12,27 @@ interface UploadResult {
   error: string | null
 }
 
+interface PhotoUploadOptions {
+  /** Bucket de destino. Padrão: 'plant-photos' (fotos de ocorrência do usuário). */
+  bucket?: string
+  /** Subpasta dentro do bucket. Padrão: 'occurrences'. */
+  folder?: string
+}
+
 /**
- * Gerencia o upload de fotos para o bucket plant-photos no Supabase Storage.
+ * Gerencia o upload de fotos para o Supabase Storage.
  * Valida tamanho máximo antes do upload e retorna a URL pública em caso de sucesso.
+ * Por padrão usa o bucket `plant-photos` (foto de ocorrência); passe `bucket`/`folder`
+ * para reaproveitar em outros contextos, como a foto de referência de uma espécie
+ * (bucket `species-photos`, ver migration 014).
  *
  * @example
  * const { upload, uploading, preview, pickFile } = usePhotoUpload()
  */
-export function usePhotoUpload(initialUrl?: string | null) {
+export function usePhotoUpload(initialUrl?: string | null, options?: PhotoUploadOptions) {
+  const bucket = options?.bucket ?? DEFAULT_BUCKET
+  const folder = options?.folder ?? DEFAULT_FOLDER
+
   const [uploading, setUploading] = useState(false)
   const [preview,   setPreview]   = useState<string | null>(initialUrl ?? null)
   const [file,      setFile]      = useState<File | null>(null)
@@ -43,17 +57,17 @@ export function usePhotoUpload(initialUrl?: string | null) {
     setUploading(true)
     const supabase = createClient()
     const ext  = file.name.split('.').pop()
-    const path = `occurrences/${Date.now()}.${ext}`
+    const path = `${folder}/${Date.now()}.${ext}`
 
     const { error: uploadError } = await supabase.storage
-      .from(BUCKET)
+      .from(bucket)
       .upload(path, file)
 
     setUploading(false)
 
     if (uploadError) return { url: null, error: uploadError.message }
 
-    const { data } = supabase.storage.from(BUCKET).getPublicUrl(path)
+    const { data } = supabase.storage.from(bucket).getPublicUrl(path)
     return { url: data.publicUrl, error: null }
   }
 

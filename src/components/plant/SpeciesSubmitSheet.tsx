@@ -4,12 +4,14 @@ import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import { Camera } from 'lucide-react'
 import BottomSheet from '@/components/ui/BottomSheet'
 import Input from '@/components/ui/Input'
 import Button from '@/components/ui/Button'
 import { submitSpecies } from '@/lib/actions/species'
 import { Species, SpeciesOrigin } from '@/types'
 import { ORIGIN_LABEL } from '@/constants/plant'
+import { usePhotoUpload } from '@/hooks/usePhotoUpload'
 
 const schema = z.object({
   common_name: z.string().min(2, 'Informe o nome popular ou ritual'),
@@ -46,6 +48,11 @@ export default function SpeciesSubmitSheet({
     defaultValues: { origin: 'native' },
   })
 
+  const { upload, uploading, preview, pickFile } = usePhotoUpload(null, {
+    bucket: 'species-photos',
+    folder: 'species',
+  })
+
   useEffect(() => {
     if (open) {
       reset({ common_name: initialCommonName || '', origin: 'native' })
@@ -53,11 +60,22 @@ export default function SpeciesSubmitSheet({
     }
   }, [open, initialCommonName, reset])
 
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const err = pickFile(file)
+    if (err) setServerError(err)
+  }
+
   const onSubmit = async (data: FormData) => {
     setServerError(null)
+    const { url: image_url, error: uploadError } = await upload()
+    if (uploadError) { setServerError(uploadError); return }
+
     const result = await submitSpecies({
       ...data,
       origin: data.origin as SpeciesOrigin,
+      image_url: image_url ?? undefined,
     })
 
     if (result.error || !result.species) {
@@ -110,12 +128,34 @@ export default function SpeciesSubmitSheet({
           />
         </div>
 
+        <div>
+          <label className="mb-1 block text-sm font-medium text-gray-700">
+            Foto de referência (opcional)
+          </label>
+          <p className="mb-1 text-xs text-gray-400">
+            Uma foto que identifique a espécie em si — diferente da foto que você tira de cada
+            ocorrência registrada.
+          </p>
+          <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-200 p-4 hover:border-green-400 hover:bg-green-50 transition-colors">
+            {preview ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={preview} alt="Preview" className="h-32 w-full object-cover rounded-lg" />
+            ) : (
+              <>
+                <Camera className="h-8 w-8 text-gray-400" />
+                <span className="text-sm text-gray-500">Adicionar foto da espécie</span>
+              </>
+            )}
+            <input type="file" accept="image/*" onChange={handlePhotoChange} className="hidden" />
+          </label>
+        </div>
+
         {serverError && (
           <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{serverError}</p>
         )}
 
-        <Button type="submit" loading={isSubmitting} className="w-full">
-          Enviar para aprovação
+        <Button type="submit" loading={isSubmitting || uploading} className="w-full">
+          {uploading ? 'Enviando foto...' : 'Enviar para aprovação'}
         </Button>
       </form>
     </BottomSheet>

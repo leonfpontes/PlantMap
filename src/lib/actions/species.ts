@@ -85,3 +85,43 @@ export async function reviewSpecies(
   if (error) return { error: error.message }
   return { species }
 }
+
+/**
+ * Catálogo de espécies aprovadas para gestão de foto de referência (ver migration 014).
+ * Prioriza espécies sem foto (mostradas primeiro) para facilitar o backfill das ~170
+ * espécies existentes que nasceram sem `image_url`. Aceita busca por nome opcional.
+ */
+export async function listApprovedSpeciesCatalog(query?: string): Promise<Species[]> {
+  const supabase = await createClient()
+  let request = supabase
+    .from('species')
+    .select('*')
+    .eq('status', 'approved')
+
+  if (query && query.length >= 2) {
+    request = request.or(`common_name.ilike.%${query}%,scientific_name.ilike.%${query}%`)
+  }
+
+  const { data } = await request
+    .order('image_url', { ascending: true, nullsFirst: true })
+    .order('common_name', { ascending: true })
+    .limit(100)
+
+  return data || []
+}
+
+/** Define/troca a foto de referência de uma espécie. Só admins conseguem (checado na RPC). */
+export async function updateSpeciesImage(
+  speciesId: string,
+  imageUrl: string
+): Promise<{ species?: Species; error?: string }> {
+  const supabase = await createClient()
+
+  const { data: species, error } = await supabase.rpc('set_species_image', {
+    p_species_id: speciesId,
+    p_image_url: imageUrl,
+  })
+
+  if (error) return { error: error.message }
+  return { species }
+}

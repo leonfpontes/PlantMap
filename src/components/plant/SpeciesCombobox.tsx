@@ -7,6 +7,7 @@ import Input from '@/components/ui/Input'
 import Badge from '@/components/ui/Badge'
 import { SPECIES_STATUS_CONFIG } from '@/constants/plant'
 import SpeciesSubmitSheet from './SpeciesSubmitSheet'
+import SpeciesAvatar from './SpeciesAvatar'
 
 interface SpeciesComboboxProps {
   initialQuery?: string
@@ -54,6 +55,7 @@ export default function SpeciesCombobox({ initialQuery, selected, onSelect, erro
                 onClick={() => handleSelect(sp)}
                 className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm hover:bg-green-50 transition-colors"
               >
+                <SpeciesAvatar imageUrl={sp.image_url} alt={sp.common_name} size={28} />
                 <span className="font-medium text-gray-900">{sp.common_name}</span>
                 {sp.scientific_name && (
                   <span className="text-xs italic text-gray-500">{sp.scientific_name}</span>
@@ -78,6 +80,7 @@ export default function SpeciesCombobox({ initialQuery, selected, onSelect, erro
 
       {selected && (
         <div className="mt-1 flex flex-wrap items-center gap-2">
+          <SpeciesAvatar imageUrl={selected.image_url} alt={selected.common_name} size={24} />
           {selected.scientific_name && (
             <p className="text-xs italic text-green-700">{selected.scientific_name}</p>
           )}
@@ -90,6 +93,7 @@ export default function SpeciesCombobox({ initialQuery, selected, onSelect, erro
       )}
 
       <SpeciesSubmitSheet
+        key={suggestOpen ? 'open' : 'closed'}
         open={suggestOpen}
         initialCommonName={query}
         onClose={() => setSuggestOpen(false)}

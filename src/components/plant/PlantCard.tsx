@@ -13,14 +13,18 @@ interface PlantCardProps {
 export default function PlantCard({ occurrence }: PlantCardProps) {
   const condition = CONDITION_CONFIG[occurrence.condition] ?? CONDITION_CONFIG.healthy
   const distance = (occurrence as OccurrenceWithDistance).distance_m
+  // Foto da própria ocorrência (tirada pelo usuário) tem prioridade; na falta dela,
+  // cai na foto de referência da espécie (species.image_url) em vez do ícone genérico.
+  const referenceOnly = !occurrence.photo_url && !!occurrence.species?.image_url
+  const thumbnailUrl = occurrence.photo_url || occurrence.species?.image_url
 
   return (
     <Link href={`/plant/${occurrence.id}`}>
       <div className="flex gap-3 rounded-2xl border border-gray-100 bg-white p-3 shadow-sm transition-all hover:shadow-md hover:border-green-200 active:scale-[0.98]">
-        <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-xl bg-green-50 flex items-center justify-center">
-          {occurrence.photo_url ? (
+        <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-xl bg-green-50 flex items-center justify-center">
+          {thumbnailUrl ? (
             <Image
-              src={occurrence.photo_url}
+              src={thumbnailUrl}
               alt={occurrence.species?.common_name || 'Planta'}
               width={64}
               height={64}
@@ -28,6 +32,11 @@ export default function PlantCard({ occurrence }: PlantCardProps) {
             />
           ) : (
             <Leaf className="h-7 w-7 text-green-400" />
+          )}
+          {referenceOnly && (
+            <span className="absolute bottom-0 left-0 right-0 bg-black/50 px-1 py-0.5 text-center text-[9px] font-medium text-white">
+              referência
+            </span>
           )}
         </div>
 
