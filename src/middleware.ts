@@ -20,11 +20,28 @@ export async function middleware(request: NextRequest) {
           )
         },
       },
+      global: {
+        // Sem isso, uma falha/lentidão no serviço de Auth do Supabase trava esta
+        // requisição até o limite da função na Vercel (MIDDLEWARE_INVOCATION_TIMEOUT),
+        // derrubando todo o site já que o matcher abaixo cobre quase todas as rotas.
+        fetch: (input, init) => {
+          const controller = new AbortController()
+          const timeoutId = setTimeout(() => controller.abort(), 5000)
+          return fetch(input, { ...init, signal: controller.signal }).finally(() =>
+            clearTimeout(timeoutId)
+          )
+        },
+      },
     }
   )
 
-  // Refreshes the session and propagates the updated token to cookies
-  await supabase.auth.getUser()
+  // Refreshes the session and propagates the updated token to cookies.
+  // Se o Supabase Auth não responder a tempo, segue sem sessão em vez de travar a página.
+  try {
+    await supabase.auth.getUser()
+  } catch {
+    return supabaseResponse
+  }
 
   return supabaseResponse
 }
