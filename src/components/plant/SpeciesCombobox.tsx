@@ -23,12 +23,14 @@ interface SpeciesComboboxProps {
  */
 export default function SpeciesCombobox({ initialQuery, selected, onSelect, error }: SpeciesComboboxProps) {
   const [query, setQuery] = useState(initialQuery || '')
+  const [isOpen, setIsOpen] = useState(false)
   const [suggestOpen, setSuggestOpen] = useState(false)
   const { results } = useSpeciesSearch(query)
 
   const handleSelect = (species: Species) => {
     onSelect(species)
     setQuery(species.common_name)
+    setIsOpen(false)
   }
 
   const handleSuggested = (species: Species) => {
@@ -41,12 +43,17 @@ export default function SpeciesCombobox({ initialQuery, selected, onSelect, erro
       <Input
         label="Espécie *"
         value={query}
-        onChange={(e) => setQuery(e.target.value)}
+        onChange={(e) => {
+          setQuery(e.target.value)
+          setIsOpen(true)
+        }}
+        onFocus={() => setIsOpen(true)}
+        onBlur={() => setTimeout(() => setIsOpen(false), 150)}
         placeholder="Buscar por nome comum, científico ou ritual..."
         error={error}
       />
 
-      {query.length >= 2 && (
+      {isOpen && query.length >= 2 && (
         <ul className="absolute z-10 mt-1 w-full overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-900">
           {results.map((sp) => (
             <li key={sp.id}>
