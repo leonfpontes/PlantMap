@@ -7,6 +7,7 @@ import { Leaf, Search } from 'lucide-react'
 import { searchNearby } from '@/lib/actions/plants'
 import { OccurrenceWithDistance } from '@/types'
 import PlantCard from '@/components/plant/PlantCard'
+import { useGeolocation } from '@/hooks/useGeolocation'
 import { cn } from '@/lib/utils'
 
 const PlantMap = dynamic(() => import('@/components/map/PlantMap'), {
@@ -14,18 +15,29 @@ const PlantMap = dynamic(() => import('@/components/map/PlantMap'), {
   loading: () => <div className="h-full w-full bg-green-50 animate-pulse dark:bg-green-950/40" />,
 })
 
+// Coordenadas de Ribeirão Preto — usadas só como centro provisório enquanto a
+// geolocalização real do usuário ainda não resolveu (ou se ele negar/não tiver).
+const FALLBACK_LAT = -21.1767
+const FALLBACK_LNG = -47.8208
+
 export default function MapView() {
   const [occurrences, setOccurrences] = useState<OccurrenceWithDistance[]>([])
   const [loading, setLoading] = useState(true)
   const [hoveredId, setHoveredId] = useState<string | null>(null)
+  const { latitude, longitude } = useGeolocation()
+
+  const centerLat = latitude ?? FALLBACK_LAT
+  const centerLng = longitude ?? FALLBACK_LNG
 
   useEffect(() => {
-    // Coordenadas de Ribeirão Preto
-    const lat = -21.1767
-    const lng = -47.8208
+    // Refaz a busca quando a localização real do usuário resolver, para que
+    // "distância" na lista seja a partir de onde ele está de fato — antes
+    // era sempre calculada a partir do centro fixo de Ribeirão Preto, mesmo
+    // com o usuário a quilômetros dali.
+    setLoading(true)
 
-    // Busca todas as ocorrências em um raio grande (100km) ao redor de Ribeirão Preto
-    searchNearby(lat, lng, 100000)
+    // Busca todas as ocorrências em um raio grande (100km) ao redor do centro atual
+    searchNearby(centerLat, centerLng, 100000)
       .then((data) => {
         setOccurrences(data)
         setLoading(false)
@@ -34,7 +46,7 @@ export default function MapView() {
         console.error('Erro ao buscar ocorrências para o mapa:', err)
         setLoading(false)
       })
-  }, [])
+  }, [centerLat, centerLng])
 
   return (
     <div className="flex h-full flex-col lg:flex-row">
@@ -94,8 +106,8 @@ export default function MapView() {
         ) : (
           <PlantMap
             occurrences={occurrences}
-            initialLat={-21.1767}
-            initialLng={-47.8208}
+            initialLat={centerLat}
+            initialLng={centerLng}
             initialZoom={12}
             hoveredOccurrenceId={hoveredId}
             onPinHover={setHoveredId}
