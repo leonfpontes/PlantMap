@@ -58,3 +58,24 @@ export interface Favorite {
   created_at: string
   occurrence?: PlantOccurrence
 }
+
+export type NotificationType =
+  | 'species_approved'
+  | 'species_rejected'
+  | 'species_pending_review'
+  | 'occurrence_verified'
+  | 'occurrence_modified_by_admin'
+  | 'occurrence_deleted_by_admin'
+
+export interface AppNotification {
+  id: string
+  user_id: string
+  type: NotificationType
+  title: string
+  body: string | null
+  link: string | null
+  species_id: string | null
+  occurrence_id: string | null
+  read_at: string | null
+  created_at: string
+}

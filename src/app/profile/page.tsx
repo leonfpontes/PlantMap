@@ -9,6 +9,7 @@ import Badge from '@/components/ui/Badge'
 import { createClient } from '@/lib/supabase/server'
 import { getProfile, getUserStats } from '@/lib/actions/profile'
 import { listPendingSpecies } from '@/lib/actions/species'
+import { getUnreadNotificationCount } from '@/lib/actions/notifications'
 import { signOut } from '@/lib/actions/auth'
 
 export default async function ProfilePage() {
@@ -16,16 +17,16 @@ export default async function ProfilePage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/map')
 
-  const [profile, stats] = await Promise.all([
+  const [profile, stats, unreadNotifications] = await Promise.all([
     getProfile(),
     getUserStats(user.id),
+    getUnreadNotificationCount(),
   ])
 
   const pendingSpecies = profile?.is_admin ? await listPendingSpecies() : []
 
   // Ainda sem tela própria — exibidos como indisponíveis em vez de links mortos (href="#").
   const menuItems = [
-    { icon: Bell, label: 'Notificações' },
     { icon: Lock, label: 'Privacidade' },
     { icon: HelpCircle, label: 'Ajuda e suporte' },
   ]
@@ -63,6 +64,20 @@ export default async function ProfilePage() {
         </div>
 
         <div className="p-4 flex flex-col gap-2">
+          <Link
+            href="/profile/notifications"
+            className="flex items-center gap-3 rounded-2xl bg-white border border-gray-100 px-4 py-3 hover:bg-gray-50 transition-colors shadow-sm dark:bg-gray-900 dark:border-gray-800 dark:hover:bg-gray-800"
+          >
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-900/30">
+              <Bell className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+            </div>
+            <span className="flex-1 text-sm font-medium text-gray-900 dark:text-gray-100">Notificações</span>
+            {unreadNotifications > 0 && (
+              <Badge variant="red">{unreadNotifications} nova{unreadNotifications !== 1 ? 's' : ''}</Badge>
+            )}
+            <ChevronRight className="h-4 w-4 text-gray-400 dark:text-gray-500" />
+          </Link>
+
           {/* Favorites link */}
           <Link
             href="/profile/favorites"

@@ -12,6 +12,29 @@ export function formatDistance(meters: number): string {
   return `${(meters / 1000).toFixed(1)}km`
 }
 
+/** Formata uma data como tempo relativo em português ("há 2 dias"). Usado nas notificações. */
+export function formatRelativeTime(dateInput: string | Date): string {
+  const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput
+  const diffSec = Math.round((Date.now() - date.getTime()) / 1000)
+
+  if (diffSec < 60) return 'agora mesmo'
+
+  const diffMin = Math.round(diffSec / 60)
+  if (diffMin < 60) return `há ${diffMin} min`
+
+  const diffHour = Math.round(diffMin / 60)
+  if (diffHour < 24) return `há ${diffHour}h`
+
+  const diffDay = Math.round(diffHour / 24)
+  if (diffDay < 30) return `há ${diffDay} dia${diffDay !== 1 ? 's' : ''}`
+
+  const diffMonth = Math.round(diffDay / 30)
+  if (diffMonth < 12) return `há ${diffMonth} ${diffMonth !== 1 ? 'meses' : 'mês'}`
+
+  const diffYear = Math.round(diffDay / 365)
+  return `há ${diffYear} ano${diffYear !== 1 ? 's' : ''}`
+}
+
 export function generateShareUrl(occurrenceId: string): string {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
   return `${baseUrl}/plant/${occurrenceId}`

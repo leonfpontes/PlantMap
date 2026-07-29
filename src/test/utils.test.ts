@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { formatDistance, parseEWKBPoint, cn } from '@/lib/utils'
+import { formatDistance, formatRelativeTime, parseEWKBPoint, cn } from '@/lib/utils'
 
 describe('cn', () => {
   it('merges class names', () => {
@@ -30,6 +30,29 @@ describe('formatDistance', () => {
 
   it('formats exactly 1000 as km', () => {
     expect(formatDistance(1000)).toBe('1.0km')
+  })
+})
+
+describe('formatRelativeTime', () => {
+  it('returns "agora mesmo" for just now', () => {
+    expect(formatRelativeTime(new Date())).toBe('agora mesmo')
+  })
+
+  it('formats minutes', () => {
+    expect(formatRelativeTime(new Date(Date.now() - 5 * 60 * 1000))).toBe('há 5 min')
+  })
+
+  it('formats hours', () => {
+    expect(formatRelativeTime(new Date(Date.now() - 3 * 60 * 60 * 1000))).toBe('há 3h')
+  })
+
+  it('formats days with singular/plural', () => {
+    expect(formatRelativeTime(new Date(Date.now() - 1 * 24 * 60 * 60 * 1000))).toBe('há 1 dia')
+    expect(formatRelativeTime(new Date(Date.now() - 3 * 24 * 60 * 60 * 1000))).toBe('há 3 dias')
+  })
+
+  it('accepts an ISO string', () => {
+    expect(formatRelativeTime(new Date(Date.now() - 60 * 60 * 1000).toISOString())).toBe('há 1h')
   })
 })
 
