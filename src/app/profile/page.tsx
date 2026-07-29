@@ -13,6 +13,11 @@ import { getUnreadNotificationCount } from '@/lib/actions/notifications'
 import { getOpenSupportMessageCount } from '@/lib/actions/support'
 import { signOut } from '@/lib/actions/auth'
 
+// Lista de menu é comprida — no celular fica em coluna única, mas no desktop
+// isso vira uma rolagem longa numa coluna estreita. Card mais largo + grade
+// de 2 colunas abaixo aproveitam o espaço em vez de esticar tudo fininho.
+const DESKTOP_WIDTH_CLASS = 'lg:max-w-4xl'
+
 export default async function ProfilePage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -29,38 +34,40 @@ export default async function ProfilePage() {
     : [[], 0]
 
   return (
-    <MobileShell>
+    <MobileShell className={DESKTOP_WIDTH_CLASS}>
       <PageHeader title="Perfil" showBack={false} />
 
       <div className="flex-1 overflow-y-auto">
-        {/* Profile header */}
-        <div className="flex flex-col items-center gap-3 bg-green-50 px-6 py-8 dark:bg-green-900/20">
-          <Avatar
-            src={profile?.avatar_url}
-            name={profile?.full_name || user.email}
-            size="xl"
-          />
-          <div className="text-center">
-            <h2 className="font-bold text-gray-900 text-lg dark:text-gray-100">{profile?.full_name || 'Usuário'}</h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400">{user.email}</p>
+        <div className="lg:flex lg:flex-row lg:items-stretch">
+          {/* Profile header */}
+          <div className="flex flex-col items-center gap-3 bg-green-50 px-6 py-8 dark:bg-green-900/20 lg:flex-1 lg:flex-row lg:justify-start lg:gap-5 lg:px-8">
+            <Avatar
+              src={profile?.avatar_url}
+              name={profile?.full_name || user.email}
+              size="xl"
+            />
+            <div className="text-center lg:text-left">
+              <h2 className="font-bold text-gray-900 text-lg dark:text-gray-100">{profile?.full_name || 'Usuário'}</h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400">{user.email}</p>
+            </div>
+          </div>
+
+          {/* Stats */}
+          <div className="grid grid-cols-3 divide-x divide-gray-100 border-b border-gray-100 bg-white dark:divide-gray-800 dark:border-gray-800 dark:bg-gray-900 lg:w-56 lg:flex-shrink-0 lg:grid-cols-1 lg:divide-x-0 lg:divide-y lg:border-b-0 lg:border-l">
+            {[
+              { label: 'Registros', value: stats.occurrences },
+              { label: 'Favoritos', value: stats.favorites },
+              { label: 'Espécies', value: stats.species },
+            ].map(({ label, value }) => (
+              <div key={label} className="flex flex-col items-center py-4 lg:flex-row lg:items-center lg:justify-between lg:px-6 lg:py-3">
+                <span className="text-xl font-bold text-green-700 dark:text-green-400">{value}</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400">{label}</span>
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-3 divide-x divide-gray-100 border-b border-gray-100 bg-white dark:divide-gray-800 dark:border-gray-800 dark:bg-gray-900">
-          {[
-            { label: 'Registros', value: stats.occurrences },
-            { label: 'Favoritos', value: stats.favorites },
-            { label: 'Espécies', value: stats.species },
-          ].map(({ label, value }) => (
-            <div key={label} className="flex flex-col items-center py-4">
-              <span className="text-xl font-bold text-green-700 dark:text-green-400">{value}</span>
-              <span className="text-xs text-gray-500 dark:text-gray-400">{label}</span>
-            </div>
-          ))}
-        </div>
-
-        <div className="p-4 flex flex-col gap-2">
+        <div className="p-4 flex flex-col gap-2 lg:grid lg:grid-cols-2 lg:gap-3 lg:p-6">
           <Link
             href="/profile/notifications"
             className="flex items-center gap-3 rounded-2xl bg-white border border-gray-100 px-4 py-3 hover:bg-gray-50 transition-colors shadow-sm dark:bg-gray-900 dark:border-gray-800 dark:hover:bg-gray-800"
@@ -175,7 +182,7 @@ export default async function ProfilePage() {
           </Link>
 
           {/* Sign out */}
-          <form action={signOut} className="mt-2">
+          <form action={signOut} className="mt-2 lg:col-span-2 lg:mt-0">
             <button
               type="submit"
               className="flex w-full items-center gap-3 rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-red-600 hover:bg-red-100 transition-colors dark:border-red-900 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30"
