@@ -107,3 +107,28 @@ body {
     stroke-dashoffset: 0;
   }
 }
+
+/* Balão do pin no mapa (hover, desktop — ver PlantPinBalloon.tsx). Substitui
+   o visual padrão do popup do MapLibre pelo cartão arredondado do app,
+   com suporte a dark mode. */
+.plant-balloon .maplibregl-popup-content {
+  padding: 0;
+  border-radius: 1rem;
+  background: #ffffff;
+  box-shadow: 0 10px 25px -5px rgb(0 0 0 / 0.15), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  overflow: hidden;
+}
+.dark .plant-balloon .maplibregl-popup-content {
+  background: #111827;
+}
+.plant-balloon .maplibregl-popup-tip {
+  border-top-color: #ffffff;
+  border-bottom-color: #ffffff;
+}
+.dark .plant-balloon .maplibregl-popup-tip {
+  border-top-color: #111827;
+  border-bottom-color: #111827;
+}
+.plant-balloon .maplibregl-popup-close-button {
+  display: none;
+}

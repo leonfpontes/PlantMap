@@ -1,13 +1,16 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useCallback, useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Map, { NavigationControl, Marker } from 'react-map-gl/maplibre'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { LocateFixed } from 'lucide-react'
 import { PlantOccurrence } from '@/types'
 import PlantPin from './PlantPin'
+import PlantPinBalloon from './PlantPinBalloon'
 import PlantTooltip from '@/components/plant/PlantTooltip'
 import { useGeolocation } from '@/hooks/useGeolocation'
+import { useHasHover } from '@/hooks/useHasHover'
 
 interface PlantMapProps {
   occurrences?: PlantOccurrence[]
@@ -31,16 +34,54 @@ export default function PlantMap({
   onMapClick,
   selectedLocation,
   interactive = false,
-  hoveredOccurrenceId = null,
+  hoveredOccurrenceId,
   onPinHover,
 }: PlantMapProps) {
+  const router = useRouter()
+  const hasHover = useHasHover()
   const [selectedOccurrence, setSelectedOccurrence] = useState<PlantOccurrence | null>(null)
+  const [internalHoveredId, setInternalHoveredId] = useState<string | null>(null)
   const [viewState, setViewState] = useState({
     longitude: initialLng,
     latitude: initialLat,
     zoom: initialZoom,
   })
   const { latitude: userLat, longitude: userLng, getLocation, loading: locLoading } = useGeolocation()
+
+  // Controlado (lista ao lado, tela desktop) quando onPinHover é passado; senão o próprio
+  // mapa cuida do próprio hover (ex.: pin único da tela de detalhe).
+  const effectiveHoveredId = onPinHover ? hoveredOccurrenceId ?? null : internalHoveredId
+
+  // Pequeno atraso pra fechar o balão evita o "piscar" ao mover o mouse do pin pro
+  // próprio balão (ex.: pra clicar em "Ver detalhes") — sem isso, o gap de alguns
+  // pixels entre os dois já fecha o balão antes do mouse chegar lá.
+  const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const setHovered = useCallback((id: string | null) => {
+    if (onPinHover) onPinHover(id)
+    else setInternalHoveredId(id)
+  }, [onPinHover])
+
+  const hoverNow = useCallback((id: string) => {
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current)
+      closeTimeoutRef.current = null
+    }
+    setHovered(id)
+  }, [setHovered])
+
+  const clearHoverSoon = useCallback(() => {
+    if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current)
+    closeTimeoutRef.current = setTimeout(() => setHovered(null), 120)
+  }, [setHovered])
+
+  const handlePinClick = useCallback((occ: PlantOccurrence) => {
+    if (hasHover) {
+      router.push(`/plant/${occ.id}`)
+    } else {
+      setSelectedOccurrence(occ)
+    }
+  }, [hasHover, router])
 
   const handleLocate = useCallback(() => {
     if (userLat && userLng) {
@@ -54,6 +95,10 @@ export default function PlantMap({
       getLocation()
     }
   }, [userLat, userLng, getLocation])
+
+  const hoveredOccurrence = hasHover && effectiveHoveredId
+    ? occurrences.find((o) => o.id === effectiveHoveredId) ?? null
+    : null
 
   return (
     <div className="relative h-full w-full">
@@ -86,10 +131,10 @@ export default function PlantMap({
           <PlantPin
             key={occ.id}
             occurrence={occ}
-            onClick={setSelectedOccurrence}
+            onClick={handlePinClick}
             selected={selectedOccurrence?.id === occ.id}
-            highlighted={hoveredOccurrenceId === occ.id}
-            onHover={(hovering) => onPinHover?.(hovering ? occ.id : null)}
+            highlighted={effectiveHoveredId === occ.id}
+            onHover={(hovering) => (hovering ? hoverNow(occ.id) : clearHoverSoon())}
           />
         ))}
 
@@ -112,6 +157,14 @@ export default function PlantMap({
             onClick={() => {}}
           />
         )}
+
+        {hoveredOccurrence && !onMapClick && (
+          <PlantPinBalloon
+            occurrence={hoveredOccurrence}
+            onMouseEnter={() => hoverNow(hoveredOccurrence.id)}
+            onMouseLeave={clearHoverSoon}
+          />
+        )}
       </Map>
 
       <button
@@ -122,7 +175,7 @@ export default function PlantMap({
         <LocateFixed className="h-5 w-5" />
       </button>
 
-      {selectedOccurrence && !onMapClick && (
+      {!hasHover && selectedOccurrence && !onMapClick && (
         <PlantTooltip
           occurrence={selectedOccurrence}
           onClose={() => setSelectedOccurrence(null)}

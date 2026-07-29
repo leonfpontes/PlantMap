@@ -3,13 +3,15 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Leaf, Map, Plus, Search, User, LogIn, ShieldCheck, MessageCircle } from 'lucide-react'
+import { Leaf, Map, Plus, Search, LogIn, ShieldCheck, MessageCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useUser } from '@/hooks/useUser'
 import { useIsAdmin } from '@/hooks/useIsAdmin'
 import { useUnreadNotifications } from '@/hooks/useUnreadNotifications'
 import { listPendingSpecies } from '@/lib/actions/species'
 import { getOpenSupportMessageCount } from '@/lib/actions/support'
+import { getProfile } from '@/lib/actions/profile'
+import Avatar from '@/components/ui/Avatar'
 
 /** Nav rail que substitui o BottomNav em telas largas (lg:+). Mesmos destinos, mais espaço. */
 export default function Sidebar() {
@@ -19,12 +21,21 @@ export default function Sidebar() {
   const { isAdmin } = useIsAdmin(user?.id || null)
   const [pendingSpeciesCount, setPendingSpeciesCount] = useState(0)
   const [openSupportCount, setOpenSupportCount] = useState(0)
+  const [profile, setProfile] = useState<{ full_name: string | null; avatar_url: string | null } | null>(null)
 
   useEffect(() => {
     if (!isAdmin) return
     listPendingSpecies().then((list) => setPendingSpeciesCount(list.length))
     getOpenSupportMessageCount().then(setOpenSupportCount)
   }, [isAdmin])
+
+  useEffect(() => {
+    if (!user) {
+      setProfile(null)
+      return
+    }
+    getProfile().then((p) => setProfile(p ? { full_name: p.full_name, avatar_url: p.avatar_url } : null))
+  }, [user])
 
   const active = (href: string) => (href === '/map' ? pathname === href : pathname.startsWith(href))
 
@@ -54,7 +65,6 @@ export default function Sidebar() {
           <SidebarItem href="/map" icon={Map} label="Mapa" active={active('/map')} />
           <SidebarItem href="/plant/register" icon={Plus} label="Registrar" active={active('/plant/register')} />
           <SidebarItem href="/search" icon={Search} label="Buscar" active={active('/search')} />
-          <SidebarItem href="/profile" icon={User} label="Perfil" active={active('/profile')} badge={unreadNotifications > 0} />
         </nav>
       )}
 
@@ -82,18 +92,45 @@ export default function Sidebar() {
           </nav>
         </>
       )}
+
+      {user && (
+        <Link
+          href="/profile"
+          className={cn(
+            'mt-auto flex items-center gap-3 rounded-xl px-2 py-2 transition-colors',
+            active('/profile')
+              ? 'bg-green-50 dark:bg-green-900/30'
+              : 'hover:bg-gray-50 dark:hover:bg-gray-800'
+          )}
+        >
+          <span className="relative flex-shrink-0">
+            <Avatar src={profile?.avatar_url} name={profile?.full_name || user.email} size="sm" />
+            {unreadNotifications > 0 && (
+              <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-white dark:ring-gray-950" />
+            )}
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className={cn(
+              'block truncate text-sm font-medium',
+              active('/profile') ? 'text-green-700 dark:text-green-400' : 'text-gray-900 dark:text-gray-100'
+            )}>
+              {profile?.full_name || 'Perfil'}
+            </span>
+            <span className="block truncate text-xs text-gray-400 dark:text-gray-500">{user.email}</span>
+          </span>
+        </Link>
+      )}
     </aside>
   )
 }
 
 function SidebarItem({
-  href, icon: Icon, label, active, badge, count,
+  href, icon: Icon, label, active, count,
 }: {
   href: string
   icon: React.ElementType
   label: string
   active: boolean
-  badge?: boolean
   count?: number
 }) {
   return (
@@ -106,12 +143,7 @@ function SidebarItem({
           : 'text-gray-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800'
       )}
     >
-      <span className="relative flex-shrink-0">
-        <Icon className="h-5 w-5" />
-        {badge && (
-          <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white dark:ring-gray-950" />
-        )}
-      </span>
+      <Icon className="h-5 w-5 flex-shrink-0" />
       <span className="flex-1 truncate">{label}</span>
       {!!count && count > 0 && (
         <span className="rounded-full bg-yellow-100 px-2 py-0.5 text-xs font-semibold text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-400">
