@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { CheckCircle2, XCircle, Sprout, PenLine, Trash2, BellRing, MessageCircle } from 'lucide-react'
+import { CheckCircle2, XCircle, Sprout, PenLine, Trash2, BellRing, MessageCircle, UserCheck } from 'lucide-react'
 import { AppNotification, NotificationType } from '@/types'
 import { markAllNotificationsRead, markNotificationRead } from '@/lib/actions/notifications'
 import Button from '@/components/ui/Button'
@@ -21,6 +21,9 @@ const TYPE_CONFIG: Record<NotificationType, { icon: typeof BellRing; bg: string;
   occurrence_deleted_by_admin: { icon: Trash2, bg: 'bg-red-50 dark:bg-red-900/30', color: 'text-red-600 dark:text-red-400' },
   support_message: { icon: MessageCircle, bg: 'bg-blue-50 dark:bg-blue-900/30', color: 'text-blue-600 dark:text-blue-400' },
   support_message_resolved: { icon: MessageCircle, bg: 'bg-green-50 dark:bg-green-900/30', color: 'text-green-600 dark:text-green-400' },
+  registration_requested: { icon: UserCheck, bg: 'bg-teal-50 dark:bg-teal-900/30', color: 'text-teal-600 dark:text-teal-400' },
+  registration_approved: { icon: UserCheck, bg: 'bg-green-50 dark:bg-green-900/30', color: 'text-green-600 dark:text-green-400' },
+  registration_rejected: { icon: XCircle, bg: 'bg-red-50 dark:bg-red-900/30', color: 'text-red-600 dark:text-red-400' },
 }
 
 /**

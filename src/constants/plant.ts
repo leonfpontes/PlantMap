@@ -4,7 +4,7 @@
  * usadas em formulários, cards e badges em toda a aplicação.
  */
 
-import type { PlantCondition, PlantStage, SpeciesStatus } from '@/types'
+import type { PlantCondition, PlantStage, SpeciesStatus, PermissionRequestStatus } from '@/types'
 
 /** Variante de badge mapeada para cada condição de planta. */
 export const CONDITION_CONFIG: Record<
@@ -72,4 +72,14 @@ export const SPECIES_STATUS_CONFIG: Record<
   pending:  { label: 'Aguardando aprovação', variant: 'yellow' },
   approved: { label: 'Aprovada',             variant: 'green' },
   rejected: { label: 'Rejeitada',            variant: 'red' },
+}
+
+/** Variante de badge e label para cada status de pedido de permissão de registro. */
+export const PERMISSION_REQUEST_STATUS_CONFIG: Record<
+  PermissionRequestStatus,
+  { label: string; variant: 'green' | 'yellow' | 'red' | 'gray' }
+> = {
+  pending:  { label: 'Em análise', variant: 'yellow' },
+  approved: { label: 'Aprovado',   variant: 'green' },
+  rejected: { label: 'Recusado',   variant: 'red' },
 }

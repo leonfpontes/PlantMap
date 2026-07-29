@@ -66,10 +66,17 @@ Copie [.env.example](.env.example) para `.env.local` e preencha os valores:
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 NEXT_PUBLIC_APP_URL=
-ALLOWED_EMAILS=   # opcional: whitelist de e-mails autorizados a logar, separados por vírgula
 ```
 
 ## Permissões
+
+O login (Google OAuth) é aberto a qualquer conta — não há mais whitelist de e-mails. O que é
+restrito é a capacidade de **registrar novas ocorrências** no mapa: cada `profiles` tem uma flag
+`can_register_occurrences` (`false` por padrão para contas novas). Um usuário sem essa permissão
+pede acesso em `/profile/permission`; um admin aprova ou rejeita em `/admin/users` (RPCs
+`request_occurrence_permission` / `review_occurrence_permission_request`, nunca insert/update
+direto — ver [migration 021](supabase/migrations/021_registration_permission.sql)). Um admin também
+pode conceder ou revogar essa permissão diretamente, sem pedido, pela mesma tela.
 
 Ocorrências só podem ser editadas/excluídas pelo próprio dono ou por um usuário com
 `is_admin = true` em `profiles` (ver [migration 012](supabase/migrations/012_ownership_based_permissions.sql)).

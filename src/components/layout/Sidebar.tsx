@@ -3,13 +3,14 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Leaf, Map, Plus, Search, LogIn, ShieldCheck, MessageCircle } from 'lucide-react'
+import { Leaf, Map, Plus, Search, LogIn, ShieldCheck, MessageCircle, Users } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useUser } from '@/hooks/useUser'
 import { useIsAdmin } from '@/hooks/useIsAdmin'
 import { useUnreadNotifications } from '@/hooks/useUnreadNotifications'
 import { listPendingSpecies } from '@/lib/actions/species'
 import { getOpenSupportMessageCount } from '@/lib/actions/support'
+import { getOpenPermissionRequestCount } from '@/lib/actions/permissions'
 import { getProfile } from '@/lib/actions/profile'
 import Avatar from '@/components/ui/Avatar'
 
@@ -21,12 +22,14 @@ export default function Sidebar() {
   const { isAdmin } = useIsAdmin(user?.id || null)
   const [pendingSpeciesCount, setPendingSpeciesCount] = useState(0)
   const [openSupportCount, setOpenSupportCount] = useState(0)
+  const [openPermissionCount, setOpenPermissionCount] = useState(0)
   const [profile, setProfile] = useState<{ full_name: string | null; avatar_url: string | null } | null>(null)
 
   useEffect(() => {
     if (!isAdmin) return
     listPendingSpecies().then((list) => setPendingSpeciesCount(list.length))
     getOpenSupportMessageCount().then(setOpenSupportCount)
+    getOpenPermissionRequestCount().then(setOpenPermissionCount)
   }, [isAdmin])
 
   useEffect(() => {
@@ -88,6 +91,13 @@ export default function Sidebar() {
               label="Mensagens de suporte"
               active={active('/admin/support')}
               count={openSupportCount}
+            />
+            <SidebarItem
+              href="/admin/users"
+              icon={Users}
+              label="Usuários"
+              active={active('/admin/users')}
+              count={openPermissionCount}
             />
           </nav>
         </>

@@ -7,6 +7,7 @@ export interface UserProfile {
   full_name: string | null
   avatar_url: string | null
   is_admin: boolean
+  can_register_occurrences: boolean
   theme_preference: ThemePreference
   font_scale: FontScale
   created_at: string
@@ -68,6 +69,9 @@ export type NotificationType =
   | 'occurrence_deleted_by_admin'
   | 'support_message'
   | 'support_message_resolved'
+  | 'registration_requested'
+  | 'registration_approved'
+  | 'registration_rejected'
 
 export interface AppNotification {
   id: string
@@ -79,6 +83,7 @@ export interface AppNotification {
   species_id: string | null
   occurrence_id: string | null
   support_message_id: string | null
+  permission_request_id: string | null
   read_at: string | null
   created_at: string
 }
@@ -95,4 +100,29 @@ export interface SupportMessage {
   resolved_by: string | null
   resolved_at: string | null
   created_at: string
+}
+
+export type PermissionRequestStatus = 'pending' | 'approved' | 'rejected'
+
+export interface PermissionRequest {
+  id: string
+  user_id: string
+  message: string | null
+  status: PermissionRequestStatus
+  reviewed_by: string | null
+  reviewed_at: string | null
+  rejection_reason: string | null
+  created_at: string
+}
+
+/** Linha da tela /admin/users: perfil + o pedido de permissão mais recente dele, se houver. */
+export interface AdminUserRow {
+  id: string
+  email: string
+  full_name: string | null
+  avatar_url: string | null
+  is_admin: boolean
+  can_register_occurrences: boolean
+  created_at: string
+  latest_request: PermissionRequest | null
 }

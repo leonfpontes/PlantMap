@@ -106,9 +106,9 @@ A autenticação é gerida via Supabase Auth (GoTrue). A interface do app expõe
 *   **Google OAuth**: no ambiente de desenvolvimento local, requer credenciais reais de um OAuth Client do Google
     configuradas no GoTrue (`GOTRUE_EXTERNAL_GOOGLE_ENABLED`, `GOTRUE_EXTERNAL_GOOGLE_CLIENT_ID`/`SECRET`), que o
     `docker-compose.yml` deste repo não traz por padrão.
-*   **Whitelist (`ALLOWED_EMAILS`)**: após o login com Google, o callback (`src/app/auth/callback/route.ts`)
-    verifica se o e-mail está na lista `ALLOWED_EMAILS`; se não estiver, a sessão é encerrada e o usuário é
-    redirecionado de volta ao login com uma mensagem de erro.
+*   **Login aberto**: qualquer conta Google pode entrar — não há mais whitelist de e-mails no
+    callback (`src/app/auth/callback/route.ts`). Quem pode *registrar novas ocorrências* é controlado
+    à parte por `profiles.can_register_occurrences` (ver seção de Permissões no README).
 *   **`create-users.ps1` / `create-users.mjs`**: criam usuários com senha diretamente via GoTrue Admin API. Como a
     UI não tem formulário de email/senha, eles não servem para logar no app pelo navegador — use-os para ter
     linhas em `auth.users`/`public.profiles` prontas para testes de banco (ex.: promover um usuário a admin, ver
@@ -135,8 +135,7 @@ cp .env.example .env
 ```
 Preencha `POSTGRES_PASSWORD`, `JWT_SECRET`, `SUPABASE_ANON_KEY` e `SUPABASE_SERVICE_ROLE_KEY` (usados pelo
 `docker-compose.yml`) e `NEXT_PUBLIC_SUPABASE_URL`/`NEXT_PUBLIC_SUPABASE_ANON_KEY` (usados pelo Next.js — geralmente
-os mesmos valores de `SUPABASE_ANON_KEY`/`http://localhost:8000`). Deixe `ALLOWED_EMAILS` vazio para permitir
-qualquer e-mail localmente, ou liste os e-mails autorizados separados por vírgula.
+os mesmos valores de `SUPABASE_ANON_KEY`/`http://localhost:8000`).
 
 ### Passo 3: Inicializar o Docker
 Na raiz do projeto, suba a infraestrutura do Supabase executando:

@@ -24,6 +24,16 @@ export async function registerOccurrence(data: {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Não autenticado' }
 
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('can_register_occurrences')
+    .eq('id', user.id)
+    .single()
+
+  if (!profile?.can_register_occurrences) {
+    return { error: 'Você ainda não tem permissão para registrar ocorrências. Peça acesso em Perfil.' }
+  }
+
   const { error } = await supabase.from('occurrences').insert({
     user_id: user.id,
     species_id: data.species_id,

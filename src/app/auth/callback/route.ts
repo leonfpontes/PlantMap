@@ -39,13 +39,10 @@ export async function GET(request: Request) {
     if (!error) {
       const { data: { user } } = await supabase.auth.getUser()
 
-      const allowedEmails = (process.env.ALLOWED_EMAILS ?? '').split(',').map(e => e.trim()).filter(Boolean)
-      if (allowedEmails.length > 0 && (!user?.email || !allowedEmails.includes(user.email))) {
-        await supabase.auth.signOut()
-        return NextResponse.redirect(
-          `${origin}/auth/login?error=access_denied&message=${encodeURIComponent('Acesso não autorizado para este e-mail.')}`
-        )
-      }
+      // Login aberto a qualquer conta Google (login não é mais restrito a uma
+      // whitelist de e-mails) — quem pode registrar novas ocorrências no mapa
+      // é controlado à parte por `profiles.can_register_occurrences`, ver
+      // migration 021 e /profile/permission.
 
       // Conta excluída pelo próprio usuário (ver migration 019, delete_my_account):
       // bloqueia o login em vez de reviver o perfil anonimizado.
