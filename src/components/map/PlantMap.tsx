@@ -17,6 +17,10 @@ interface PlantMapProps {
   onMapClick?: (lat: number, lng: number) => void
   selectedLocation?: { lat: number; lng: number } | null
   interactive?: boolean
+  /** Id de ocorrência realçada por fora (ex.: hover num card da lista, na tela desktop). */
+  hoveredOccurrenceId?: string | null
+  /** Avisa quando o mouse entra/sai de um pin, para realçar o card correspondente na lista. */
+  onPinHover?: (id: string | null) => void
 }
 
 export default function PlantMap({
@@ -27,6 +31,8 @@ export default function PlantMap({
   onMapClick,
   selectedLocation,
   interactive = false,
+  hoveredOccurrenceId = null,
+  onPinHover,
 }: PlantMapProps) {
   const [selectedOccurrence, setSelectedOccurrence] = useState<PlantOccurrence | null>(null)
   const [viewState, setViewState] = useState({
@@ -82,6 +88,8 @@ export default function PlantMap({
             occurrence={occ}
             onClick={setSelectedOccurrence}
             selected={selectedOccurrence?.id === occ.id}
+            highlighted={hoveredOccurrenceId === occ.id}
+            onHover={(hovering) => onPinHover?.(hovering ? occ.id : null)}
           />
         ))}
 

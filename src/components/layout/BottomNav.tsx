@@ -17,14 +17,15 @@ export default function BottomNav() {
 
   if (loading) {
     return (
-      <nav className="flex-shrink-0 border-t border-gray-100 bg-white shadow-[0_-1px_8px_rgba(0,0,0,0.06)] dark:border-gray-800 dark:bg-gray-950 h-14" />
+      <nav className="flex-shrink-0 border-t border-gray-100 bg-white shadow-[0_-1px_8px_rgba(0,0,0,0.06)] dark:border-gray-800 dark:bg-gray-950 h-14 lg:hidden" />
     )
   }
 
   /* ── Visitante: Mapa | Buscar | Login ── */
+  /* Escondido em telas largas (lg:+): a Sidebar já cobre a mesma navegação lá. */
   if (!user) {
     return (
-      <nav className="flex-shrink-0 border-t border-gray-100 bg-white shadow-[0_-1px_8px_rgba(0,0,0,0.06)] dark:border-gray-800 dark:bg-gray-950">
+      <nav className="flex-shrink-0 border-t border-gray-100 bg-white shadow-[0_-1px_8px_rgba(0,0,0,0.06)] dark:border-gray-800 dark:bg-gray-950 lg:hidden">
         <div className="flex items-center justify-around px-4 pb-2 pt-1">
           <NavItem href="/map"         icon={Map}   label="Mapa"   active={active('/map')} />
           <NavItem href="/search"      icon={Search} label="Buscar" active={active('/search')} />
@@ -36,7 +37,7 @@ export default function BottomNav() {
 
   /* ── Autenticado: Mapa | Registrar (FAB) | Buscar | Perfil ── */
   return (
-    <nav className="flex-shrink-0 border-t border-gray-100 bg-white shadow-[0_-1px_8px_rgba(0,0,0,0.06)] dark:border-gray-800 dark:bg-gray-950">
+    <nav className="flex-shrink-0 border-t border-gray-100 bg-white shadow-[0_-1px_8px_rgba(0,0,0,0.06)] dark:border-gray-800 dark:bg-gray-950 lg:hidden">
       <div className="flex items-center justify-around px-2 pb-2 pt-1">
 
         <NavItem href="/map"     icon={Map}    label="Mapa"   active={active('/map')} />

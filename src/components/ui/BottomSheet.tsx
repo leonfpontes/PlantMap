@@ -53,6 +53,7 @@ export default function BottomSheet({
         aria-label={title}
         className={cn(
           'fixed bottom-0 left-1/2 z-50 w-full max-w-[430px] -translate-x-1/2 rounded-t-2xl bg-white p-5 shadow-xl dark:bg-gray-900',
+          'lg:bottom-auto lg:top-1/2 lg:max-w-md lg:-translate-y-1/2 lg:rounded-2xl lg:shadow-2xl',
           className
         )}
       >

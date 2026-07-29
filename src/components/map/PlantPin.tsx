@@ -9,9 +9,12 @@ interface PlantPinProps {
   occurrence: PlantOccurrence
   onClick: (occurrence: PlantOccurrence) => void
   selected?: boolean
+  /** Realce vindo de fora (ex.: hover na lista da tela desktop), somado ao `selected` por clique. */
+  highlighted?: boolean
+  onHover?: (hovering: boolean) => void
 }
 
-export default function PlantPin({ occurrence, onClick, selected }: PlantPinProps) {
+export default function PlantPin({ occurrence, onClick, selected, highlighted, onHover }: PlantPinProps) {
   return (
     <Marker
       longitude={occurrence.longitude}
@@ -22,12 +25,16 @@ export default function PlantPin({ occurrence, onClick, selected }: PlantPinProp
         onClick(occurrence)
       }}
     >
-      <div className="cursor-pointer">
+      <div
+        className="cursor-pointer"
+        onMouseEnter={() => onHover?.(true)}
+        onMouseLeave={() => onHover?.(false)}
+      >
         <div
           className={cn(
             'h-5 w-5 rounded-full border-2 shadow-md transition-transform',
             CONDITION_PIN_CLASS[occurrence.condition] ?? CONDITION_PIN_CLASS.healthy,
-            selected && 'scale-150 shadow-lg'
+            (selected || highlighted) && 'scale-150 shadow-lg'
           )}
         />
         <div className={cn(
