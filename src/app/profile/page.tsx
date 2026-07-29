@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { Heart, LogOut, ChevronRight, Bell, Lock, Palette, HelpCircle, Leaf, Sprout, ShieldCheck } from 'lucide-react'
+import { Heart, LogOut, ChevronRight, Bell, Lock, Palette, HelpCircle, Leaf, Sprout, ShieldCheck, MessageCircle } from 'lucide-react'
 import MobileShell from '@/components/layout/MobileShell'
 import PageHeader from '@/components/layout/PageHeader'
 import BottomNav from '@/components/layout/BottomNav'
@@ -10,6 +10,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getProfile, getUserStats } from '@/lib/actions/profile'
 import { listPendingSpecies } from '@/lib/actions/species'
 import { getUnreadNotificationCount } from '@/lib/actions/notifications'
+import { getOpenSupportMessageCount } from '@/lib/actions/support'
 import { signOut } from '@/lib/actions/auth'
 
 export default async function ProfilePage() {
@@ -23,7 +24,9 @@ export default async function ProfilePage() {
     getUnreadNotificationCount(),
   ])
 
-  const pendingSpecies = profile?.is_admin ? await listPendingSpecies() : []
+  const [pendingSpecies, openSupportMessages] = profile?.is_admin
+    ? await Promise.all([listPendingSpecies(), getOpenSupportMessageCount()])
+    : [[], 0]
 
   return (
     <MobileShell>
@@ -139,6 +142,22 @@ export default async function ProfilePage() {
               <span className="flex-1 text-sm font-medium text-gray-900 dark:text-gray-100">Moderação de ervas</span>
               {pendingSpecies.length > 0 && (
                 <Badge variant="yellow">{pendingSpecies.length} pendente{pendingSpecies.length !== 1 ? 's' : ''}</Badge>
+              )}
+              <ChevronRight className="h-4 w-4 text-gray-400 dark:text-gray-500" />
+            </Link>
+          )}
+
+          {profile?.is_admin && (
+            <Link
+              href="/admin/support"
+              className="flex items-center gap-3 rounded-2xl bg-white border border-gray-100 px-4 py-3 hover:bg-gray-50 transition-colors shadow-sm dark:bg-gray-900 dark:border-gray-800 dark:hover:bg-gray-800"
+            >
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-900/30">
+                <MessageCircle className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+              </div>
+              <span className="flex-1 text-sm font-medium text-gray-900 dark:text-gray-100">Mensagens de suporte</span>
+              {openSupportMessages > 0 && (
+                <Badge variant="yellow">{openSupportMessages} aberta{openSupportMessages !== 1 ? 's' : ''}</Badge>
               )}
               <ChevronRight className="h-4 w-4 text-gray-400 dark:text-gray-500" />
             </Link>

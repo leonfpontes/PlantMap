@@ -66,6 +66,8 @@ export type NotificationType =
   | 'occurrence_verified'
   | 'occurrence_modified_by_admin'
   | 'occurrence_deleted_by_admin'
+  | 'support_message'
+  | 'support_message_resolved'
 
 export interface AppNotification {
   id: string
@@ -76,6 +78,21 @@ export interface AppNotification {
   link: string | null
   species_id: string | null
   occurrence_id: string | null
+  support_message_id: string | null
   read_at: string | null
+  created_at: string
+}
+
+export type SupportMessageStatus = 'open' | 'resolved'
+
+export interface SupportMessage {
+  id: string
+  user_id: string
+  subject: string
+  message: string
+  status: SupportMessageStatus
+  admin_reply: string | null
+  resolved_by: string | null
+  resolved_at: string | null
   created_at: string
 }
