@@ -25,11 +25,6 @@ export default async function ProfilePage() {
 
   const pendingSpecies = profile?.is_admin ? await listPendingSpecies() : []
 
-  // Ainda sem tela própria — exibidos como indisponíveis em vez de links mortos (href="#").
-  const menuItems = [
-    { icon: HelpCircle, label: 'Ajuda e suporte' },
-  ]
-
   return (
     <MobileShell>
       <PageHeader title="Perfil" showBack={false} />
@@ -149,20 +144,16 @@ export default async function ProfilePage() {
             </Link>
           )}
 
-          {/* Menu items (ainda sem tela própria) */}
-          <div className="mt-2 rounded-2xl bg-white border border-gray-100 overflow-hidden shadow-sm dark:bg-gray-900 dark:border-gray-800">
-            {menuItems.map(({ icon: Icon, label }, i) => (
-              <div
-                key={label}
-                aria-disabled="true"
-                className={`flex items-center gap-3 px-4 py-3 opacity-50 ${i > 0 ? 'border-t border-gray-100 dark:border-gray-800' : ''}`}
-              >
-                <Icon className="h-5 w-5 text-gray-500 dark:text-gray-400" />
-                <span className="flex-1 text-sm font-medium text-gray-900 dark:text-gray-100">{label}</span>
-                <span className="text-xs text-gray-400 dark:text-gray-500">Em breve</span>
-              </div>
-            ))}
-          </div>
+          <Link
+            href="/profile/help"
+            className="flex items-center gap-3 rounded-2xl bg-white border border-gray-100 px-4 py-3 hover:bg-gray-50 transition-colors shadow-sm dark:bg-gray-900 dark:border-gray-800 dark:hover:bg-gray-800"
+          >
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800">
+              <HelpCircle className="h-5 w-5 text-gray-600 dark:text-gray-300" />
+            </div>
+            <span className="flex-1 text-sm font-medium text-gray-900 dark:text-gray-100">Ajuda e suporte</span>
+            <ChevronRight className="h-4 w-4 text-gray-400 dark:text-gray-500" />
+          </Link>
 
           {/* Sign out */}
           <form action={signOut} className="mt-2">
