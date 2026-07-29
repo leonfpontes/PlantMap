@@ -20,6 +20,11 @@ import { useFavorites } from '@/hooks/useFavorites'
 import { useIsAdmin } from '@/hooks/useIsAdmin'
 import { PlantOccurrence } from '@/types'
 import { CONDITION_CONFIG, STAGE_LABEL, ORIGIN_LABEL } from '@/constants/plant'
+import { cn } from '@/lib/utils'
+
+// Card mais largo que o padrão 'comfortable' — mapa e foto lado a lado
+// precisam de mais espaço do que a coluna estreita das outras telas.
+const DESKTOP_WIDTH_CLASS = 'lg:max-w-4xl'
 
 const PlantMap = dynamic(() => import('@/components/map/PlantMap'), { ssr: false })
 
@@ -44,7 +49,7 @@ export default function PlantDetailPage() {
 
   if (loading) {
     return (
-      <MobileShell>
+      <MobileShell className={DESKTOP_WIDTH_CLASS}>
         <PageHeader title="Carregando..." />
         <div className="flex-1 flex items-center justify-center">
           <div className="h-8 w-8 animate-spin rounded-full border-2 border-green-700 border-t-transparent" />
@@ -56,7 +61,7 @@ export default function PlantDetailPage() {
 
   if (!occurrence) {
     return (
-      <MobileShell>
+      <MobileShell className={DESKTOP_WIDTH_CLASS}>
         <PageHeader title="Não encontrado" />
         <div className="flex-1 flex items-center justify-center text-gray-500 dark:text-gray-400">
           Ocorrência não encontrada
@@ -85,7 +90,7 @@ export default function PlantDetailPage() {
   const isFav = favorites.has(occurrence.id)
 
   return (
-    <MobileShell>
+    <MobileShell className={DESKTOP_WIDTH_CLASS}>
       <PageHeader
         title={occurrence.species?.common_name || 'Planta'}
         right={
@@ -109,27 +114,36 @@ export default function PlantDetailPage() {
       />
 
       <div className="flex-1 overflow-y-auto">
-        {/* Mini map */}
-        <div className="h-48 w-full">
-          <PlantMap
-            occurrences={[occurrence]}
-            initialLat={occurrence.latitude}
-            initialLng={occurrence.longitude}
-            initialZoom={15}
-          />
+        {/* Mapa + foto: lado a lado e bem maiores no desktop, empilhados no celular */}
+        <div className="lg:grid lg:grid-cols-2 lg:gap-4 lg:p-4 lg:pb-0">
+          <div
+            className={cn(
+              'h-48 w-full lg:order-2 lg:h-80 lg:overflow-hidden lg:rounded-2xl',
+              !occurrence.photo_url && 'lg:col-span-2'
+            )}
+          >
+            <PlantMap
+              occurrences={[occurrence]}
+              initialLat={occurrence.latitude}
+              initialLng={occurrence.longitude}
+              initialZoom={15}
+            />
+          </div>
+
+          {occurrence.photo_url && (
+            <button
+              onClick={() => setPhotoOpen(true)}
+              className="w-full block lg:order-1 lg:h-80 lg:overflow-hidden lg:rounded-2xl"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={occurrence.photo_url} alt="Foto da planta" className="w-full h-48 object-cover lg:h-80" />
+            </button>
+          )}
         </div>
 
-        {/* Photo */}
-        {occurrence.photo_url && (
-          <button onClick={() => setPhotoOpen(true)} className="w-full block">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={occurrence.photo_url} alt="Foto da planta" className="w-full h-48 object-cover" />
-          </button>
-        )}
-
-        <div className="p-4 flex flex-col gap-4">
+        <div className="p-4 flex flex-col gap-4 lg:grid lg:grid-cols-2 lg:gap-4 lg:p-6">
           {/* Header info */}
-          <div>
+          <div className="lg:col-span-2">
             <div className="flex items-start justify-between gap-2">
               <div className="flex items-center gap-3">
                 {occurrence.species?.image_url ? (
@@ -158,7 +172,7 @@ export default function PlantDetailPage() {
           </div>
 
           {/* Badges */}
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 lg:col-span-2">
             <Badge variant={condition.variant}>{condition.label}</Badge>
             <Badge variant="gray">{STAGE_LABEL[occurrence.stage] ?? occurrence.stage}</Badge>
             {occurrence.species?.origin && (
@@ -170,7 +184,10 @@ export default function PlantDetailPage() {
           </div>
 
           {/* Details */}
-          <div className="rounded-2xl bg-gray-50 p-4 flex flex-col gap-3 dark:bg-gray-800/60">
+          <div className={cn(
+            'rounded-2xl bg-gray-50 p-4 flex flex-col gap-3 dark:bg-gray-800/60',
+            !occurrence.notes && 'lg:col-span-2'
+          )}>
             <div className="flex items-center gap-2 text-sm">
               <MapPin className="h-4 w-4 text-green-600 flex-shrink-0 dark:text-green-400" />
               <span className="text-gray-600 dark:text-gray-300">
@@ -202,7 +219,7 @@ export default function PlantDetailPage() {
 
           <Button
             variant="secondary"
-            className="w-full"
+            className={cn('w-full', !canDelete && 'lg:col-span-2')}
             onClick={() => setShareOpen(true)}
           >
             <Share2 className="h-4 w-4" />
