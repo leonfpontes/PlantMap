@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { MapPin, MapPinned, Download, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -21,7 +21,7 @@ interface PrivacySettingsProps {
  */
 export default function PrivacySettings({ initialShareExactLocation }: PrivacySettingsProps) {
   const [shareExact, setShareExact] = useState(initialShareExactLocation)
-  const [, startTransition] = useTransition()
+  const [locationSaveError, setLocationSaveError] = useState<string | null>(null)
   const [exporting, setExporting] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [confirmChecked, setConfirmChecked] = useState(false)
@@ -29,11 +29,27 @@ export default function PrivacySettings({ initialShareExactLocation }: PrivacySe
   const [deleteError, setDeleteError] = useState<string | null>(null)
   const router = useRouter()
 
+  // Debounce: cliques rápidos entre as duas opções disparavam várias gravações
+  // em paralelo, que podiam chegar ao banco fora de ordem — a última escolhida
+  // na tela nem sempre era a que persistia. Só a escolha em que o usuário
+  // "parou" por 400ms é de fato enviada, e nunca duas ao mesmo tempo.
+  const pendingLocationChange = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (pendingLocationChange.current) clearTimeout(pendingLocationChange.current)
+    }
+  }, [])
+
   const handleLocationChange = (value: boolean) => {
     setShareExact(value)
-    startTransition(() => {
-      updateLocationSharing(value)
-    })
+    setLocationSaveError(null)
+
+    if (pendingLocationChange.current) clearTimeout(pendingLocationChange.current)
+    pendingLocationChange.current = setTimeout(async () => {
+      const result = await updateLocationSharing(value)
+      if (result.error) setLocationSaveError(result.error)
+    }, 400)
   }
 
   const handleExport = async () => {
@@ -113,6 +129,11 @@ export default function PrivacySettings({ initialShareExactLocation }: PrivacySe
             ? 'Outros usuários veem o ponto exato dos seus registros no mapa.'
             : 'Outros usuários veem só uma área aproximada (~500m) dos seus registros. Você e os administradores sempre veem o ponto exato.'}
         </p>
+        {locationSaveError && (
+          <p className="mt-2 text-xs text-red-600 dark:text-red-400">
+            Não foi possível salvar: {locationSaveError}. Tente de novo.
+          </p>
+        )}
       </section>
 
       <section>

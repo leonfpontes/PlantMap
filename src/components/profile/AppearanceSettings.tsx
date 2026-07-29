@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Sun, Moon, Monitor, Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { saveTheme, saveFontScale } from '@/lib/appearance'
@@ -32,22 +32,44 @@ const FONT_SCALE_OPTIONS: { value: FontScale; label: string; sizeClass: string }
 export default function AppearanceSettings({ initialTheme, initialFontScale }: AppearanceSettingsProps) {
   const [theme, setTheme] = useState(initialTheme)
   const [fontScale, setFontScale] = useState(initialFontScale)
-  const [, startTransition] = useTransition()
+  const [saveError, setSaveError] = useState<string | null>(null)
+
+  // Debounce: cliques rápidos entre opções disparavam várias gravações em
+  // paralelo, que podiam chegar ao banco fora de ordem — a última escolha na
+  // tela nem sempre era a que persistia (mesmo bug encontrado em Privacidade).
+  // Só a opção em que o usuário "parou" por 400ms é enviada, uma de cada vez.
+  const pendingTheme = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const pendingFontScale = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (pendingTheme.current) clearTimeout(pendingTheme.current)
+      if (pendingFontScale.current) clearTimeout(pendingFontScale.current)
+    }
+  }, [])
 
   const handleTheme = (value: ThemePreference) => {
     setTheme(value)
     saveTheme(value)
-    startTransition(() => {
-      updateAppearancePrefs({ theme: value })
-    })
+    setSaveError(null)
+
+    if (pendingTheme.current) clearTimeout(pendingTheme.current)
+    pendingTheme.current = setTimeout(async () => {
+      const result = await updateAppearancePrefs({ theme: value })
+      if (result.error) setSaveError(result.error)
+    }, 400)
   }
 
   const handleFontScale = (value: FontScale) => {
     setFontScale(value)
     saveFontScale(value)
-    startTransition(() => {
-      updateAppearancePrefs({ fontScale: value })
-    })
+    setSaveError(null)
+
+    if (pendingFontScale.current) clearTimeout(pendingFontScale.current)
+    pendingFontScale.current = setTimeout(async () => {
+      const result = await updateAppearancePrefs({ fontScale: value })
+      if (result.error) setSaveError(result.error)
+    }, 400)
   }
 
   return (
@@ -126,6 +148,12 @@ export default function AppearanceSettings({ initialTheme, initialFontScale }: A
           </p>
         </div>
       </section>
+
+      {saveError && (
+        <p className="text-xs text-red-600 dark:text-red-400">
+          Não foi possível salvar: {saveError}. Tente de novo.
+        </p>
+      )}
     </div>
   )
 }
