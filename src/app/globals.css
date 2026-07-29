@@ -54,3 +54,56 @@ body {
   0%, 100% { transform: rotate(-3deg); }
   50% { transform: rotate(3deg); }
 }
+
+/* Ciclo de carregamento temático (src/components/loading/SproutLoader.tsx):
+   semente -> caule cresce -> folhas -> flor -> desvanece -> recomeça. Todas
+   as peças compartilham a mesma duração para o timing bater entre si. */
+@keyframes sprout-stem {
+  0%, 4%   { stroke-dashoffset: 100; opacity: 0; }
+  12%      { opacity: 1; }
+  45%, 86% { stroke-dashoffset: 0; opacity: 1; }
+  96%, 100% { stroke-dashoffset: 0; opacity: 0; }
+}
+
+@keyframes sprout-leaf {
+  0%, 36%  { opacity: 0; transform: scale(0.3); }
+  48%      { opacity: 1; transform: scale(1); }
+  86%      { opacity: 1; transform: scale(1); }
+  96%, 100% { opacity: 0; transform: scale(0.3); }
+}
+
+@keyframes sprout-flower {
+  0%, 55%  { opacity: 0; transform: scale(0.2); }
+  68%      { opacity: 1; transform: scale(1.15); }
+  78%, 86% { opacity: 1; transform: scale(1); }
+  96%, 100% { opacity: 0; transform: scale(0.2); }
+}
+
+.sprout-stem {
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  animation: sprout-stem 3.2s ease-in-out infinite;
+}
+.sprout-leaf-left {
+  transform-origin: 58px 100px;
+  animation: sprout-leaf 3.2s ease-in-out infinite;
+}
+.sprout-leaf-right {
+  transform-origin: 62px 86px;
+  animation: sprout-leaf 3.2s ease-in-out infinite;
+  animation-delay: 0.12s;
+}
+.sprout-flower {
+  transform-origin: 60px 66px;
+  animation: sprout-flower 3.2s ease-in-out infinite;
+}
+
+/* Quem prefere menos movimento vê a planta já florescida, parada. */
+@media (prefers-reduced-motion: reduce) {
+  .sprout-stem, .sprout-leaf-left, .sprout-leaf-right, .sprout-flower {
+    animation: none;
+    opacity: 1;
+    transform: scale(1);
+    stroke-dashoffset: 0;
+  }
+}

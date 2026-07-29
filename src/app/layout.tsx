@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import { GeolocationProvider } from '@/hooks/useGeolocation'
+import AppShell from '@/components/layout/AppShell'
 import AppearanceSync from '@/components/layout/AppearanceSync'
 import PrivacyConsentGate from '@/components/profile/PrivacyConsentGate'
 import { NO_FLASH_SCRIPT } from '@/lib/appearance'
@@ -35,7 +36,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body suppressHydrationWarning>
         <GeolocationProvider>
-          {children}
+          <AppShell>{children}</AppShell>
         </GeolocationProvider>
         <AppearanceSync />
         <PrivacyConsentGate />

@@ -1,5 +1,4 @@
 import { cn } from '@/lib/utils'
-import Sidebar from './Sidebar'
 
 interface MobileShellProps {
   children: React.ReactNode
@@ -14,27 +13,29 @@ interface MobileShellProps {
   desktopWidth?: 'comfortable' | 'full'
 }
 
+/**
+ * Card de conteúdo de uma página. A sidebar e a moldura externa (canvas)
+ * vivem em AppShell (persistente entre navegações) — este componente só
+ * cuida do "cartão" da página em si, no espaço ao lado da sidebar.
+ */
 export default function MobileShell({ children, className, desktopWidth = 'comfortable' }: MobileShellProps) {
   return (
-    <div className="flex min-h-dvh w-full bg-gray-100 dark:bg-black lg:bg-gray-50 lg:dark:bg-gray-950">
-      <Sidebar />
+    <div
+      className={cn(
+        'flex flex-1 items-center justify-center',
+        desktopWidth === 'full' ? 'lg:p-0' : 'lg:p-10'
+      )}
+    >
       <div
         className={cn(
-          'flex flex-1 items-center justify-center',
-          desktopWidth === 'full' ? 'lg:p-0' : 'lg:p-10'
+          'relative flex h-dvh w-full max-w-[430px] flex-col bg-white dark:bg-gray-950',
+          desktopWidth === 'full'
+            ? 'lg:max-w-none'
+            : 'lg:h-[calc(100dvh-5rem)] lg:max-w-2xl lg:rounded-3xl lg:border lg:border-gray-100 lg:shadow-sm dark:lg:border-gray-800',
+          className
         )}
       >
-        <div
-          className={cn(
-            'relative flex h-dvh w-full max-w-[430px] flex-col bg-white dark:bg-gray-950',
-            desktopWidth === 'full'
-              ? 'lg:max-w-none'
-              : 'lg:h-[calc(100dvh-5rem)] lg:max-w-2xl lg:rounded-3xl lg:border lg:border-gray-100 lg:shadow-sm dark:lg:border-gray-800',
-            className
-          )}
-        >
-          {children}
-        </div>
+        {children}
       </div>
     </div>
   )
