@@ -1,12 +1,12 @@
 'use client'
 
 import { useState } from 'react'
-import { CheckCircle2 } from 'lucide-react'
+import { CheckCircle2, MessageCircle } from 'lucide-react'
 import Button from '@/components/ui/Button'
-import Badge from '@/components/ui/Badge'
 import { resolveSupportMessage } from '@/lib/actions/support'
 import { SupportMessage } from '@/types'
 import { formatRelativeTime } from '@/lib/utils'
+import AdminReviewCard from './AdminReviewCard'
 
 interface SupportInboxProps {
   initialMessages: SupportMessage[]
@@ -64,31 +64,38 @@ export default function SupportInbox({ initialMessages }: SupportInboxProps) {
           </h2>
           <div className="flex flex-col gap-3">
             {open.map((m) => (
-              <div key={m.id} className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-                <div className="mb-1 flex items-center justify-between gap-2">
-                  <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{m.subject}</span>
-                  <Badge variant="yellow">Aberta</Badge>
-                </div>
-                <p className="text-sm text-gray-600 dark:text-gray-300">{m.message}</p>
-                <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">{formatRelativeTime(m.created_at)}</p>
-
-                <textarea
-                  rows={2}
-                  placeholder="Resposta (opcional)"
-                  value={replyDrafts[m.id] || ''}
-                  onChange={(e) => setReplyDrafts((prev) => ({ ...prev, [m.id]: e.target.value }))}
-                  className="mt-3 w-full resize-none rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-green-600 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
-                />
-                <Button
-                  size="sm"
-                  className="mt-2 w-full"
-                  loading={resolvingId === m.id}
-                  onClick={() => handleResolve(m.id)}
-                >
-                  <CheckCircle2 className="h-4 w-4" />
-                  Marcar como resolvida
-                </Button>
-              </div>
+              <AdminReviewCard
+                key={m.id}
+                avatar={
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-900/30">
+                    <MessageCircle className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                  </div>
+                }
+                title={m.subject}
+                meta={formatRelativeTime(m.created_at)}
+                pills={[{ label: 'Aberta', variant: 'yellow' }]}
+                message={m.message}
+                footer={
+                  <div className="flex flex-col gap-2">
+                    <textarea
+                      rows={2}
+                      placeholder="Resposta (opcional)"
+                      value={replyDrafts[m.id] || ''}
+                      onChange={(e) => setReplyDrafts((prev) => ({ ...prev, [m.id]: e.target.value }))}
+                      className="w-full resize-none rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-green-600 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+                    />
+                    <Button
+                      size="sm"
+                      className="w-full"
+                      loading={resolvingId === m.id}
+                      onClick={() => handleResolve(m.id)}
+                    >
+                      <CheckCircle2 className="h-4 w-4" />
+                      Marcar como resolvida
+                    </Button>
+                  </div>
+                }
+              />
             ))}
           </div>
         </section>
@@ -101,19 +108,26 @@ export default function SupportInbox({ initialMessages }: SupportInboxProps) {
           </h2>
           <div className="flex flex-col gap-3">
             {resolved.map((m) => (
-              <div key={m.id} className="rounded-2xl border border-gray-100 bg-white p-4 opacity-75 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-                <div className="mb-1 flex items-center justify-between gap-2">
-                  <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{m.subject}</span>
-                  <Badge variant="green">Resolvida</Badge>
-                </div>
-                <p className="text-sm text-gray-600 dark:text-gray-300">{m.message}</p>
-                {m.admin_reply && (
-                  <div className="mt-2 rounded-xl bg-green-50 p-3 dark:bg-green-900/20">
-                    <p className="text-xs font-medium text-green-700 dark:text-green-400">Sua resposta</p>
-                    <p className="mt-0.5 text-sm text-gray-700 dark:text-gray-300">{m.admin_reply}</p>
+              <AdminReviewCard
+                key={m.id}
+                dimmed
+                avatar={
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800">
+                    <MessageCircle className="h-5 w-5 text-gray-500 dark:text-gray-400" />
                   </div>
-                )}
-              </div>
+                }
+                title={m.subject}
+                pills={[{ label: 'Resolvida', variant: 'green' }]}
+                message={m.message}
+                footer={
+                  m.admin_reply ? (
+                    <div className="rounded-xl bg-green-50 p-3 dark:bg-green-900/20">
+                      <p className="text-xs font-medium text-green-700 dark:text-green-400">Sua resposta</p>
+                      <p className="mt-0.5 text-sm text-gray-700 dark:text-gray-300">{m.admin_reply}</p>
+                    </div>
+                  ) : undefined
+                }
+              />
             ))}
           </div>
         </section>

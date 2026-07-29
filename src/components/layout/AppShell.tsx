@@ -12,11 +12,16 @@ import Sidebar from './Sidebar'
  *
  * /auth/* fica de fora: é a tela de entrada, com seu próprio layout
  * centralizado sem navegação nenhuma (nem BottomNav tinha lá).
+ *
+ * /admin/* também fica de fora: o AdminShell (ver app/admin/layout.tsx) é a
+ * própria casca completa dali — trilho escuro persistente no desktop,
+ * cabeçalho + abas no celular — em vez de aninhar dentro da Sidebar comum
+ * do app.
  */
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
 
-  if (pathname.startsWith('/auth')) {
+  if (pathname.startsWith('/auth') || pathname.startsWith('/admin')) {
     return <>{children}</>
   }
 

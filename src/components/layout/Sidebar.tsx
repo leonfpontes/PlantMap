@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Leaf, Map, Plus, Search, LogIn, ShieldCheck, MessageCircle, Users } from 'lucide-react'
+import { Leaf, Map, Plus, Search, LogIn, LayoutGrid } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useUser } from '@/hooks/useUser'
 import { useIsAdmin } from '@/hooks/useIsAdmin'
@@ -20,16 +20,16 @@ export default function Sidebar() {
   const { user, loading } = useUser()
   const unreadNotifications = useUnreadNotifications(user?.id || null)
   const { isAdmin } = useIsAdmin(user?.id || null)
-  const [pendingSpeciesCount, setPendingSpeciesCount] = useState(0)
-  const [openSupportCount, setOpenSupportCount] = useState(0)
-  const [openPermissionCount, setOpenPermissionCount] = useState(0)
+  const [pendingAdminCount, setPendingAdminCount] = useState(0)
   const [profile, setProfile] = useState<{ full_name: string | null; avatar_url: string | null } | null>(null)
 
   useEffect(() => {
     if (!isAdmin) return
-    listPendingSpecies().then((list) => setPendingSpeciesCount(list.length))
-    getOpenSupportMessageCount().then(setOpenSupportCount)
-    getOpenPermissionRequestCount().then(setOpenPermissionCount)
+    Promise.all([
+      listPendingSpecies().then((list) => list.length),
+      getOpenSupportMessageCount(),
+      getOpenPermissionRequestCount(),
+    ]).then(([species, support, permissions]) => setPendingAdminCount(species + support + permissions))
   }, [isAdmin])
 
   useEffect(() => {
@@ -74,30 +74,13 @@ export default function Sidebar() {
       {isAdmin && (
         <>
           <div className="my-4 border-t border-gray-100 dark:border-gray-800" />
-          <p className="mb-1 px-3 text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">
-            Administração
-          </p>
           <nav className="flex flex-col gap-1">
             <SidebarItem
-              href="/admin/species"
-              icon={ShieldCheck}
-              label="Moderação de ervas"
-              active={active('/admin/species')}
-              count={pendingSpeciesCount}
-            />
-            <SidebarItem
-              href="/admin/support"
-              icon={MessageCircle}
-              label="Mensagens de suporte"
-              active={active('/admin/support')}
-              count={openSupportCount}
-            />
-            <SidebarItem
-              href="/admin/users"
-              icon={Users}
-              label="Usuários"
-              active={active('/admin/users')}
-              count={openPermissionCount}
+              href="/admin"
+              icon={LayoutGrid}
+              label="Administração"
+              active={active('/admin')}
+              count={pendingAdminCount}
             />
           </nav>
         </>

@@ -31,6 +31,7 @@ export interface Species {
   reviewed_by: string | null
   reviewed_at: string | null
   rejection_reason: string | null
+  created_at: string
 }
 
 export interface PlantOccurrence {
