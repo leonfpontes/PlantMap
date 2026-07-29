@@ -27,7 +27,6 @@ export default async function ProfilePage() {
 
   // Ainda sem tela própria — exibidos como indisponíveis em vez de links mortos (href="#").
   const menuItems = [
-    { icon: Lock, label: 'Privacidade' },
     { icon: HelpCircle, label: 'Ajuda e suporte' },
   ]
 
@@ -120,6 +119,17 @@ export default async function ProfilePage() {
               <Palette className="h-5 w-5 text-purple-600 dark:text-purple-400" />
             </div>
             <span className="flex-1 text-sm font-medium text-gray-900 dark:text-gray-100">Aparência</span>
+            <ChevronRight className="h-4 w-4 text-gray-400 dark:text-gray-500" />
+          </Link>
+
+          <Link
+            href="/profile/privacy"
+            className="flex items-center gap-3 rounded-2xl bg-white border border-gray-100 px-4 py-3 hover:bg-gray-50 transition-colors shadow-sm dark:bg-gray-900 dark:border-gray-800 dark:hover:bg-gray-800"
+          >
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800">
+              <Lock className="h-5 w-5 text-gray-600 dark:text-gray-300" />
+            </div>
+            <span className="flex-1 text-sm font-medium text-gray-900 dark:text-gray-100">Privacidade</span>
             <ChevronRight className="h-4 w-4 text-gray-400 dark:text-gray-500" />
           </Link>
 

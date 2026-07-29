@@ -14,13 +14,11 @@ import ShareSheet from '@/components/plant/ShareSheet'
 import SpeciesAvatar from '@/components/plant/SpeciesAvatar'
 import ImageLightbox from '@/components/plant/ImageLightbox'
 import BottomSheet from '@/components/ui/BottomSheet'
-import { deleteOccurrence } from '@/lib/actions/plants'
-import { createClient } from '@/lib/supabase/client'
+import { deleteOccurrence, getOccurrence } from '@/lib/actions/plants'
 import { useUser } from '@/hooks/useUser'
 import { useFavorites } from '@/hooks/useFavorites'
 import { useIsAdmin } from '@/hooks/useIsAdmin'
 import { PlantOccurrence } from '@/types'
-import { parseEWKBPoint } from '@/lib/utils'
 import { CONDITION_CONFIG, STAGE_LABEL, ORIGIN_LABEL } from '@/constants/plant'
 
 const PlantMap = dynamic(() => import('@/components/map/PlantMap'), { ssr: false })
@@ -38,23 +36,10 @@ export default function PlantDetailPage() {
   const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
-    const supabase = createClient()
-    supabase
-      .from('occurrences')
-      .select('*, species(*)')
-      .eq('id', id)
-      .single()
-      .then(({ data }) => {
-        if (data) {
-          const coords = parseEWKBPoint(data.location)
-          if (coords) {
-            data.latitude = coords.latitude
-            data.longitude = coords.longitude
-          }
-        }
-        setOccurrence(data as unknown as PlantOccurrence)
-        setLoading(false)
-      })
+    getOccurrence(id).then((data) => {
+      setOccurrence(data)
+      setLoading(false)
+    })
   }, [id])
 
   if (loading) {

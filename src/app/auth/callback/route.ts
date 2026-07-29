@@ -37,16 +37,33 @@ export async function GET(request: Request) {
 
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     if (!error) {
+      const { data: { user } } = await supabase.auth.getUser()
+
       const allowedEmails = (process.env.ALLOWED_EMAILS ?? '').split(',').map(e => e.trim()).filter(Boolean)
-      if (allowedEmails.length > 0) {
-        const { data: { user } } = await supabase.auth.getUser()
-        if (!user?.email || !allowedEmails.includes(user.email)) {
+      if (allowedEmails.length > 0 && (!user?.email || !allowedEmails.includes(user.email))) {
+        await supabase.auth.signOut()
+        return NextResponse.redirect(
+          `${origin}/auth/login?error=access_denied&message=${encodeURIComponent('Acesso não autorizado para este e-mail.')}`
+        )
+      }
+
+      // Conta excluída pelo próprio usuário (ver migration 019, delete_my_account):
+      // bloqueia o login em vez de reviver o perfil anonimizado.
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('deleted_at')
+          .eq('id', user.id)
+          .single()
+
+        if (profile?.deleted_at) {
           await supabase.auth.signOut()
           return NextResponse.redirect(
-            `${origin}/auth/login?error=access_denied&message=${encodeURIComponent('Acesso não autorizado para este e-mail.')}`
+            `${origin}/auth/login?error=account_deleted&message=${encodeURIComponent('Esta conta foi excluída.')}`
           )
         }
       }
+
       return response
     }
 

@@ -1,7 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import { PlantCondition, PlantStage, OccurrenceWithDistance, Species } from '@/types'
+import { PlantCondition, PlantStage, OccurrenceWithDistance, PlantOccurrence, Species } from '@/types'
 
 
 /**
@@ -73,19 +73,28 @@ export async function searchNearby(lat: number, lng: number, radiusM: number): P
   }))
 }
 
-export async function getOccurrence(id: string) {
+/**
+ * Busca uma ocorrência para a tela de detalhe via RPC (em vez de select direto)
+ * porque a coordenada precisa respeitar a preferência de privacidade do dono —
+ * ver `get_occurrence_detail` na migration 019: aproxima lat/lng (~500m) para
+ * quem não é o dono nem admin, quando o dono não optou por compartilhar a
+ * localização exata.
+ */
+export async function getOccurrence(id: string): Promise<PlantOccurrence | null> {
   const supabase = await createClient()
   const { data, error } = await supabase
-    .from('occurrences')
-    .select(`
-      *,
-      species (*)
-    `)
-    .eq('id', id)
+    .rpc('get_occurrence_detail', { p_occurrence_id: id })
+    .single() as { data: Omit<PlantOccurrence, 'species'> | null; error: unknown }
+
+  if (error || !data) return null
+
+  const { data: species } = await supabase
+    .from('species')
+    .select('*')
+    .eq('id', data.species_id)
     .single()
 
-  if (error) return null
-  return data
+  return { ...data, species: species || undefined } as PlantOccurrence
 }
 
 export async function toggleFavorite(occurrenceId: string): Promise<{ favorited: boolean }> {

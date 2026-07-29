@@ -6,11 +6,10 @@ import MobileShell from '@/components/layout/MobileShell'
 import PageHeader from '@/components/layout/PageHeader'
 import BottomNav from '@/components/layout/BottomNav'
 import EditForm from '@/components/plant/EditForm'
-import { createClient } from '@/lib/supabase/client'
+import { getOccurrence } from '@/lib/actions/plants'
 import { useUser } from '@/hooks/useUser'
 import { useIsAdmin } from '@/hooks/useIsAdmin'
 import { PlantOccurrence } from '@/types'
-import { parseEWKBPoint } from '@/lib/utils'
 
 export default function EditPlantPage() {
   const { id } = useParams<{ id: string }>()
@@ -21,23 +20,10 @@ export default function EditPlantPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const supabase = createClient()
-    supabase
-      .from('occurrences')
-      .select('*, species(*)')
-      .eq('id', id)
-      .single()
-      .then(({ data }) => {
-        if (data) {
-          const coords = parseEWKBPoint(data.location)
-          if (coords) {
-            data.latitude = coords.latitude
-            data.longitude = coords.longitude
-          }
-        }
-        setOccurrence(data as unknown as PlantOccurrence)
-        setLoading(false)
-      })
+    getOccurrence(id).then((data) => {
+      setOccurrence(data)
+      setLoading(false)
+    })
   }, [id])
 
   useEffect(() => {

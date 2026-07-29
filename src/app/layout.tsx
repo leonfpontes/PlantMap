@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import { GeolocationProvider } from '@/hooks/useGeolocation'
 import AppearanceSync from '@/components/layout/AppearanceSync'
+import PrivacyConsentGate from '@/components/profile/PrivacyConsentGate'
 import { NO_FLASH_SCRIPT } from '@/lib/appearance'
 
 export const metadata: Metadata = {
@@ -37,6 +38,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {children}
         </GeolocationProvider>
         <AppearanceSync />
+        <PrivacyConsentGate />
       </body>
     </html>
   )
