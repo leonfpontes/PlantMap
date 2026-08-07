@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { ChevronDown, Info } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import Badge from '@/components/ui/Badge'
+import AvatarFrame from '@/components/ui/AvatarFrame'
 import { BADGE_TIER_CONFIG, BADGE_TIERS_ORDERED, POINTS_CONFIG } from '@/constants/ranking'
 
 /**
@@ -44,16 +44,25 @@ export default function RankingRulesAccordion() {
               ocorrência, pra valer por cuidado de verdade, não por salvar de novo sem mudar nada
             </li>
           </ul>
-          <div className="mt-3 flex flex-wrap gap-1.5">
+
+          <p className="mb-2 mt-4 text-xs font-semibold uppercase tracking-wide text-purple-700 dark:text-purple-400">
+            Molduras
+          </p>
+          <div className="flex flex-col divide-y divide-purple-100 dark:divide-purple-900/60">
             {BADGE_TIERS_ORDERED.map((t) => {
               const tier = BADGE_TIER_CONFIG[t]
               return (
-                <Badge key={t} variant={tier.variant}>
-                  {tier.label} · {tier.minPoints}+
-                </Badge>
+                <div key={t} className="flex items-center gap-3 py-2 first:pt-0 last:pb-0">
+                  <AvatarFrame tier={t} size="md" />
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-purple-900 dark:text-purple-200">{tier.label}</p>
+                    <p className="text-xs text-purple-700 dark:text-purple-400">{tier.minPoints}+ pontos</p>
+                  </div>
+                </div>
               )
             })}
           </div>
+
           <p className="mt-3 text-xs text-purple-700 dark:text-purple-400">
             É só reconhecimento dentro do terreiro — sem prêmio associado, e edições feitas por um
             administrador no seu registro não geram pontos.
