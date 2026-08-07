@@ -1,125 +1,169 @@
 'use client'
 
 import { useState } from 'react'
-import { Search, Camera, ImageOff } from 'lucide-react'
+import { Search, ImageOff, Plus, Pencil, Trash2 } from 'lucide-react'
 import { Species } from '@/types'
-import { listApprovedSpeciesCatalog, updateSpeciesImage } from '@/lib/actions/species'
-import { usePhotoUpload } from '@/hooks/usePhotoUpload'
+import { listAllSpeciesAdmin, deleteSpeciesAdmin } from '@/lib/actions/species'
+import { SPECIES_STATUS_CONFIG } from '@/constants/plant'
+import Badge from '@/components/ui/Badge'
+import Button from '@/components/ui/Button'
+import SpeciesFormSheet from './SpeciesFormSheet'
 
 interface SpeciesCatalogManagerProps {
   initialSpecies: Species[]
 }
 
 /**
- * Gestão da foto de referência de cada espécie aprovada do catálogo (migration 014).
- * Lista sempre traz as espécies sem foto primeiro, para priorizar o backfill —
- * hoje nenhuma das ~170 espécies seedadas tem `image_url` preenchido.
+ * Catálogo completo de espécies (qualquer status) com CRUD manual por admin
+ * (migration 022): cadastrar, editar todos os dados (inclusive foto) e excluir
+ * — além da busca/visualização que já existia aqui. Moderação de sugestões
+ * pendentes continua sendo uma ação separada (aba "Pendentes", `reviewSpecies`).
  */
 export default function SpeciesCatalogManager({ initialSpecies }: SpeciesCatalogManagerProps) {
   const [species, setSpecies] = useState(initialSpecies)
   const [query, setQuery] = useState('')
   const [searching, setSearching] = useState(false)
+  const [formSpecies, setFormSpecies] = useState<Species | null | undefined>(undefined)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
+  const [busyDeleteId, setBusyDeleteId] = useState<string | null>(null)
 
   const handleSearch = async (value: string) => {
     setQuery(value)
     setSearching(true)
-    const results = await listApprovedSpeciesCatalog(value)
+    const results = await listAllSpeciesAdmin(value)
     setSpecies(results)
     setSearching(false)
   }
 
-  const handlePhotoUpdated = (id: string, imageUrl: string) => {
-    setSpecies((prev) => prev.map((s) => (s.id === id ? { ...s, image_url: imageUrl } : s)))
+  const handleSaved = (saved: Species) => {
+    setSpecies((prev) => {
+      const exists = prev.some((s) => s.id === saved.id)
+      const next = exists ? prev.map((s) => (s.id === saved.id ? saved : s)) : [saved, ...prev]
+      return next.sort((a, b) => a.common_name.localeCompare(b.common_name, 'pt-BR'))
+    })
+    setFormSpecies(undefined)
   }
 
-  const missingCount = species.filter((s) => !s.image_url).length
+  const handleDelete = async (id: string) => {
+    setBusyDeleteId(id)
+    setDeleteError(null)
+    const result = await deleteSpeciesAdmin(id)
+    if (result.error) {
+      setDeleteError(result.error)
+    } else {
+      setSpecies((prev) => prev.filter((s) => s.id !== id))
+      setDeletingId(null)
+    }
+    setBusyDeleteId(null)
+  }
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500" />
-        <input
-          value={query}
-          onChange={(e) => handleSearch(e.target.value)}
-          placeholder="Buscar espécie no catálogo..."
-          className="w-full rounded-xl border border-gray-200 bg-white pl-9 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
-        />
+      <div className="flex gap-2">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500" />
+          <input
+            value={query}
+            onChange={(e) => handleSearch(e.target.value)}
+            placeholder="Buscar espécie no catálogo..."
+            className="w-full rounded-xl border border-gray-200 bg-white pl-9 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+          />
+        </div>
+        <Button size="md" onClick={() => setFormSpecies(null)} className="flex-shrink-0">
+          <Plus className="h-4 w-4" />
+          Nova
+        </Button>
       </div>
 
       <p className="text-xs text-gray-500 dark:text-gray-400">
-        {searching
-          ? 'Buscando...'
-          : missingCount > 0
-            ? `${missingCount} de ${species.length} sem foto de referência (mostradas primeiro)`
-            : `${species.length} espécies, todas com foto`}
+        {searching ? 'Buscando...' : `${species.length} espécie${species.length === 1 ? '' : 's'}`}
       </p>
+
+      {deleteError && (
+        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-400">{deleteError}</p>
+      )}
 
       <div className="flex flex-col gap-2">
         {species.map((sp) => (
-          <SpeciesPhotoRow key={sp.id} species={sp} onUpdated={(url) => handlePhotoUpdated(sp.id, url)} />
+          <div
+            key={sp.id}
+            className="flex items-center gap-3 rounded-2xl border border-gray-100 bg-white p-3 shadow-sm dark:border-gray-800 dark:bg-gray-900"
+          >
+            <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl bg-green-50 dark:bg-green-900/30">
+              {sp.image_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={sp.image_url} alt={sp.common_name} className="h-full w-full object-cover" />
+              ) : (
+                <ImageOff className="h-5 w-5 text-gray-300 dark:text-gray-600" />
+              )}
+            </div>
+
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1.5">
+                <p className="truncate text-sm font-medium text-gray-900 dark:text-gray-100">{sp.common_name}</p>
+                <Badge variant={SPECIES_STATUS_CONFIG[sp.status].variant} className="flex-shrink-0">
+                  {SPECIES_STATUS_CONFIG[sp.status].label}
+                </Badge>
+              </div>
+              {sp.scientific_name && (
+                <p className="truncate text-xs italic text-gray-500 dark:text-gray-400">{sp.scientific_name}</p>
+              )}
+
+              {deletingId === sp.id && (
+                <div className="mt-2 flex flex-col gap-2 rounded-xl bg-red-50 p-2 dark:bg-red-900/20">
+                  <p className="text-xs text-red-700 dark:text-red-400">Excluir definitivamente? Não pode ser desfeito.</p>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      className="flex-1"
+                      onClick={() => { setDeletingId(null); setDeleteError(null) }}
+                    >
+                      Cancelar
+                    </Button>
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      className="flex-1"
+                      loading={busyDeleteId === sp.id}
+                      onClick={() => handleDelete(sp.id)}
+                    >
+                      Excluir
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="flex flex-shrink-0 gap-1">
+              <button
+                type="button"
+                aria-label={`Editar ${sp.common_name}`}
+                onClick={() => setFormSpecies(sp)}
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-green-50 text-green-700 transition-colors hover:bg-green-100 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50"
+              >
+                <Pencil className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                aria-label={`Excluir ${sp.common_name}`}
+                onClick={() => { setDeletingId(sp.id); setDeleteError(null) }}
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-red-50 text-red-600 transition-colors hover:bg-red-100 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
         ))}
       </div>
-    </div>
-  )
-}
 
-function SpeciesPhotoRow({
-  species,
-  onUpdated,
-}: {
-  species: Species
-  onUpdated: (url: string) => void
-}) {
-  const { upload, uploading, preview, pickFile } = usePhotoUpload(species.image_url, {
-    bucket: 'species-photos',
-    folder: 'species',
-  })
-  const [error, setError] = useState<string | null>(null)
-
-  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-
-    const pickError = pickFile(file)
-    if (pickError) { setError(pickError); return }
-
-    const { url, error: uploadError } = await upload()
-    if (uploadError || !url) { setError(uploadError || 'Falha no upload'); return }
-
-    const result = await updateSpeciesImage(species.id, url)
-    if (result.error) { setError(result.error); return }
-
-    setError(null)
-    onUpdated(url)
-  }
-
-  return (
-    <div className="flex items-center gap-3 rounded-2xl border border-gray-100 bg-white p-3 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-      <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl bg-green-50 dark:bg-green-900/30">
-        {preview ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={preview} alt={species.common_name} className="h-full w-full object-cover" />
-        ) : (
-          <ImageOff className="h-5 w-5 text-gray-300 dark:text-gray-600" />
-        )}
-      </div>
-
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium text-gray-900 dark:text-gray-100">{species.common_name}</p>
-        {species.scientific_name && (
-          <p className="truncate text-xs italic text-gray-500 dark:text-gray-400">{species.scientific_name}</p>
-        )}
-        {error && <p className="text-xs text-red-600 dark:text-red-400">{error}</p>}
-      </div>
-
-      <label className="flex h-9 w-9 flex-shrink-0 cursor-pointer items-center justify-center rounded-full bg-green-50 text-green-700 transition-colors hover:bg-green-100 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50">
-        {uploading ? (
-          <span className="h-4 w-4 animate-spin rounded-full border-2 border-green-700 border-t-transparent dark:border-green-400" />
-        ) : (
-          <Camera className="h-4 w-4" />
-        )}
-        <input type="file" accept="image/*" onChange={handleFile} className="hidden" disabled={uploading} />
-      </label>
+      <SpeciesFormSheet
+        open={formSpecies !== undefined}
+        species={formSpecies}
+        onClose={() => setFormSpecies(undefined)}
+        onSaved={handleSaved}
+      />
     </div>
   )
 }

@@ -23,7 +23,7 @@ export default function SpeciesAdminTabs({ pendingSpecies, catalogSpecies }: Spe
           Pendentes{pendingSpecies.length > 0 && ` (${pendingSpecies.length})`}
         </TabButton>
         <TabButton active={tab === 'catalog'} onClick={() => setTab('catalog')}>
-          Catálogo de fotos
+          Catálogo
         </TabButton>
       </div>
 

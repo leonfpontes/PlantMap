@@ -125,3 +125,82 @@ export async function updateSpeciesImage(
   if (error) return { error: error.message }
   return { species }
 }
+
+export interface SpeciesAdminFormData {
+  common_name: string
+  scientific_name?: string
+  family?: string
+  origin?: SpeciesOrigin
+  description?: string
+  image_url?: string
+}
+
+/**
+ * Catálogo completo para gestão administrativa (migration 022) — qualquer status,
+ * não só aprovadas. A RLS de `species` já deixa um admin ver tudo (migration 013),
+ * então esta query não precisa de RPC, só do filtro de busca opcional.
+ */
+export async function listAllSpeciesAdmin(query?: string): Promise<Species[]> {
+  const supabase = await createClient()
+  let request = supabase.from('species').select('*')
+
+  if (query && query.length >= 2) {
+    request = request.or(`common_name.ilike.%${query}%,scientific_name.ilike.%${query}%`)
+  }
+
+  const { data } = await request.order('common_name', { ascending: true }).limit(500)
+  return data || []
+}
+
+/** Cadastra uma espécie diretamente aprovada (fora do fluxo de sugestão/moderação). Só admin. */
+export async function createSpeciesAdmin(
+  data: SpeciesAdminFormData
+): Promise<{ species?: Species; error?: string }> {
+  const supabase = await createClient()
+
+  const { data: species, error } = await supabase.rpc('create_species_admin', {
+    p_common_name: data.common_name,
+    p_scientific_name: data.scientific_name || null,
+    p_family: data.family || null,
+    p_origin: data.origin || 'native',
+    p_description: data.description || null,
+    p_image_url: data.image_url || null,
+  })
+
+  if (error) return { error: error.message }
+  return { species }
+}
+
+/** Edita os dados de uma espécie existente (qualquer status). Só admin. */
+export async function updateSpeciesAdmin(
+  speciesId: string,
+  data: SpeciesAdminFormData
+): Promise<{ species?: Species; error?: string }> {
+  const supabase = await createClient()
+
+  const { data: species, error } = await supabase.rpc('update_species_admin', {
+    p_species_id: speciesId,
+    p_common_name: data.common_name,
+    p_scientific_name: data.scientific_name || null,
+    p_family: data.family || null,
+    p_origin: data.origin || 'native',
+    p_description: data.description || null,
+    p_image_url: data.image_url || null,
+  })
+
+  if (error) return { error: error.message }
+  return { species }
+}
+
+/**
+ * Exclui uma espécie definitivamente. Só admin, e só se nenhuma ocorrência
+ * registrada apontar para ela (checado na RPC, que devolve um erro claro).
+ */
+export async function deleteSpeciesAdmin(speciesId: string): Promise<{ error?: string }> {
+  const supabase = await createClient()
+
+  const { error } = await supabase.rpc('delete_species_admin', { p_species_id: speciesId })
+
+  if (error) return { error: error.message }
+  return {}
+}
