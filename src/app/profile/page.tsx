@@ -4,7 +4,7 @@ import { Heart, LogOut, ChevronRight, Bell, Lock, Palette, HelpCircle, Leaf, Spr
 import MobileShell from '@/components/layout/MobileShell'
 import PageHeader from '@/components/layout/PageHeader'
 import BottomNav from '@/components/layout/BottomNav'
-import Avatar from '@/components/ui/Avatar'
+import AvatarFrame from '@/components/ui/AvatarFrame'
 import Badge from '@/components/ui/Badge'
 import { createClient } from '@/lib/supabase/server'
 import { getProfile, getUserStats } from '@/lib/actions/profile'
@@ -47,18 +47,19 @@ export default async function ProfilePage() {
         <div className="lg:flex lg:flex-row lg:items-stretch">
           {/* Profile header */}
           <div className="flex flex-col items-center gap-3 bg-green-50 px-6 py-8 dark:bg-green-900/20 lg:flex-1 lg:flex-row lg:justify-start lg:gap-5 lg:px-8">
-            <Avatar
+            <AvatarFrame
               src={profile?.avatar_url}
               name={profile?.full_name || user.email}
+              tier={ranking?.tier || 'sementeira'}
               size="xl"
             />
             <div className="text-center lg:text-left">
               <h2 className="font-bold text-gray-900 text-lg dark:text-gray-100">{profile?.full_name || 'Usuário'}</h2>
               <p className="text-sm text-gray-500 dark:text-gray-400">{user.email}</p>
               {ranking && (
-                <Badge variant={BADGE_TIER_CONFIG[ranking.tier].variant} className="mt-1.5">
+                <p className="mt-1 text-xs font-medium text-gray-500 dark:text-gray-400">
                   {BADGE_TIER_CONFIG[ranking.tier].label}
-                </Badge>
+                </p>
               )}
             </div>
           </div>
