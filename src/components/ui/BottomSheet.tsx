@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -31,6 +32,12 @@ export default function BottomSheet({
   children,
   className,
 }: BottomSheetProps) {
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
   useEffect(() => {
     if (!open) return
     const handler = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
@@ -38,9 +45,9 @@ export default function BottomSheet({
     return () => window.removeEventListener('keydown', handler)
   }, [open, onClose])
 
-  if (!open) return null
+  if (!open || !mounted) return null
 
-  return (
+  return createPortal(
     <>
       <div
         className="fixed inset-0 z-40 bg-black/40"
@@ -71,6 +78,7 @@ export default function BottomSheet({
         )}
         {children}
       </div>
-    </>
+    </>,
+    document.body
   )
 }
