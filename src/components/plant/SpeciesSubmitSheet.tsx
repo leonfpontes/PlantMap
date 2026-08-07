@@ -85,8 +85,14 @@ export default function SpeciesSubmitSheet({
     onSubmitted(result.species)
   }
 
+  /** Ignora fechamento (backdrop/Esc/X) enquanto envia — evita perder um envio em andamento por um toque acidental. */
+  const handleClose = () => {
+    if (isSubmitting || uploading) return
+    onClose()
+  }
+
   return (
-    <BottomSheet title="Sugerir nova erva" open={open} onClose={onClose}>
+    <BottomSheet title="Sugerir nova erva" open={open} onClose={handleClose}>
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3">
         <p className="rounded-lg bg-yellow-50 px-3 py-2 text-xs text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400">
           A erva entra como <strong>pendente</strong> e só aparece na busca de todos depois que um

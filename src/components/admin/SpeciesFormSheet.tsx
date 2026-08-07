@@ -93,8 +93,14 @@ export default function SpeciesFormSheet({ open, species, onClose, onSaved }: Sp
     onSaved(result.species)
   }
 
+  /** Ignora fechamento (backdrop/Esc/X) enquanto salva — evita perder um envio em andamento por um toque acidental. */
+  const handleClose = () => {
+    if (isSubmitting || uploading) return
+    onClose()
+  }
+
   return (
-    <BottomSheet title={isEdit ? 'Editar espécie' : 'Nova espécie'} open={open} onClose={onClose}>
+    <BottomSheet title={isEdit ? 'Editar espécie' : 'Nova espécie'} open={open} onClose={handleClose}>
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3">
         <Input
           label="Nome popular / ritual *"
