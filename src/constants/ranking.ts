@@ -18,7 +18,7 @@ export const BADGE_TIER_CONFIG: Record<
   ancestral:  { label: 'Ancestral Verde',   minPoints: 600, variant: 'purple' },
 }
 
-const BADGE_TIERS_ORDERED: BadgeTier[] = ['sementeira', 'broto', 'raiz', 'guardiao', 'ancestral']
+export const BADGE_TIERS_ORDERED: BadgeTier[] = ['sementeira', 'broto', 'raiz', 'guardiao', 'ancestral']
 
 /** Maior tier cujo limiar de pontos já foi alcançado. */
 export function getBadgeTier(points: number): BadgeTier {
