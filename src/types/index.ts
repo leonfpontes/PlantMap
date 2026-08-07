@@ -10,6 +10,7 @@ export interface UserProfile {
   can_register_occurrences: boolean
   theme_preference: ThemePreference
   font_scale: FontScale
+  points: number
   created_at: string
 }
 
@@ -126,4 +127,27 @@ export interface AdminUserRow {
   can_register_occurrences: boolean
   created_at: string
   latest_request: PermissionRequest | null
+}
+
+export type PointsReason = 'register' | 'maintain'
+
+export interface PointsLogEntry {
+  id: string
+  user_id: string
+  occurrence_id: string | null
+  reason: PointsReason
+  points: number
+  created_at: string
+}
+
+export type BadgeTier = 'sementeira' | 'broto' | 'raiz' | 'guardiao' | 'ancestral'
+
+/** Linha da tela /profile/ranking: dados públicos do perfil + posição calculada. */
+export interface LeaderboardEntry {
+  id: string
+  full_name: string | null
+  avatar_url: string | null
+  points: number
+  tier: BadgeTier
+  rank: number
 }

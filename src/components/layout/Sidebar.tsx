@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Leaf, Map, Plus, Search, LogIn, LayoutGrid } from 'lucide-react'
+import { Leaf, Map, Plus, Search, LogIn, LayoutGrid, Trophy } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useUser } from '@/hooks/useUser'
 import { useIsAdmin } from '@/hooks/useIsAdmin'
@@ -68,6 +68,7 @@ export default function Sidebar() {
           <SidebarItem href="/map" icon={Map} label="Mapa" active={active('/map')} />
           <SidebarItem href="/plant/register" icon={Plus} label="Registrar" active={active('/plant/register')} />
           <SidebarItem href="/search" icon={Search} label="Buscar" active={active('/search')} />
+          <SidebarItem href="/profile/ranking" icon={Trophy} label="Ranking" active={active('/profile/ranking')} />
         </nav>
       )}
 

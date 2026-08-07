@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { Heart, LogOut, ChevronRight, Bell, Lock, Palette, HelpCircle, Leaf, Sprout, UserCheck, LayoutGrid } from 'lucide-react'
+import { Heart, LogOut, ChevronRight, Bell, Lock, Palette, HelpCircle, Leaf, Sprout, UserCheck, LayoutGrid, Trophy } from 'lucide-react'
 import MobileShell from '@/components/layout/MobileShell'
 import PageHeader from '@/components/layout/PageHeader'
 import BottomNav from '@/components/layout/BottomNav'
@@ -12,7 +12,9 @@ import { listPendingSpecies } from '@/lib/actions/species'
 import { getUnreadNotificationCount } from '@/lib/actions/notifications'
 import { getOpenSupportMessageCount } from '@/lib/actions/support'
 import { getOpenPermissionRequestCount } from '@/lib/actions/permissions'
+import { getMyRankingSummary } from '@/lib/actions/ranking'
 import { signOut } from '@/lib/actions/auth'
+import { BADGE_TIER_CONFIG } from '@/constants/ranking'
 
 // Lista de menu é comprida — no celular fica em coluna única, mas no desktop
 // isso vira uma rolagem longa numa coluna estreita. Card mais largo + grade
@@ -24,10 +26,11 @@ export default async function ProfilePage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/map')
 
-  const [profile, stats, unreadNotifications] = await Promise.all([
+  const [profile, stats, unreadNotifications, ranking] = await Promise.all([
     getProfile(),
     getUserStats(user.id),
     getUnreadNotificationCount(),
+    getMyRankingSummary(user.id),
   ])
 
   const pendingAdminCount = profile?.is_admin
@@ -52,6 +55,11 @@ export default async function ProfilePage() {
             <div className="text-center lg:text-left">
               <h2 className="font-bold text-gray-900 text-lg dark:text-gray-100">{profile?.full_name || 'Usuário'}</h2>
               <p className="text-sm text-gray-500 dark:text-gray-400">{user.email}</p>
+              {ranking && (
+                <Badge variant={BADGE_TIER_CONFIG[ranking.tier].variant} className="mt-1.5">
+                  {BADGE_TIER_CONFIG[ranking.tier].label}
+                </Badge>
+              )}
             </div>
           </div>
 
@@ -94,6 +102,20 @@ export default async function ProfilePage() {
               <Heart className="h-5 w-5 text-red-500 dark:text-red-400" />
             </div>
             <span className="flex-1 text-sm font-medium text-gray-900 dark:text-gray-100">Plantas favoritas</span>
+            <ChevronRight className="h-4 w-4 text-gray-400 dark:text-gray-500" />
+          </Link>
+
+          <Link
+            href="/profile/ranking"
+            className="flex items-center gap-3 rounded-2xl bg-white border border-gray-100 px-4 py-3 hover:bg-gray-50 transition-colors shadow-sm dark:bg-gray-900 dark:border-gray-800 dark:hover:bg-gray-800"
+          >
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-purple-50 dark:bg-purple-900/30">
+              <Trophy className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+            </div>
+            <span className="flex-1 text-sm font-medium text-gray-900 dark:text-gray-100">Ranking</span>
+            {ranking && (
+              <Badge variant={BADGE_TIER_CONFIG[ranking.tier].variant}>{BADGE_TIER_CONFIG[ranking.tier].label}</Badge>
+            )}
             <ChevronRight className="h-4 w-4 text-gray-400 dark:text-gray-500" />
           </Link>
 

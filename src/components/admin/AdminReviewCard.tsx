@@ -1,6 +1,6 @@
 import Badge from '@/components/ui/Badge'
 
-type BadgeVariant = 'green' | 'yellow' | 'red' | 'gray' | 'blue'
+type BadgeVariant = 'green' | 'yellow' | 'red' | 'gray' | 'blue' | 'purple'
 
 interface AdminReviewCardProps {
   /** Avatar do usuário (componente Avatar) ou um ícone num círculo colorido — cada domínio decide o que faz sentido. */
