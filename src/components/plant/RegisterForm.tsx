@@ -1,20 +1,26 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useRouter } from 'next/navigation'
-import { Camera, MapPin } from 'lucide-react'
+import { Camera, MapPin, Maximize2, Minimize2 } from 'lucide-react'
 import { registerOccurrence } from '@/lib/actions/plants'
 import { Species, PlantCondition, PlantStage } from '@/types'
 import Button from '@/components/ui/Button'
 import dynamic from 'next/dynamic'
 import SpeciesCombobox from '@/components/plant/SpeciesCombobox'
 import { usePhotoUpload } from '@/hooks/usePhotoUpload'
+import { useGeolocation } from '@/hooks/useGeolocation'
 import { CONDITION_OPTIONS, STAGE_OPTIONS } from '@/constants/plant'
+import { cn } from '@/lib/utils'
 
 const PlantMap = dynamic(() => import('@/components/map/PlantMap'), { ssr: false })
+
+// Coordenadas de Ribeirão Preto — usadas só se o usuário negar/não tiver geolocalização.
+const FALLBACK_LAT = -21.1767
+const FALLBACK_LNG = -47.8208
 
 const schema = z.object({
   species_id: z.string().min(1, 'Selecione uma espécie'),
@@ -35,8 +41,19 @@ export default function RegisterForm() {
   const router = useRouter()
   const [selectedSpecies, setSelectedSpecies] = useState<Species | null>(null)
   const [serverError, setServerError]         = useState<string | null>(null)
+  const [mapExpanded, setMapExpanded]         = useState(false)
 
   const { upload, uploading, preview, pickFile } = usePhotoUpload()
+  const { latitude: userLat, longitude: userLng, loading: locLoading } = useGeolocation()
+  const centerLat = userLat ?? FALLBACK_LAT
+  const centerLng = userLng ?? FALLBACK_LNG
+
+  // Trava o scroll da página por trás enquanto o mapa está em tela cheia.
+  useEffect(() => {
+    if (!mapExpanded) return
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = '' }
+  }, [mapExpanded])
 
   const { register, handleSubmit, setValue, watch, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -86,13 +103,34 @@ export default function RegisterForm() {
         <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
           Localização <span className="text-red-500">*</span>
         </label>
-        <div className="h-48 w-full overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700">
-          <PlantMap
-            onMapClick={handleMapClick}
-            selectedLocation={lat && lng ? { lat, lng } : null}
-            initialZoom={13}
-            interactive
-          />
+        <div className={cn(
+          mapExpanded
+            ? 'fixed inset-0 z-50 bg-white dark:bg-gray-950'
+            : 'relative h-48 w-full overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700'
+        )}>
+          {locLoading ? (
+            <div className="flex h-full w-full items-center justify-center bg-gray-50 dark:bg-gray-900">
+              <span className="text-xs text-gray-400 dark:text-gray-500">Localizando você...</span>
+            </div>
+          ) : (
+            <PlantMap
+              key={userLat && userLng ? 'user' : 'fallback'}
+              onMapClick={handleMapClick}
+              selectedLocation={lat && lng ? { lat, lng } : null}
+              initialLat={centerLat}
+              initialLng={centerLng}
+              initialZoom={16}
+              interactive
+            />
+          )}
+          <button
+            type="button"
+            onClick={() => setMapExpanded((v) => !v)}
+            aria-label={mapExpanded ? 'Recolher mapa' : 'Ampliar mapa'}
+            className="absolute left-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 shadow-md transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:bg-gray-800"
+          >
+            {mapExpanded ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+          </button>
         </div>
         {lat && lng ? (
           <p className="mt-1 flex items-center gap-1 text-xs text-green-700 dark:text-green-400">
