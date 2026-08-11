@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Map, Plus, Search, User, LogIn } from 'lucide-react'
+import { Map, Plus, Search, User, LogIn, Trophy } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useUser } from '@/hooks/useUser'
 import { useUnreadNotifications } from '@/hooks/useUnreadNotifications'
@@ -35,16 +35,27 @@ export default function BottomNav() {
     )
   }
 
-  /* ── Autenticado: Mapa | Registrar (FAB) | Buscar | Perfil ── */
+  /* ── Autenticado: Mapa | Buscar | Nova planta (FAB) | Ranking | Perfil ── */
   return (
     <nav className="flex-shrink-0 border-t border-gray-100 bg-white shadow-[0_-1px_8px_rgba(0,0,0,0.06)] dark:border-gray-800 dark:bg-gray-950 lg:hidden">
-      <div className="flex items-center justify-around px-2 pb-2 pt-1">
+      <div className="flex items-end justify-around px-1 pb-2 pt-1">
 
         <NavItem href="/map"     icon={Map}    label="Mapa"   active={active('/map')} />
-
-        <NavItem href="/plant/register" icon={Plus} label="Registrar" active={active('/plant/register')} />
-
         <NavItem href="/search"  icon={Search} label="Buscar" active={active('/search')} />
+
+        <Link href="/plant/register" className="z-10 -mt-7 flex flex-col items-center gap-1 px-2">
+          <span className="flex h-14 w-14 items-center justify-center rounded-full bg-green-700 shadow-lg shadow-green-700/30 ring-4 ring-white dark:bg-green-600 dark:shadow-green-600/30 dark:ring-gray-950">
+            <Plus className="h-7 w-7 text-white" strokeWidth={2.5} />
+          </span>
+          <span className={cn(
+            'text-[10px] font-medium',
+            active('/plant/register') ? 'text-green-700 dark:text-green-400' : 'text-gray-400 dark:text-gray-500'
+          )}>
+            Nova planta
+          </span>
+        </Link>
+
+        <NavItem href="/profile/ranking" icon={Trophy} label="Ranking" active={active('/profile/ranking')} />
         <NavItem href="/profile" icon={User}   label="Perfil" active={active('/profile')} badge={unreadNotifications > 0} />
 
       </div>
