@@ -49,21 +49,34 @@ export async function registerOccurrence(data: {
 }
 
 /**
- * Busca ocorrências de plantas próximas a uma coordenada geográfica dentro de um raio específico.
- * 
+ * Busca ocorrências de plantas a partir de uma coordenada geográfica, ordenadas da mais próxima
+ * para a mais distante.
+ *
  * Como funciona:
  * 1. Executa a função RPC `search_nearby` criada no PostgreSQL/PostGIS. Essa função usa `ST_DWithin`
  *    no banco para encontrar os pontos eficientemente utilizando índices espaciais.
  * 2. Mapeia as espécies correspondentes de forma otimizada. Para evitar a query N+1 (uma chamada no
  *    banco para cada ocorrência para pegar a espécie), agrupamos os IDs únicos de espécies retornados,
  *    buscamos as espécies uma única vez (`.in(...)`) e mesclamos os dados na memória da aplicação.
+ *
+ * @param radiusM Raio em metros, ou `null` para busca sem limite de raio (mundo todo) —
+ *   ver migration 024. Sem raio, quem viaja continua enxergando as ocorrências de casa.
+ * @param maxResults Teto de resultados, aplicado depois da ordenação por distância (então corta
+ *   sempre as mais distantes). `null` = sem teto; use um valor ao buscar sem raio, para o payload
+ *   não crescer junto com a base.
  */
-export async function searchNearby(lat: number, lng: number, radiusM: number): Promise<OccurrenceWithDistance[]> {
+export async function searchNearby(
+  lat: number,
+  lng: number,
+  radiusM: number | null,
+  maxResults: number | null = null
+): Promise<OccurrenceWithDistance[]> {
   const supabase = await createClient()
   const { data, error } = await supabase.rpc('search_nearby', {
     lat,
     lng,
     radius_m: radiusM,
+    max_results: maxResults,
   })
   if (error) throw error
 

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { formatDistance, formatRelativeTime, parseEWKBPoint, cn } from '@/lib/utils'
+import { formatDistance, formatRelativeTime, parseEWKBPoint, cn, zoomForDistance, DEFAULT_MAP_ZOOM } from '@/lib/utils'
 
 describe('cn', () => {
   it('merges class names', () => {
@@ -82,5 +82,30 @@ describe('parseEWKBPoint', () => {
     expect(result).not.toBeNull()
     expect(result!.longitude).toBeCloseTo(-46.6333, 4)
     expect(result!.latitude).toBeCloseTo(-23.5505, 4)
+  })
+})
+
+describe('zoomForDistance', () => {
+  it('keeps the default zoom for plants nearby', () => {
+    expect(zoomForDistance(50)).toBe(DEFAULT_MAP_ZOOM)
+    expect(zoomForDistance(2000)).toBe(DEFAULT_MAP_ZOOM)
+  })
+
+  it('zooms out for a plant in another city (São Paulo → Ribeirão Preto, ~300km)', () => {
+    const zoom = zoomForDistance(300_000)
+    expect(zoom).toBeLessThan(DEFAULT_MAP_ZOOM)
+    expect(zoom).toBe(6)
+  })
+
+  it('zooms out further the farther the nearest plant is', () => {
+    expect(zoomForDistance(3_000_000)).toBeLessThan(zoomForDistance(300_000))
+  })
+
+  it('never goes below world view', () => {
+    expect(zoomForDistance(20_000_000)).toBe(2)
+  })
+
+  it('handles zero distance without blowing up', () => {
+    expect(zoomForDistance(0)).toBe(DEFAULT_MAP_ZOOM)
   })
 })

@@ -8,7 +8,7 @@ import { searchNearby } from '@/lib/actions/plants'
 import { OccurrenceWithDistance } from '@/types'
 import PlantCard from '@/components/plant/PlantCard'
 import { useGeolocation } from '@/hooks/useGeolocation'
-import { cn } from '@/lib/utils'
+import { cn, DEFAULT_MAP_ZOOM, zoomForDistance } from '@/lib/utils'
 
 const PlantMap = dynamic(() => import('@/components/map/PlantMap'), {
   ssr: false,
@@ -19,6 +19,11 @@ const PlantMap = dynamic(() => import('@/components/map/PlantMap'), {
 // geolocalização real do usuário ainda não resolveu (ou se ele negar/não tiver).
 const FALLBACK_LAT = -21.1767
 const FALLBACK_LNG = -47.8208
+
+// O mapa busca sem limite de raio (ver migration 024), então o teto de resultados é o
+// que segura o tamanho do payload conforme a base cresce. Como a busca vem ordenada por
+// distância, o corte tira sempre as mais longe — as daqui do lado nunca somem.
+const MAX_MAP_OCCURRENCES = 1000
 
 export default function MapView() {
   const [occurrences, setOccurrences] = useState<OccurrenceWithDistance[]>([])
@@ -36,8 +41,10 @@ export default function MapView() {
     // com o usuário a quilômetros dali.
     setLoading(true)
 
-    // Busca todas as ocorrências em um raio grande (100km) ao redor do centro atual
-    searchNearby(centerLat, centerLng, 100000)
+    // Sem limite de raio: antes eram 100km fixos, e quem viajava para outra cidade abria
+    // o app e via o mapa vazio — as plantas de casa ficavam fora do raio. Agora vem tudo,
+    // do mais perto para o mais longe, limitado só pelo teto de resultados.
+    searchNearby(centerLat, centerLng, null, MAX_MAP_OCCURRENCES)
       .then((data) => {
         setOccurrences(data)
         setLoading(false)
@@ -48,6 +55,13 @@ export default function MapView() {
       })
   }, [centerLat, centerLng])
 
+  // A busca já vem ordenada por distância, então a primeira ocorrência é a mais próxima.
+  // O mapa abre enquadrando ela: com a busca sem raio, as plantas podem estar a centenas
+  // de quilômetros, e no zoom padrão a tela ficaria vazia mesmo com tudo carregado.
+  const initialZoom = occurrences.length > 0
+    ? zoomForDistance(occurrences[0].distance_m)
+    : DEFAULT_MAP_ZOOM
+
   return (
     <div className="flex h-full flex-col lg:flex-row">
       {/* Lista lateral: só em telas largas — no celular o mapa já ocupa a tela toda,
@@ -55,7 +69,7 @@ export default function MapView() {
       <div className="hidden w-[360px] flex-shrink-0 flex-col overflow-y-auto border-r border-gray-100 bg-white lg:flex dark:border-gray-800 dark:bg-gray-950">
         <div className="flex-shrink-0 border-b border-gray-100 px-4 py-3 dark:border-gray-800">
           <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-            {loading ? 'Carregando...' : `${occurrences.length} planta${occurrences.length !== 1 ? 's' : ''} na região`}
+            {loading ? 'Carregando...' : `${occurrences.length} planta${occurrences.length !== 1 ? 's' : ''} no mapa`}
           </p>
         </div>
 
@@ -68,7 +82,7 @@ export default function MapView() {
         ) : occurrences.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-2 p-6 text-center">
             <Leaf className="h-8 w-8 text-gray-300 dark:text-gray-700" />
-            <p className="text-sm text-gray-400 dark:text-gray-500">Nenhum registro por aqui ainda</p>
+            <p className="text-sm text-gray-400 dark:text-gray-500">Nenhum registro ainda</p>
           </div>
         ) : (
           <div className="flex flex-col gap-2 p-3">
@@ -108,7 +122,7 @@ export default function MapView() {
             occurrences={occurrences}
             initialLat={centerLat}
             initialLng={centerLng}
-            initialZoom={12}
+            initialZoom={initialZoom}
             hoveredOccurrenceId={hoveredId}
             onPinHover={setHoveredId}
           />

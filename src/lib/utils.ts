@@ -35,6 +35,28 @@ export function formatRelativeTime(dateInput: string | Date): string {
   return `há ${diffYear} ano${diffYear !== 1 ? 's' : ''}`
 }
 
+/** Zoom padrão do mapa quando já existem plantas perto de quem abriu o app. */
+export const DEFAULT_MAP_ZOOM = 12
+
+/**
+ * Escolhe o zoom inicial do mapa de forma que a ocorrência mais próxima caiba na tela.
+ *
+ * Sem isso, quem está viajando abre o app centrado na própria localização com o zoom
+ * padrão e vê um mapa vazio — as plantas até vêm da busca (que hoje é sem limite de
+ * raio), só estão a centenas de quilômetros dali, fora do enquadramento.
+ *
+ * A conta é a aproximação de Web Mercator: cada nível de zoom divide a largura visível
+ * do mundo (~40.000km) por 2. Manter a distância abaixo de ~1/4 dessa largura deixa a
+ * planta bem dentro da tela em vez de colada na borda — daí o 20.000 em vez de 40.000.
+ * Nunca passa do zoom padrão (não faz sentido aproximar mais do que o normal só porque
+ * a planta está a 50m) nem desce abaixo de 2 (o mundo inteiro já cabe).
+ */
+export function zoomForDistance(distanceM: number): number {
+  const km = Math.max(distanceM, 1) / 1000
+  const zoom = Math.floor(Math.log2(20000 / km))
+  return Math.min(DEFAULT_MAP_ZOOM, Math.max(2, zoom))
+}
+
 export function generateShareUrl(occurrenceId: string): string {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
   return `${baseUrl}/plant/${occurrenceId}`
