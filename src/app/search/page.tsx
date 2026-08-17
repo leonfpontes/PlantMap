@@ -9,7 +9,7 @@ import PlantCard from '@/components/plant/PlantCard'
 import { searchNearby } from '@/lib/actions/plants'
 import { OccurrenceWithDistance } from '@/types'
 import { useGeolocation } from '@/hooks/useGeolocation'
-import { cn } from '@/lib/utils'
+import { cn, normalizeSearchText } from '@/lib/utils'
 
 // Teto de resultados da busca sem raio (ver migration 024). Como o retorno vem ordenado
 // por distância, o corte descarta sempre as mais longe — e a lista continua utilizável
@@ -66,10 +66,14 @@ export default function SearchPage() {
       const data = unlimited
         ? await searchNearby(lat, lng, null, MAX_UNLIMITED_RESULTS)
         : await searchNearby(lat, lng, radius * 1000)
-      const filtered = query
+      // Filtro por nome ignorando acentuação: quem busca "guine" ou "acafrao" espera
+      // ver os registros de "Guiné" e "Açafrão" (mesma regra da busca de espécies,
+      // ver normalizeSearchText e migration 025).
+      const term = normalizeSearchText(query)
+      const filtered = term
         ? data.filter((o) =>
-            o.species?.common_name?.toLowerCase().includes(query.toLowerCase()) ||
-            o.species?.scientific_name?.toLowerCase().includes(query.toLowerCase())
+            normalizeSearchText(o.species?.common_name ?? '').includes(term) ||
+            normalizeSearchText(o.species?.scientific_name ?? '').includes(term)
           )
         : data
       setResults(filtered)

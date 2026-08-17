@@ -6,7 +6,7 @@ vi.mock('@/lib/supabase/server', () => ({
 }))
 
 import { createClient } from '@/lib/supabase/server'
-import { registerOccurrence } from '@/lib/actions/plants'
+import { registerOccurrence, searchSpecies } from '@/lib/actions/plants'
 
 let mockClient: ReturnType<typeof createSupabaseMock>
 
@@ -68,5 +68,39 @@ describe('registerOccurrence', () => {
     const result = await registerOccurrence(VALID_INPUT)
 
     expect(result).toEqual({ error: 'espécie inexistente' })
+  })
+})
+
+describe('searchSpecies', () => {
+  it('vai pela RPC search_species, que normaliza acentos nos dois lados (migration 025)', async () => {
+    mockClient.setRpcResult('search_species', {
+      data: [{ id: 'sp-1', common_name: 'Guiné' }],
+      error: null,
+    })
+
+    const result = await searchSpecies('guine')
+
+    expect(mockClient.getRpcCalls()).toEqual([
+      { fn: 'search_species', params: { p_query: 'guine', p_limit: 20 } },
+    ])
+    expect(result).toEqual([{ id: 'sp-1', common_name: 'Guiné' }])
+    // O termo vai como parâmetro, sem montar filtro na tabela.
+    expect(mockClient.from).not.toHaveBeenCalled()
+  })
+
+  it('repassa o termo cru (acentuado ou com parênteses) sem quebrar a query', async () => {
+    mockClient.setRpcResult('search_species', { data: [], error: null })
+
+    await searchSpecies('erva (guiné)')
+
+    expect(mockClient.getRpcCalls()).toEqual([
+      { fn: 'search_species', params: { p_query: 'erva (guiné)', p_limit: 20 } },
+    ])
+  })
+
+  it('devolve lista vazia quando a RPC não retorna nada', async () => {
+    mockClient.setRpcResult('search_species', { data: null, error: null })
+
+    expect(await searchSpecies('xyz')).toEqual([])
   })
 })

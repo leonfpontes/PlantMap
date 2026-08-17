@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { formatDistance, formatRelativeTime, parseEWKBPoint, cn, zoomForDistance, DEFAULT_MAP_ZOOM } from '@/lib/utils'
+import { formatDistance, formatRelativeTime, parseEWKBPoint, cn, zoomForDistance, normalizeSearchText, DEFAULT_MAP_ZOOM } from '@/lib/utils'
 
 describe('cn', () => {
   it('merges class names', () => {
@@ -107,5 +107,38 @@ describe('zoomForDistance', () => {
 
   it('handles zero distance without blowing up', () => {
     expect(zoomForDistance(0)).toBe(DEFAULT_MAP_ZOOM)
+  })
+})
+
+describe('normalizeSearchText', () => {
+  it('remove acentos das vogais', () => {
+    expect(normalizeSearchText('Guiné')).toBe('guine')
+    expect(normalizeSearchText('Ipê')).toBe('ipe')
+    expect(normalizeSearchText('Hortelã')).toBe('hortela')
+    expect(normalizeSearchText('Cipó')).toBe('cipo')
+  })
+
+  it('remove a cedilha, como o unaccent do banco', () => {
+    expect(normalizeSearchText('Açafrão')).toBe('acafrao')
+  })
+
+  it('deixa em minúsculas e sem espaços nas pontas', () => {
+    expect(normalizeSearchText('  ARRUDA  ')).toBe('arruda')
+  })
+
+  it('é idempotente: texto já normalizado não muda', () => {
+    expect(normalizeSearchText('guine')).toBe('guine')
+  })
+
+  it('faz o termo digitado sem acento casar com o nome acentuado', () => {
+    expect(normalizeSearchText('Erva de Guiné').includes(normalizeSearchText('guine'))).toBe(true)
+  })
+
+  it('preserva hífen e espaço interno (fazem parte do nome popular)', () => {
+    expect(normalizeSearchText('Cipó-mil-homens')).toBe('cipo-mil-homens')
+  })
+
+  it('não quebra com string vazia', () => {
+    expect(normalizeSearchText('')).toBe('')
   })
 })

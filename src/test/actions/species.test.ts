@@ -6,7 +6,13 @@ vi.mock('@/lib/supabase/server', () => ({
 }))
 
 import { createClient } from '@/lib/supabase/server'
-import { createSpeciesAdmin, updateSpeciesAdmin, deleteSpeciesAdmin, listAllSpeciesAdmin } from '@/lib/actions/species'
+import {
+  createSpeciesAdmin,
+  updateSpeciesAdmin,
+  deleteSpeciesAdmin,
+  listAllSpeciesAdmin,
+  listApprovedSpeciesCatalog,
+} from '@/lib/actions/species'
 
 let mockClient: ReturnType<typeof createSupabaseMock>
 
@@ -123,7 +129,47 @@ describe('listAllSpeciesAdmin', () => {
     await listAllSpeciesAdmin('gu')
 
     expect(mockClient.getBuilder('species')?.or).toHaveBeenCalledWith(
-      'common_name.ilike.%gu%,scientific_name.ilike.%gu%'
+      'common_name_normalized.ilike.%gu%,scientific_name_normalized.ilike.%gu%'
     )
+  })
+
+  it('busca nas colunas normalizadas com o termo sem acento (migration 025)', async () => {
+    mockClient.setTableResult('species', { data: [], error: null })
+
+    await listAllSpeciesAdmin('Guiné')
+
+    expect(mockClient.getBuilder('species')?.or).toHaveBeenCalledWith(
+      'common_name_normalized.ilike.%guine%,scientific_name_normalized.ilike.%guine%'
+    )
+  })
+
+  it('neutraliza metacaracteres do PostgREST no termo digitado', async () => {
+    mockClient.setTableResult('species', { data: [], error: null })
+
+    await listAllSpeciesAdmin('erva (guiné)')
+
+    expect(mockClient.getBuilder('species')?.or).toHaveBeenCalledWith(
+      'common_name_normalized.ilike.%erva  guine %,scientific_name_normalized.ilike.%erva  guine %'
+    )
+  })
+})
+
+describe('listApprovedSpeciesCatalog', () => {
+  it('filtra pelas colunas normalizadas, ignorando acentuação', async () => {
+    mockClient.setTableResult('species', { data: [], error: null })
+
+    await listApprovedSpeciesCatalog('AÇAFRÃO')
+
+    expect(mockClient.getBuilder('species')?.or).toHaveBeenCalledWith(
+      'common_name_normalized.ilike.%acafrao%,scientific_name_normalized.ilike.%acafrao%'
+    )
+  })
+
+  it('não filtra por nome quando a query tem menos de 2 caracteres', async () => {
+    mockClient.setTableResult('species', { data: [], error: null })
+
+    await listApprovedSpeciesCatalog('a')
+
+    expect(mockClient.getBuilder('species')?.or).not.toHaveBeenCalled()
   })
 })

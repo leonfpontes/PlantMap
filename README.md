@@ -9,7 +9,7 @@ Plataforma colaborativa para mapeamento de ocorrências de plantas medicinais, r
 
 - Mapa interativo com marcadores coloridos por condição da planta
 - Registro de ocorrências com foto, espécie, condição e estágio
-- Busca por espécie com debounce
+- Busca por espécie com debounce e sem depender de acentuação — "guine" acha "Guiné" (ver [migration 025](supabase/migrations/025_accent_insensitive_search.sql))
 - Sugestão de novas espécies pelos usuários, com fila de moderação para admins (ver [Moderação de espécies](#moderação-de-espécies))
 - Soft delete de registros (dados preservados no banco)
 - Log de auditoria automático para todas as alterações (ocorrências e espécies)

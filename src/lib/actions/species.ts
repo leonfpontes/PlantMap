@@ -1,7 +1,22 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { normalizeSearchText } from '@/lib/utils'
 import { Species, SpeciesOrigin } from '@/types'
+
+/**
+ * Filtro de busca por nome das listas de catálogo, ignorando acentuação.
+ *
+ * O termo digitado é normalizado aqui e comparado com as colunas `*_normalized`
+ * mantidas pelo banco (migration 025) — as colunas originais continuam intactas
+ * para exibição. Vírgula, parênteses e barra invertida viram espaço porque são
+ * metacaracteres da sintaxe de filtro do PostgREST: buscar "erva (guiné)" com eles
+ * dentro do texto quebraria a query inteira.
+ */
+function nameSearchFilter(query: string): string {
+  const term = normalizeSearchText(query).replace(/[,()\\]/g, ' ')
+  return `common_name_normalized.ilike.%${term}%,scientific_name_normalized.ilike.%${term}%`
+}
 
 export interface SpeciesModerationItem extends Species {
   submitter: { full_name: string | null; email: string } | null
@@ -99,7 +114,7 @@ export async function listApprovedSpeciesCatalog(query?: string): Promise<Specie
     .eq('status', 'approved')
 
   if (query && query.length >= 2) {
-    request = request.or(`common_name.ilike.%${query}%,scientific_name.ilike.%${query}%`)
+    request = request.or(nameSearchFilter(query))
   }
 
   const { data } = await request
@@ -145,7 +160,7 @@ export async function listAllSpeciesAdmin(query?: string): Promise<Species[]> {
   let request = supabase.from('species').select('*')
 
   if (query && query.length >= 2) {
-    request = request.or(`common_name.ilike.%${query}%,scientific_name.ilike.%${query}%`)
+    request = request.or(nameSearchFilter(query))
   }
 
   const { data } = await request.order('common_name', { ascending: true }).limit(500)

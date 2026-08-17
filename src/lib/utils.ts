@@ -57,6 +57,24 @@ export function zoomForDistance(distanceM: number): number {
   return Math.min(DEFAULT_MAP_ZOOM, Math.max(2, zoom))
 }
 
+/**
+ * Forma canônica de um texto para busca: sem acento, em minúsculas e sem espaços
+ * nas pontas. Espelha `normalize_search_text` do banco (migration 025) — os dois
+ * precisam concordar, porque a comparação sempre põe o termo digitado aqui contra
+ * as colunas `*_normalized` calculadas lá.
+ *
+ * O usuário digita "guine", "acafrao" ou "ipe" e espera achar "Guiné", "Açafrão" e
+ * "Ipê". A decomposição NFD separa a letra do acento, e o range U+0300–U+036F cobre
+ * os diacríticos combinantes — inclusive a cedilha (ç -> c), como o `unaccent` faz.
+ */
+export function normalizeSearchText(value: string): string {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim()
+}
+
 export function generateShareUrl(occurrenceId: string): string {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
   return `${baseUrl}/plant/${occurrenceId}`

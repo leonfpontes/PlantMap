@@ -141,13 +141,21 @@ export async function toggleFavorite(occurrenceId: string): Promise<{ favorited:
   }
 }
 
+/**
+ * Busca espécies pelo nome popular ou científico para o autocomplete do registro.
+ *
+ * Vai pela RPC `search_species` (migration 025) em vez de um `.ilike` direto porque
+ * a comparação precisa ignorar acentuação — quem digita "guine" ou "acafrao" tem que
+ * achar "Guiné" e "Açafrão". A RPC compara as duas pontas já normalizadas e devolve
+ * primeiro quem *começa* com o termo, já que o corte em 20 resultados sem ordenação
+ * podia esconder justamente a espécie mais óbvia.
+ */
 export async function searchSpecies(query: string): Promise<Species[]> {
   const supabase = await createClient()
-  const { data } = await supabase
-    .from('species')
-    .select('*')
-    .or(`common_name.ilike.%${query}%,scientific_name.ilike.%${query}%`)
-    .limit(20)
+  const { data } = await supabase.rpc('search_species', {
+    p_query: query,
+    p_limit: 20,
+  })
   return data || []
 }
 
