@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { formatDistance, formatRelativeTime, parseEWKBPoint, cn, zoomForDistance, normalizeSearchText, DEFAULT_MAP_ZOOM } from '@/lib/utils'
+import { formatDistance, formatRelativeTime, parseEWKBPoint, cn, zoomForDistance, normalizeSearchText, matchesSearchTerms, DEFAULT_MAP_ZOOM } from '@/lib/utils'
 
 describe('cn', () => {
   it('merges class names', () => {
@@ -134,11 +134,53 @@ describe('normalizeSearchText', () => {
     expect(normalizeSearchText('Erva de Guiné').includes(normalizeSearchText('guine'))).toBe(true)
   })
 
-  it('preserva hífen e espaço interno (fazem parte do nome popular)', () => {
-    expect(normalizeSearchText('Cipó-mil-homens')).toBe('cipo-mil-homens')
+  it('transforma hífen, barra e apóstrofo em espaço — ninguém digita a pontuação do catálogo', () => {
+    expect(normalizeSearchText('Cipó-mil-homens')).toBe('cipo mil homens')
+    expect(normalizeSearchText('Espada-de-Iansã / Espada-de-São-Jorge')).toBe(
+      'espada de iansa espada de sao jorge'
+    )
+    expect(normalizeSearchText("Alface-d'água")).toBe('alface d agua')
+  })
+
+  it('colapsa pontuação e espaços repetidos numa forma única', () => {
+    expect(normalizeSearchText('erva  ---  (guiné)')).toBe('erva guine')
   })
 
   it('não quebra com string vazia', () => {
     expect(normalizeSearchText('')).toBe('')
+  })
+})
+
+describe('matchesSearchTerms', () => {
+  const ESPADA = 'Espada-de-Iansã / Espada-de-São-Jorge'
+
+  it('acha nome com hífen quando o usuário digita com espaço', () => {
+    expect(matchesSearchTerms('espada de sao jorge', ESPADA)).toBe(true)
+  })
+
+  it('acha do mesmo jeito com a pontuação e os acentos do catálogo', () => {
+    expect(matchesSearchTerms('Espada-de-São-Jorge', ESPADA)).toBe(true)
+  })
+
+  it('não depende da ordem das palavras', () => {
+    expect(matchesSearchTerms('jorge espada', ESPADA)).toBe(true)
+  })
+
+  it('exige todas as palavras digitadas', () => {
+    expect(matchesSearchTerms('espada de ogum', ESPADA)).toBe(false)
+  })
+
+  it('aceita palavras espalhadas entre os campos (popular e científico)', () => {
+    expect(matchesSearchTerms('petiveria guine', 'Guiné', 'Petiveria alliacea')).toBe(true)
+  })
+
+  it('ignora campos vazios sem quebrar', () => {
+    expect(matchesSearchTerms('guine', 'Guiné', null)).toBe(true)
+    expect(matchesSearchTerms('guine', null, undefined)).toBe(false)
+  })
+
+  it('query vazia ou só pontuação casa com tudo — quem chama decide se filtra', () => {
+    expect(matchesSearchTerms('', ESPADA)).toBe(true)
+    expect(matchesSearchTerms('  ---  ', ESPADA)).toBe(true)
   })
 })

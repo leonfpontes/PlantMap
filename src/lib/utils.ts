@@ -58,21 +58,45 @@ export function zoomForDistance(distanceM: number): number {
 }
 
 /**
- * Forma canônica de um texto para busca: sem acento, em minúsculas e sem espaços
- * nas pontas. Espelha `normalize_search_text` do banco (migration 025) — os dois
- * precisam concordar, porque a comparação sempre põe o termo digitado aqui contra
- * as colunas `*_normalized` calculadas lá.
+ * Forma canônica de um texto para busca. Espelha `search_normalize` do banco
+ * (migrations 025 e 027) — os dois precisam concordar, porque a comparação sempre
+ * põe o termo digitado aqui contra as colunas `*_normalized` calculadas lá.
  *
- * O usuário digita "guine", "acafrao" ou "ipe" e espera achar "Guiné", "Açafrão" e
- * "Ipê". A decomposição NFD separa a letra do acento, e o range U+0300–U+036F cobre
- * os diacríticos combinantes — inclusive a cedilha (ç -> c), como o `unaccent` faz.
+ * Duas coisas acontecem:
+ *   - Acento sai: quem digita "guine" ou "acafrao" acha "Guiné" e "Açafrão". A
+ *     decomposição NFD separa a letra do acento, e o range U+0300–U+036F cobre os
+ *     diacríticos combinantes — inclusive a cedilha (ç -> c), como o `unaccent`.
+ *   - Pontuação vira espaço: hífen, barra e apóstrofo separam palavras no catálogo
+ *     ("Espada-de-São-Jorge", "Alfavaca / Alfavaquinha"), mas ninguém digita assim.
+ *     Sem isso, "espada de sao jorge" não acha nada.
  */
 export function normalizeSearchText(value: string): string {
   return value
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
     .trim()
+}
+
+/**
+ * Se o que o usuário digitou casa com algum dos campos, na mesma regra da busca do
+ * banco (`search_species`, migration 027): cada palavra digitada precisa aparecer
+ * em pelo menos um dos campos, em qualquer ordem. É o que faz "jorge espada" achar
+ * "Espada-de-São-Jorge", e "petiveria guine" achar "Guiné" — uma palavra bate no
+ * nome popular, a outra no científico.
+ *
+ * Query vazia casa com tudo; quem chama decide se chega a filtrar.
+ */
+export function matchesSearchTerms(query: string, ...fields: (string | null | undefined)[]): boolean {
+  const terms = normalizeSearchText(query).split(' ').filter(Boolean)
+  if (terms.length === 0) return true
+
+  const haystacks = fields
+    .filter((field): field is string => !!field)
+    .map(normalizeSearchText)
+
+  return terms.every((term) => haystacks.some((haystack) => haystack.includes(term)))
 }
 
 export function generateShareUrl(occurrenceId: string): string {

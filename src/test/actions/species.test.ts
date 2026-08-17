@@ -149,7 +149,17 @@ describe('listAllSpeciesAdmin', () => {
     await listAllSpeciesAdmin('erva (guiné)')
 
     expect(mockClient.getBuilder('species')?.or).toHaveBeenCalledWith(
-      'common_name_normalized.ilike.%erva  guine %,scientific_name_normalized.ilike.%erva  guine %'
+      'common_name_normalized.ilike.%erva guine%,scientific_name_normalized.ilike.%erva guine%'
+    )
+  })
+
+  it('procura a forma sem pontuação do nome (hífen do catálogo vira espaço)', async () => {
+    mockClient.setTableResult('species', { data: [], error: null })
+
+    await listAllSpeciesAdmin('Espada-de-São-Jorge')
+
+    expect(mockClient.getBuilder('species')?.or).toHaveBeenCalledWith(
+      'common_name_normalized.ilike.%espada de sao jorge%,scientific_name_normalized.ilike.%espada de sao jorge%'
     )
   })
 })

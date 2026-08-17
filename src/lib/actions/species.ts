@@ -5,16 +5,22 @@ import { normalizeSearchText } from '@/lib/utils'
 import { Species, SpeciesOrigin } from '@/types'
 
 /**
- * Filtro de busca por nome das listas de catálogo, ignorando acentuação.
+ * Filtro de busca por nome das listas de catálogo, ignorando acentuação e
+ * pontuação (hífen e barra do catálogo não atrapalham: "espada de sao jorge" acha
+ * "Espada-de-São-Jorge").
  *
  * O termo digitado é normalizado aqui e comparado com as colunas `*_normalized`
- * mantidas pelo banco (migration 025) — as colunas originais continuam intactas
- * para exibição. Vírgula, parênteses e barra invertida viram espaço porque são
- * metacaracteres da sintaxe de filtro do PostgREST: buscar "erva (guiné)" com eles
- * dentro do texto quebraria a query inteira.
+ * mantidas pelo banco (migrations 025 e 027) — as colunas originais continuam
+ * intactas para exibição. Como a normalização só deixa passar letra, número e
+ * espaço, o termo já chega livre de vírgula e parêntese, que são metacaracteres
+ * da sintaxe de filtro do PostgREST e quebrariam a query inteira.
+ *
+ * Aqui a busca é por frase, não palavra a palavra como no autocomplete
+ * (`search_species`): estas telas são de gestão, e a lista completa fica a um
+ * scroll de distância.
  */
 function nameSearchFilter(query: string): string {
-  const term = normalizeSearchText(query).replace(/[,()\\]/g, ' ')
+  const term = normalizeSearchText(query)
   return `common_name_normalized.ilike.%${term}%,scientific_name_normalized.ilike.%${term}%`
 }
 
