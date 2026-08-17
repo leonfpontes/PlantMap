@@ -150,7 +150,7 @@ describe('getOccurrence', () => {
     })
   })
 
-  it('credita quem editou, não quem registrou, quando o registro já foi atualizado', async () => {
+  it('credita quem editou, não quem registrou, quando a edição foi de outra pessoa', async () => {
     mockClient.setRpcResult('get_occurrence_detail', {
       data: { ...DETAIL, updated_by: 'admin-1', updated_at: '2026-08-15T09:30:00Z' },
       error: null,
@@ -169,6 +169,28 @@ describe('getOccurrence', () => {
       tier: 'guardiao',
       kind: 'updated',
       at: '2026-08-15T09:30:00Z',
+    })
+  })
+
+  it('mantém o crédito de registro quando o próprio dono editou a planta dele', async () => {
+    mockClient.setRpcResult('get_occurrence_detail', {
+      data: { ...DETAIL, updated_by: DETAIL.user_id, updated_at: '2026-08-15T09:30:00Z' },
+      error: null,
+    })
+    mockClient.setTableResult('species', { data: { id: 'sp-1' }, error: null })
+    mockClient.setTableResult('profiles', {
+      data: { id: 'user-1', full_name: 'Maria da Mata', avatar_url: null, points: 120, deleted_at: null },
+      error: null,
+    })
+
+    const occurrence = await getOccurrence('occ-1')
+
+    // Mesma pessoa dos dois lados: trocar o rótulo para "Atualizado por" só
+    // confundiria, então segue como registro — com a data do registro.
+    expect(occurrence?.credit).toMatchObject({
+      id: 'user-1',
+      kind: 'registered',
+      at: DETAIL.created_at,
     })
   })
 

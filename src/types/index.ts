@@ -41,8 +41,9 @@ export interface Species {
  * 001) — nada de e-mail. `tier` vem dos pontos, como no ranking, para escolher a
  * moldura do avatar.
  *
- * A tela credita uma pessoa só: quem editou por último, se o registro já foi
- * editado (`updated_by`, migration 026); senão, quem registrou.
+ * A tela credita uma pessoa só: quem editou por último, quando quem editou é
+ * outra pessoa que não o dono (`updated_by`, migration 026); senão, quem
+ * registrou.
  */
 export interface OccurrenceCredit {
   id: string

@@ -112,10 +112,13 @@ export async function getOccurrence(id: string): Promise<PlantOccurrence | null>
 
   if (error || !data) return null
 
-  // A tela credita uma pessoa só: quem editou por último, quando o registro já
-  // foi editado (migration 026), senão quem registrou. Busca só esse perfil.
-  const credited = data.updated_by || data.user_id
-  const kind = data.updated_by ? 'updated' : 'registered'
+  // A tela credita uma pessoa só. "Atualizado por" fica reservado para quando
+  // alguém *de fora* mexeu no registro (outro usuário ou um admin, ver migration
+  // 012): o dono editando a própria planta continua aparecendo como quem
+  // registrou, já que é a mesma pessoa e trocar o rótulo só confundiria.
+  const editedByOther = !!data.updated_by && data.updated_by !== data.user_id
+  const credited = editedByOther ? data.updated_by! : data.user_id
+  const kind = editedByOther ? 'updated' : 'registered'
 
   // Espécie e pessoa creditada não dependem uma da outra: em paralelo pra tela
   // não pagar dois round-trips em série.

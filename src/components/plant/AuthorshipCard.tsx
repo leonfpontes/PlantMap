@@ -16,10 +16,10 @@ interface AuthorshipCardProps {
  * AvatarFrame e migration 023) — quem cuida do registro é reconhecido pelo mesmo
  * sinal visual em toda a aplicação.
  *
- * Quem aparece é sempre a última pessoa a mexer no registro: se já foi editado,
- * credita quem editou ("Atualizado por"); enquanto ninguém editou, credita quem
- * registrou ("Registrado por"). A data da edição vem junto do rótulo — a do
- * registro não, porque já está logo abaixo, na lista de detalhes.
+ * "Atualizado por" só aparece quando quem editou é outra pessoa que não o dono
+ * (ver getOccurrence); o dono mexendo na própria planta continua como
+ * "Registrado por". A data da edição vem junto do rótulo — a do registro não,
+ * porque já está logo abaixo, na lista de detalhes.
  *
  * Conta excluída vira "Usuário removido": a anonimização da migration 019 zera
  * nome e foto, e sem isso o card apareceria com o nome em branco.
