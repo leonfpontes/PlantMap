@@ -119,9 +119,10 @@ describe('getOccurrence', () => {
     verified: false,
     created_at: '2026-08-01T12:00:00Z',
     updated_at: '2026-08-01T12:00:00Z',
+    updated_by: null,
   }
 
-  it('inclui quem registrou, com o tier derivado dos pontos', async () => {
+  it('credita quem registrou, com o tier derivado dos pontos, enquanto ninguém editou', async () => {
     mockClient.setRpcResult('get_occurrence_detail', { data: DETAIL, error: null })
     mockClient.setTableResult('species', { data: { id: 'sp-1', common_name: 'Guiné' }, error: null })
     mockClient.setTableResult('profiles', {
@@ -137,14 +138,51 @@ describe('getOccurrence', () => {
 
     const occurrence = await getOccurrence('occ-1')
 
-    expect(occurrence?.registrant).toEqual({
+    expect(occurrence?.credit).toEqual({
       id: 'user-1',
       full_name: 'Maria da Mata',
       avatar_url: 'https://lh3.googleusercontent.com/foto',
       points: 120,
       tier: 'raiz',
       deleted: false,
+      kind: 'registered',
+      at: DETAIL.created_at,
     })
+  })
+
+  it('credita quem editou, não quem registrou, quando o registro já foi atualizado', async () => {
+    mockClient.setRpcResult('get_occurrence_detail', {
+      data: { ...DETAIL, updated_by: 'admin-1', updated_at: '2026-08-15T09:30:00Z' },
+      error: null,
+    })
+    mockClient.setTableResult('species', { data: { id: 'sp-1' }, error: null })
+    mockClient.setTableResult('profiles', {
+      data: { id: 'admin-1', full_name: 'João Guardião', avatar_url: null, points: 300, deleted_at: null },
+      error: null,
+    })
+
+    const occurrence = await getOccurrence('occ-1')
+
+    expect(occurrence?.credit).toMatchObject({
+      id: 'admin-1',
+      full_name: 'João Guardião',
+      tier: 'guardiao',
+      kind: 'updated',
+      at: '2026-08-15T09:30:00Z',
+    })
+  })
+
+  it('busca o perfil de quem editou, e não o do dono do registro', async () => {
+    mockClient.setRpcResult('get_occurrence_detail', {
+      data: { ...DETAIL, updated_by: 'admin-1' },
+      error: null,
+    })
+    mockClient.setTableResult('species', { data: { id: 'sp-1' }, error: null })
+    mockClient.setTableResult('profiles', { data: { id: 'admin-1', points: 0 }, error: null })
+
+    await getOccurrence('occ-1')
+
+    expect(mockClient.getBuilder('profiles')?.eq).toHaveBeenCalledWith('id', 'admin-1')
   })
 
   it('marca conta excluída, que vem anonimizada do banco (migration 019)', async () => {
@@ -157,10 +195,10 @@ describe('getOccurrence', () => {
 
     const occurrence = await getOccurrence('occ-1')
 
-    expect(occurrence?.registrant).toMatchObject({ deleted: true, tier: 'sementeira' })
+    expect(occurrence?.credit).toMatchObject({ deleted: true, tier: 'sementeira' })
   })
 
-  it('não quebra a tela quando o perfil do autor não vem', async () => {
+  it('não quebra a tela quando o perfil da pessoa creditada não vem', async () => {
     mockClient.setRpcResult('get_occurrence_detail', { data: DETAIL, error: null })
     mockClient.setTableResult('species', { data: { id: 'sp-1' }, error: null })
     mockClient.setTableResult('profiles', { data: null, error: null })
@@ -168,6 +206,6 @@ describe('getOccurrence', () => {
     const occurrence = await getOccurrence('occ-1')
 
     expect(occurrence?.id).toBe('occ-1')
-    expect(occurrence?.registrant).toBeUndefined()
+    expect(occurrence?.credit).toBeUndefined()
   })
 })

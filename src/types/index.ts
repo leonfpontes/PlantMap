@@ -36,12 +36,15 @@ export interface Species {
 }
 
 /**
- * Dados públicos de quem registrou uma ocorrência, para creditar a autoria na
- * tela de detalhe. Só o que `profiles` já expõe publicamente (policy de select
- * `using (true)`, migration 001) — nada de e-mail. `tier` vem dos pontos, como
- * no ranking, para escolher a moldura do avatar.
+ * Dados públicos da pessoa creditada na tela de detalhe da ocorrência. Só o que
+ * `profiles` já expõe publicamente (policy de select `using (true)`, migration
+ * 001) — nada de e-mail. `tier` vem dos pontos, como no ranking, para escolher a
+ * moldura do avatar.
+ *
+ * A tela credita uma pessoa só: quem editou por último, se o registro já foi
+ * editado (`updated_by`, migration 026); senão, quem registrou.
  */
-export interface OccurrenceRegistrant {
+export interface OccurrenceCredit {
   id: string
   full_name: string | null
   avatar_url: string | null
@@ -49,6 +52,10 @@ export interface OccurrenceRegistrant {
   tier: BadgeTier
   /** Conta excluída e anonimizada (migration 019): nome e foto vêm nulos de propósito. */
   deleted: boolean
+  /** Qual ação está sendo creditada — define o texto exibido na tela. */
+  kind: 'registered' | 'updated'
+  /** Data da ação creditada: o registro ou a última edição. */
+  at: string
 }
 
 export interface PlantOccurrence {
@@ -56,7 +63,7 @@ export interface PlantOccurrence {
   user_id: string
   species_id: string
   species?: Species
-  registrant?: OccurrenceRegistrant
+  credit?: OccurrenceCredit
   latitude: number
   longitude: number
   condition: PlantCondition
@@ -66,6 +73,8 @@ export interface PlantOccurrence {
   verified: boolean
   created_at: string
   updated_at: string
+  /** Quem fez a última edição; null enquanto ninguém editou (migration 026). */
+  updated_by?: string | null
 }
 
 export interface OccurrenceWithDistance extends PlantOccurrence {

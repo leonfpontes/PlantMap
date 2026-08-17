@@ -112,21 +112,26 @@ export async function getOccurrence(id: string): Promise<PlantOccurrence | null>
 
   if (error || !data) return null
 
-  // Espécie e autor não dependem um do outro: em paralelo pra tela não pagar
-  // dois round-trips em série.
+  // A tela credita uma pessoa só: quem editou por último, quando o registro já
+  // foi editado (migration 026), senão quem registrou. Busca só esse perfil.
+  const credited = data.updated_by || data.user_id
+  const kind = data.updated_by ? 'updated' : 'registered'
+
+  // Espécie e pessoa creditada não dependem uma da outra: em paralelo pra tela
+  // não pagar dois round-trips em série.
   const [{ data: species }, { data: profile }] = await Promise.all([
     supabase.from('species').select('*').eq('id', data.species_id).single(),
     supabase
       .from('profiles')
       .select('id, full_name, avatar_url, points, deleted_at')
-      .eq('id', data.user_id)
+      .eq('id', credited)
       .single(),
   ])
 
   return {
     ...data,
     species: species || undefined,
-    registrant: profile
+    credit: profile
       ? {
           id: profile.id,
           full_name: profile.full_name,
@@ -134,6 +139,8 @@ export async function getOccurrence(id: string): Promise<PlantOccurrence | null>
           points: profile.points ?? 0,
           tier: getBadgeTier(profile.points ?? 0),
           deleted: !!profile.deleted_at,
+          kind,
+          at: kind === 'updated' ? data.updated_at : data.created_at,
         }
       : undefined,
   } as PlantOccurrence

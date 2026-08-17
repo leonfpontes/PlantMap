@@ -12,7 +12,7 @@ import Badge from '@/components/ui/Badge'
 import Button from '@/components/ui/Button'
 import ShareSheet from '@/components/plant/ShareSheet'
 import SpeciesAvatar from '@/components/plant/SpeciesAvatar'
-import RegistrantCard from '@/components/plant/RegistrantCard'
+import AuthorshipCard from '@/components/plant/AuthorshipCard'
 import ImageLightbox from '@/components/plant/ImageLightbox'
 import BottomSheet from '@/components/ui/BottomSheet'
 import { deleteOccurrence, getOccurrence } from '@/lib/actions/plants'
@@ -184,14 +184,15 @@ export default function PlantDetailPage() {
             )}
           </div>
 
-          {/* Autoria: quem registrou a planta, no mesmo formato do perfil/ranking.
-              Full width (como header e badges) pra não desemparelhar a dupla
-              detalhes + observações da grade do desktop. */}
-          {occurrence.registrant && (
+          {/* Autoria: quem cuidou do registro por último (editou, ou registrou se
+              ninguém editou), no mesmo formato do perfil/ranking. Full width
+              (como header e badges) pra não desemparelhar a dupla detalhes +
+              observações da grade do desktop. */}
+          {occurrence.credit && (
             <div className="lg:col-span-2">
-              <RegistrantCard
-                registrant={occurrence.registrant}
-                isMe={user?.id === occurrence.user_id}
+              <AuthorshipCard
+                credit={occurrence.credit}
+                isMe={user?.id === occurrence.credit.id}
               />
             </div>
           )}
@@ -209,7 +210,11 @@ export default function PlantDetailPage() {
             </div>
             <div className="flex items-center gap-2 text-sm">
               <Calendar className="h-4 w-4 text-green-600 flex-shrink-0 dark:text-green-400" />
+              {/* Rotulada porque o card de autoria logo acima também mostra data
+                  quando o registro foi editado — sem o "Registrado em" as duas
+                  datas ficariam ambíguas. */}
               <span className="text-gray-600 dark:text-gray-300">
+                Registrado em{' '}
                 {new Date(occurrence.created_at).toLocaleDateString('pt-BR', {
                   day: '2-digit', month: 'long', year: 'numeric'
                 })}
