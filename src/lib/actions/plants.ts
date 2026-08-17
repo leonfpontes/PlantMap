@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { getBadgeTier } from '@/constants/ranking'
 import { PlantCondition, PlantStage, OccurrenceWithDistance, PlantOccurrence, Species } from '@/types'
 
 
@@ -111,13 +112,31 @@ export async function getOccurrence(id: string): Promise<PlantOccurrence | null>
 
   if (error || !data) return null
 
-  const { data: species } = await supabase
-    .from('species')
-    .select('*')
-    .eq('id', data.species_id)
-    .single()
+  // Espécie e autor não dependem um do outro: em paralelo pra tela não pagar
+  // dois round-trips em série.
+  const [{ data: species }, { data: profile }] = await Promise.all([
+    supabase.from('species').select('*').eq('id', data.species_id).single(),
+    supabase
+      .from('profiles')
+      .select('id, full_name, avatar_url, points, deleted_at')
+      .eq('id', data.user_id)
+      .single(),
+  ])
 
-  return { ...data, species: species || undefined } as PlantOccurrence
+  return {
+    ...data,
+    species: species || undefined,
+    registrant: profile
+      ? {
+          id: profile.id,
+          full_name: profile.full_name,
+          avatar_url: profile.avatar_url,
+          points: profile.points ?? 0,
+          tier: getBadgeTier(profile.points ?? 0),
+          deleted: !!profile.deleted_at,
+        }
+      : undefined,
+  } as PlantOccurrence
 }
 
 export async function toggleFavorite(occurrenceId: string): Promise<{ favorited: boolean }> {

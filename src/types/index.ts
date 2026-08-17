@@ -35,11 +35,28 @@ export interface Species {
   created_at: string
 }
 
+/**
+ * Dados públicos de quem registrou uma ocorrência, para creditar a autoria na
+ * tela de detalhe. Só o que `profiles` já expõe publicamente (policy de select
+ * `using (true)`, migration 001) — nada de e-mail. `tier` vem dos pontos, como
+ * no ranking, para escolher a moldura do avatar.
+ */
+export interface OccurrenceRegistrant {
+  id: string
+  full_name: string | null
+  avatar_url: string | null
+  points: number
+  tier: BadgeTier
+  /** Conta excluída e anonimizada (migration 019): nome e foto vêm nulos de propósito. */
+  deleted: boolean
+}
+
 export interface PlantOccurrence {
   id: string
   user_id: string
   species_id: string
   species?: Species
+  registrant?: OccurrenceRegistrant
   latitude: number
   longitude: number
   condition: PlantCondition

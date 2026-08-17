@@ -12,6 +12,7 @@ import Badge from '@/components/ui/Badge'
 import Button from '@/components/ui/Button'
 import ShareSheet from '@/components/plant/ShareSheet'
 import SpeciesAvatar from '@/components/plant/SpeciesAvatar'
+import RegistrantCard from '@/components/plant/RegistrantCard'
 import ImageLightbox from '@/components/plant/ImageLightbox'
 import BottomSheet from '@/components/ui/BottomSheet'
 import { deleteOccurrence, getOccurrence } from '@/lib/actions/plants'
@@ -182,6 +183,18 @@ export default function PlantDetailPage() {
               <Badge variant="gray">{occurrence.species.family}</Badge>
             )}
           </div>
+
+          {/* Autoria: quem registrou a planta, no mesmo formato do perfil/ranking.
+              Full width (como header e badges) pra não desemparelhar a dupla
+              detalhes + observações da grade do desktop. */}
+          {occurrence.registrant && (
+            <div className="lg:col-span-2">
+              <RegistrantCard
+                registrant={occurrence.registrant}
+                isMe={user?.id === occurrence.user_id}
+              />
+            </div>
+          )}
 
           {/* Details */}
           <div className={cn(

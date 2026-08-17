@@ -6,7 +6,7 @@ vi.mock('@/lib/supabase/server', () => ({
 }))
 
 import { createClient } from '@/lib/supabase/server'
-import { registerOccurrence, searchSpecies } from '@/lib/actions/plants'
+import { registerOccurrence, searchSpecies, getOccurrence } from '@/lib/actions/plants'
 
 let mockClient: ReturnType<typeof createSupabaseMock>
 
@@ -102,5 +102,72 @@ describe('searchSpecies', () => {
     mockClient.setRpcResult('search_species', { data: null, error: null })
 
     expect(await searchSpecies('xyz')).toEqual([])
+  })
+})
+
+describe('getOccurrence', () => {
+  const DETAIL = {
+    id: 'occ-1',
+    user_id: 'user-1',
+    species_id: 'sp-1',
+    latitude: -21.1767,
+    longitude: -47.8208,
+    condition: 'healthy',
+    stage: 'adult',
+    notes: null,
+    photo_url: null,
+    verified: false,
+    created_at: '2026-08-01T12:00:00Z',
+    updated_at: '2026-08-01T12:00:00Z',
+  }
+
+  it('inclui quem registrou, com o tier derivado dos pontos', async () => {
+    mockClient.setRpcResult('get_occurrence_detail', { data: DETAIL, error: null })
+    mockClient.setTableResult('species', { data: { id: 'sp-1', common_name: 'Guiné' }, error: null })
+    mockClient.setTableResult('profiles', {
+      data: {
+        id: 'user-1',
+        full_name: 'Maria da Mata',
+        avatar_url: 'https://lh3.googleusercontent.com/foto',
+        points: 120,
+        deleted_at: null,
+      },
+      error: null,
+    })
+
+    const occurrence = await getOccurrence('occ-1')
+
+    expect(occurrence?.registrant).toEqual({
+      id: 'user-1',
+      full_name: 'Maria da Mata',
+      avatar_url: 'https://lh3.googleusercontent.com/foto',
+      points: 120,
+      tier: 'raiz',
+      deleted: false,
+    })
+  })
+
+  it('marca conta excluída, que vem anonimizada do banco (migration 019)', async () => {
+    mockClient.setRpcResult('get_occurrence_detail', { data: DETAIL, error: null })
+    mockClient.setTableResult('species', { data: { id: 'sp-1' }, error: null })
+    mockClient.setTableResult('profiles', {
+      data: { id: 'user-1', full_name: null, avatar_url: null, points: 0, deleted_at: '2026-08-10T00:00:00Z' },
+      error: null,
+    })
+
+    const occurrence = await getOccurrence('occ-1')
+
+    expect(occurrence?.registrant).toMatchObject({ deleted: true, tier: 'sementeira' })
+  })
+
+  it('não quebra a tela quando o perfil do autor não vem', async () => {
+    mockClient.setRpcResult('get_occurrence_detail', { data: DETAIL, error: null })
+    mockClient.setTableResult('species', { data: { id: 'sp-1' }, error: null })
+    mockClient.setTableResult('profiles', { data: null, error: null })
+
+    const occurrence = await getOccurrence('occ-1')
+
+    expect(occurrence?.id).toBe('occ-1')
+    expect(occurrence?.registrant).toBeUndefined()
   })
 })
