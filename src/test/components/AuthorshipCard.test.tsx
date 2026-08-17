@@ -27,7 +27,8 @@ describe('AuthorshipCard', () => {
   it('não repete a data do registro, que já aparece na lista de detalhes', () => {
     render(<AuthorshipCard credit={CREDIT} />)
 
-    expect(screen.queryByText(/agosto de 2026/)).not.toBeInTheDocument()
+    expect(screen.getByText('Registrado por')).toBeInTheDocument()
+    expect(screen.queryByText(/\d{2}\/\d{2}\/\d{4}/)).not.toBeInTheDocument()
   })
 
   it('credita quem editou, com a data da edição, quando o registro já foi atualizado', () => {
@@ -43,7 +44,7 @@ describe('AuthorshipCard', () => {
       />
     )
 
-    expect(screen.getByText(/Atualizado por · 15 de agosto de 2026/)).toBeInTheDocument()
+    expect(screen.getByText(/Atualizado por · 15\/08\/2026/)).toBeInTheDocument()
     expect(screen.getByText('João Guardião')).toBeInTheDocument()
     expect(screen.queryByText('Registrado por')).not.toBeInTheDocument()
   })

@@ -27,13 +27,12 @@ interface AuthorshipCardProps {
 export default function AuthorshipCard({ credit, isMe }: AuthorshipCardProps) {
   const name = credit.deleted ? 'Usuário removido' : credit.full_name || 'Usuário'
   const tierLabel = BADGE_TIER_CONFIG[credit.tier].label
+  // Data curta (17/08/2026) porque o rótulo é caixa alta com tracking: por
+  // extenso, "Atualizado por · 17 de agosto de 2026" quebra em duas linhas no
+  // celular. A data por extenso do registro continua na lista de detalhes.
   const label =
     credit.kind === 'updated'
-      ? `Atualizado por · ${new Date(credit.at).toLocaleDateString('pt-BR', {
-          day: '2-digit',
-          month: 'long',
-          year: 'numeric',
-        })}`
+      ? `Atualizado por · ${new Date(credit.at).toLocaleDateString('pt-BR')}`
       : 'Registrado por'
 
   return (
