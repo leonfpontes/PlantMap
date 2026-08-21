@@ -10,6 +10,13 @@ import { BADGE_TIER_CONFIG, BADGE_TIERS_ORDERED, POINTS_CONFIG } from '@/constan
  * Regras do ranking em formato sanfona (mesmo padrão de FaqAccordion), fechada
  * por padrão — antes ficava sempre aberta no topo de /profile/ranking e
  * empurrava a lista pra baixo da dobra.
+ *
+ * Aberta, ela precisa caber numa tela de celular: com nove molduras, a versão
+ * em lista (uma linha por moldura, mais parágrafos explicando cada regra)
+ * passava de duas telas de rolagem e o painel virava um documento. Daí as duas
+ * escolhas aqui — pontuação como tabela de valor + rótulo curto, e molduras
+ * numa grade de três colunas em vez de nove linhas. O texto longo que sobrava
+ * virou uma frase só no rodapé.
  */
 export default function RankingRulesAccordion() {
   const [open, setOpen] = useState(false)
@@ -35,47 +42,55 @@ export default function RankingRulesAccordion() {
       </button>
 
       {open && (
-        <div className="px-4 pb-4 text-sm">
-          <ul className="list-disc space-y-1 pl-5 text-purple-800 dark:text-purple-300">
-            <li>+{POINTS_CONFIG.REGISTER} pontos ao registrar uma ocorrência nova</li>
-            <li>
-              +{POINTS_CONFIG.MAINTAIN} pontos ao atualizar condição, estágio, foto ou observações de um
-              registro seu — no máximo uma vez a cada {POINTS_CONFIG.MAINTAIN_COOLDOWN_DAYS} dias por
-              ocorrência, pra valer por cuidado de verdade, não por salvar de novo sem mudar nada
-            </li>
-            <li>
-              Excluir um registro desconta os pontos que ele tinha dado — cadastrar e excluir em
-              seguida não rende nada
-            </li>
-          </ul>
-
-          <p className="mt-3 text-xs text-purple-700 dark:text-purple-400">
-            As molduras mais altas se alcançam mantendo os registros vivos ao longo do tempo: cada
-            planta só paga o cadastro uma vez, mas paga a manutenção de novo a cada{' '}
-            {POINTS_CONFIG.MAINTAIN_COOLDOWN_DAYS} dias, pra sempre.
-          </p>
+        <div className="px-4 pb-4">
+          {/* Pontuação: o valor à esquerda em coluna fixa deixa comparar as
+              regras de relance, sem ler três frases inteiras pra achar os
+              números. */}
+          <dl className="flex flex-col gap-1.5">
+            {[
+              { valor: `+${POINTS_CONFIG.REGISTER}`, regra: 'Registrar uma ocorrência nova' },
+              {
+                valor: `+${POINTS_CONFIG.MAINTAIN}`,
+                regra: `Cuidar de um registro seu: atualizar condição, estágio, foto ou observações (1× a cada ${POINTS_CONFIG.MAINTAIN_COOLDOWN_DAYS} dias por planta)`,
+              },
+              { valor: '−', regra: 'Excluir um registro desconta o que ele deu' },
+            ].map(({ valor, regra }) => (
+              <div key={regra} className="flex gap-2.5">
+                <dt className="w-8 flex-shrink-0 text-right text-sm font-semibold tabular-nums text-purple-900 dark:text-purple-200">
+                  {valor}
+                </dt>
+                <dd className="text-xs leading-relaxed text-purple-800 dark:text-purple-300">{regra}</dd>
+              </div>
+            ))}
+          </dl>
 
           <p className="mb-2 mt-4 text-xs font-semibold uppercase tracking-wide text-purple-700 dark:text-purple-400">
             Molduras
           </p>
-          <div className="flex flex-col divide-y divide-purple-100 dark:divide-purple-900/60">
+          <div className="grid grid-cols-3 gap-y-3 sm:grid-cols-5">
             {BADGE_TIERS_ORDERED.map((t) => {
               const tier = BADGE_TIER_CONFIG[t]
               return (
-                <div key={t} className="flex items-center gap-3 py-2 first:pt-0 last:pb-0">
+                <div key={t} className="flex flex-col items-center gap-1 text-center">
                   <AvatarFrame tier={t} size="md" />
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium text-purple-900 dark:text-purple-200">{tier.label}</p>
-                    <p className="text-xs text-purple-700 dark:text-purple-400">{tier.minPoints}+ pontos</p>
-                  </div>
+                  {/* Duas linhas reservadas: "Guardião do Mato" quebra e
+                      "Broto" não, e sem a reserva a linha de pontos de cada
+                      célula parava numa altura diferente na mesma fileira. */}
+                  <p className="flex min-h-[2.1rem] items-start justify-center text-[11px] font-medium leading-tight text-purple-900 dark:text-purple-200">
+                    {tier.label}
+                  </p>
+                  <p className="text-[10px] leading-none text-purple-700 dark:text-purple-400">
+                    {tier.minPoints}+
+                  </p>
                 </div>
               )
             })}
           </div>
 
-          <p className="mt-3 text-xs text-purple-700 dark:text-purple-400">
-            É só reconhecimento dentro do terreiro — sem prêmio associado, e edições feitas por um
-            administrador no seu registro não geram pontos.
+          <p className="mt-4 text-[11px] leading-relaxed text-purple-700 dark:text-purple-400">
+            As molduras altas vêm de manter os registros vivos: o cadastro paga uma vez, a manutenção
+            paga sempre. É só reconhecimento dentro do terreiro — sem prêmio, e edição feita por
+            administrador não pontua.
           </p>
         </div>
       )}
