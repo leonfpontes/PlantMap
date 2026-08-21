@@ -1,16 +1,18 @@
 'use client'
 
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import Map, { NavigationControl, Marker } from 'react-map-gl/maplibre'
+import Map, { NavigationControl, Marker, Source, Layer } from 'react-map-gl/maplibre'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { LocateFixed } from 'lucide-react'
 import { PlantOccurrence } from '@/types'
 import PlantPin from './PlantPin'
 import PlantPinBalloon from './PlantPinBalloon'
 import PlantTooltip from '@/components/plant/PlantTooltip'
-import { useGeolocation } from '@/hooks/useGeolocation'
+import { useGeolocationWatch } from '@/hooks/useGeolocation'
 import { useHasHover } from '@/hooks/useHasHover'
+import { accuracyCircle, formatAccuracy, POOR_ACCURACY_M } from '@/lib/geo'
+import { cn } from '@/lib/utils'
 
 interface PlantMapProps {
   occurrences?: PlantOccurrence[]
@@ -46,7 +48,20 @@ export default function PlantMap({
     latitude: initialLat,
     zoom: initialZoom,
   })
-  const { latitude: userLat, longitude: userLng, getLocation, loading: locLoading } = useGeolocation()
+  // Watch contínuo (e não leitura única): é o que faz o ponto acompanhar quem
+  // está andando pelo mapa.
+  const {
+    latitude: userLat,
+    longitude: userLng,
+    accuracy: userAccuracy,
+    loading: locLoading,
+    acquireBestFix,
+  } = useGeolocationWatch()
+
+  // Modo "seguir": depois de tocar em localizar, o mapa acompanha o usuário até
+  // ele mexer no mapa com a mão. Sem isso, quem toca em localizar e sai andando
+  // vê o próprio ponto escapar da tela.
+  const [following, setFollowing] = useState(false)
 
   // Controlado (lista ao lado, tela desktop) quando onPinHover é passado; senão o próprio
   // mapa cuida do próprio hover (ex.: pin único da tela de detalhe).
@@ -83,18 +98,30 @@ export default function PlantMap({
     }
   }, [hasHover, router])
 
-  const handleLocate = useCallback(() => {
-    if (userLat && userLng) {
+  // Recentra já no que tiver (resposta imediata ao toque) e, em paralelo, pede
+  // um fix melhor — antes o botão só recentrava na leitura antiga e nunca
+  // pedia uma nova quando já existia alguma, então ficava preso nela.
+  const handleLocate = useCallback(async () => {
+    setFollowing(true)
+    if (userLat != null && userLng != null) {
+      setViewState((v) => ({ ...v, longitude: userLng, latitude: userLat, zoom: Math.max(v.zoom, 17) }))
+    }
+    const fix = await acquireBestFix()
+    if (fix) {
       setViewState((v) => ({
         ...v,
-        longitude: userLng,
-        latitude: userLat,
-        zoom: 15,
+        longitude: fix.longitude,
+        latitude: fix.latitude,
+        zoom: Math.max(v.zoom, 17),
       }))
-    } else {
-      getLocation()
     }
-  }, [userLat, userLng, getLocation])
+  }, [userLat, userLng, acquireBestFix])
+
+  // Enquanto estiver seguindo, cada leitura nova reposiciona o mapa.
+  useEffect(() => {
+    if (!following || userLat == null || userLng == null) return
+    setViewState((v) => ({ ...v, longitude: userLng, latitude: userLat }))
+  }, [following, userLat, userLng])
 
   const hoveredOccurrence = hasHover && effectiveHoveredId
     ? occurrences.find((o) => o.id === effectiveHoveredId) ?? null
@@ -105,6 +132,9 @@ export default function PlantMap({
       <Map
         {...viewState}
         onMove={(e) => setViewState(e.viewState)}
+        // originalEvent só existe quando o movimento veio de gesto; movimento
+        // programático (o próprio follow) não pode desligar o follow.
+        onMoveStart={(e) => { if (e.originalEvent) setFollowing(false) }}
         mapStyle="https://tiles.openfreemap.org/styles/liberty"
         onClick={(e) => {
           if (onMapClick) {
@@ -118,7 +148,29 @@ export default function PlantMap({
       >
         <NavigationControl position="top-right" showCompass={false} />
 
-        {userLat && userLng && (
+        {/* Halo de precisão: o raio é desenhado em metros reais, então encolhe
+            e cresce junto com o zoom e mostra honestamente o quanto o ponto
+            pode estar errado. */}
+        {userLat != null && userLng != null && userAccuracy != null && (
+          <Source
+            id="user-accuracy"
+            type="geojson"
+            data={accuracyCircle(userLat, userLng, userAccuracy)}
+          >
+            <Layer
+              id="user-accuracy-fill"
+              type="fill"
+              paint={{ 'fill-color': '#3b82f6', 'fill-opacity': 0.12 }}
+            />
+            <Layer
+              id="user-accuracy-line"
+              type="line"
+              paint={{ 'line-color': '#3b82f6', 'line-opacity': 0.35, 'line-width': 1 }}
+            />
+          </Source>
+        )}
+
+        {userLat != null && userLng != null && (
           <Marker longitude={userLng} latitude={userLat} anchor="center">
             <div className="relative flex h-6 w-6 items-center justify-center">
               <div className="absolute h-full w-full animate-ping rounded-full bg-blue-400 opacity-75"></div>
@@ -167,12 +219,38 @@ export default function PlantMap({
         )}
       </Map>
 
+      {/* Precisão à vista: sem esse número não dá pra saber se o ponto azul
+          está a 5 m ou a 2 km de onde a pessoa realmente está. */}
+      {userAccuracy != null && (
+        <span
+          className={cn(
+            'absolute bottom-4 left-4 rounded-full px-2.5 py-1 text-xs font-medium shadow-md',
+            userAccuracy > POOR_ACCURACY_M
+              ? 'bg-amber-50 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300'
+              : 'bg-white text-gray-600 dark:bg-gray-900 dark:text-gray-300'
+          )}
+        >
+          Precisão {formatAccuracy(userAccuracy)}
+        </span>
+      )}
+
       <button
+        // O mapa é renderizado dentro do <form> de registro, e botão sem type
+        // dentro de form é submit: sem isso, tocar em localizar mandava o
+        // formulário em vez de localizar.
+        type="button"
         onClick={handleLocate}
         disabled={locLoading}
-        className="absolute bottom-4 right-4 flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-md border border-gray-200 text-green-700 hover:bg-green-50 transition-colors disabled:opacity-50 dark:bg-gray-900 dark:border-gray-700 dark:text-green-400 dark:hover:bg-green-900/30"
+        aria-label={following ? 'Seguindo sua localização' : 'Centralizar na minha localização'}
+        aria-pressed={following}
+        className={cn(
+          'absolute bottom-4 right-4 flex h-10 w-10 items-center justify-center rounded-full shadow-md border transition-colors disabled:opacity-50',
+          following
+            ? 'border-green-600 bg-green-600 text-white hover:bg-green-700'
+            : 'border-gray-200 bg-white text-green-700 hover:bg-green-50 dark:bg-gray-900 dark:border-gray-700 dark:text-green-400 dark:hover:bg-green-900/30'
+        )}
       >
-        <LocateFixed className="h-5 w-5" />
+        <LocateFixed className={cn('h-5 w-5', locLoading && 'animate-pulse')} />
       </button>
 
       {!hasHover && selectedOccurrence && !onMapClick && (

@@ -5,14 +5,15 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useRouter } from 'next/navigation'
-import { Camera, MapPin, Maximize2, Minimize2 } from 'lucide-react'
+import { Camera, Crosshair, MapPin, Maximize2, Minimize2 } from 'lucide-react'
 import { registerOccurrence } from '@/lib/actions/plants'
 import { Species, PlantCondition, PlantStage } from '@/types'
 import Button from '@/components/ui/Button'
 import dynamic from 'next/dynamic'
 import SpeciesCombobox from '@/components/plant/SpeciesCombobox'
 import { usePhotoUpload } from '@/hooks/usePhotoUpload'
-import { useGeolocation } from '@/hooks/useGeolocation'
+import { useGeolocationWatch } from '@/hooks/useGeolocation'
+import { formatAccuracy, GOOD_ACCURACY_M, POOR_ACCURACY_M } from '@/lib/geo'
 import { CONDITION_OPTIONS, STAGE_OPTIONS } from '@/constants/plant'
 import { cn } from '@/lib/utils'
 
@@ -44,9 +45,14 @@ export default function RegisterForm() {
   const [mapExpanded, setMapExpanded]         = useState(false)
 
   const { upload, uploading, preview, pickFile } = usePhotoUpload()
-  const { latitude: userLat, longitude: userLng, loading: locLoading } = useGeolocation()
+  const { latitude: userLat, longitude: userLng, loading: locLoading, acquireBestFix } = useGeolocationWatch()
   const centerLat = userLat ?? FALLBACK_LAT
   const centerLng = userLng ?? FALLBACK_LNG
+
+  // Precisão do ponto escolhido — só existe quando ele veio do GPS. Ponto
+  // marcado com o dedo no mapa não tem margem de erro pra reportar.
+  const [pickedAccuracy, setPickedAccuracy] = useState<number | null>(null)
+  const [locating, setLocating] = useState(false)
 
   // Trava o scroll da página por trás enquanto o mapa está em tela cheia.
   useEffect(() => {
@@ -78,7 +84,33 @@ export default function RegisterForm() {
   const handleMapClick = useCallback((clickLat: number, clickLng: number) => {
     setValue('latitude', clickLat)
     setValue('longitude', clickLng)
+    setPickedAccuracy(null)
   }, [setValue])
+
+  /**
+   * Fixa o ponto do registro na posição atual do GPS.
+   *
+   * Não usa a primeira leitura que aparecer: `acquireBestFix` fica insistindo
+   * por alguns segundos e devolve a melhor: o primeiro retorno do navegador
+   * costuma ser um fix de rede com centenas de metros de erro, e marcar uma
+   * planta com esse ponto colocaria ela no quarteirão errado. A precisão
+   * obtida fica visível pra quem registra decidir se aceita ou ajusta na mão.
+   */
+  const handleUseMyLocation = useCallback(async () => {
+    setLocating(true)
+    setServerError(null)
+    const fix = await acquireBestFix({ targetAccuracy: GOOD_ACCURACY_M, timeoutMs: 15_000 })
+    setLocating(false)
+
+    if (!fix) {
+      setServerError('Não foi possível obter sua localização. Marque o ponto no mapa.')
+      return
+    }
+
+    setValue('latitude', fix.latitude)
+    setValue('longitude', fix.longitude)
+    setPickedAccuracy(fix.accuracy)
+  }, [acquireBestFix, setValue])
 
   const onSubmit = async (data: FormData) => {
     setServerError(null)
@@ -108,15 +140,18 @@ export default function RegisterForm() {
             ? 'fixed inset-0 z-50 bg-white dark:bg-gray-950'
             : 'relative h-48 w-full overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700'
         )}>
-          {locLoading ? (
+          {/* Só segura o mapa enquanto não há posição nenhuma. Gatilhar no
+              `locLoading` puro faria o mapa sumir toda vez que "Usar minha
+              localização" fosse acionado, que é justo quando ele importa. */}
+          {locLoading && userLat == null ? (
             <div className="flex h-full w-full items-center justify-center bg-gray-50 dark:bg-gray-900">
               <span className="text-xs text-gray-400 dark:text-gray-500">Localizando você...</span>
             </div>
           ) : (
             <PlantMap
-              key={userLat && userLng ? 'user' : 'fallback'}
+              key={userLat != null && userLng != null ? 'user' : 'fallback'}
               onMapClick={handleMapClick}
-              selectedLocation={lat && lng ? { lat, lng } : null}
+              selectedLocation={lat != null && lng != null ? { lat, lng } : null}
               initialLat={centerLat}
               initialLng={centerLng}
               initialZoom={16}
@@ -132,13 +167,36 @@ export default function RegisterForm() {
             {mapExpanded ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
           </button>
         </div>
-        {lat && lng ? (
-          <p className="mt-1 flex items-center gap-1 text-xs text-green-700 dark:text-green-400">
-            <MapPin className="h-3 w-3" />
-            {lat.toFixed(5)}, {lng.toFixed(5)}
-          </p>
+        <button
+          type="button"
+          onClick={handleUseMyLocation}
+          disabled={locating}
+          className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl border border-green-700 px-3 py-2.5 text-sm font-medium text-green-700 transition-colors hover:bg-green-50 disabled:opacity-60 dark:border-green-500 dark:text-green-400 dark:hover:bg-green-900/30"
+        >
+          <Crosshair className={cn('h-4 w-4', locating && 'animate-pulse')} />
+          {locating ? 'Buscando o ponto mais preciso...' : 'Usar minha localização atual'}
+        </button>
+
+        {lat != null && lng != null ? (
+          <div className="mt-1.5">
+            <p className="flex items-center gap-1 text-xs text-green-700 dark:text-green-400">
+              <MapPin className="h-3 w-3 flex-shrink-0" />
+              {lat.toFixed(5)}, {lng.toFixed(5)}
+              {pickedAccuracy != null && <span className="text-gray-500 dark:text-gray-400">· {formatAccuracy(pickedAccuracy)}</span>}
+            </p>
+            {/* Registrar com precisão ruim é pior do que registrar devagar: a
+                planta acaba num ponto que ninguém vai achar depois. */}
+            {pickedAccuracy != null && pickedAccuracy > POOR_ACCURACY_M && (
+              <p className="mt-1 rounded-lg bg-amber-50 px-2 py-1.5 text-xs text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
+                O GPS só chegou a {formatAccuracy(pickedAccuracy)} — a planta pode ficar longe do ponto
+                real. Vale sair de baixo de cobertura e tentar de novo, ou ajustar tocando no mapa.
+              </p>
+            )}
+          </div>
         ) : (
-          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Toque no mapa para marcar a localização</p>
+          <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+            Use o botão acima ou toque no mapa para marcar a localização
+          </p>
         )}
         {(errors.latitude || errors.longitude) && (
           <p className="text-xs text-red-500 mt-1 dark:text-red-400">{errors.latitude?.message || errors.longitude?.message}</p>

@@ -16,6 +16,10 @@ import { cn, matchesSearchTerms } from '@/lib/utils'
 // em vez de renderizar a base inteira de uma vez.
 const MAX_UNLIMITED_RESULTS = 500
 
+// Ribeirão Preto — centro provisório se o usuário negar a localização ou o GPS falhar.
+const FALLBACK_LAT = -21.1767
+const FALLBACK_LNG = -47.8208
+
 export default function SearchPage() {
   const [query, setQuery] = useState('')
   const [radius, setRadius] = useState(5)
@@ -23,43 +27,23 @@ export default function SearchPage() {
   const [results, setResults] = useState<OccurrenceWithDistance[]>([])
   const [loading, setLoading] = useState(false)
   const [searched, setSearched] = useState(false)
-  const { latitude, longitude, loading: locLoading } = useGeolocation()
+  const { latitude, longitude, loading: locLoading, acquireBestFix } = useGeolocation()
 
   const handleSearch = async () => {
     setLoading(true)
     setSearched(true)
 
+    // "Perto de mim" só significa alguma coisa se o ponto de partida estiver
+    // certo, então quando ainda não há leitura vale esperar o GPS convergir
+    // um pouco — antes daqui saía a primeira leitura que aparecesse, que num
+    // fix de rede pode estar quilômetros fora e desloca o raio inteiro.
     let lat = latitude
     let lng = longitude
 
-    if (!lat || !lng) {
-      await new Promise<void>((resolve) => {
-        if (navigator.geolocation) {
-          navigator.geolocation.getCurrentPosition(
-            (pos) => {
-              lat = pos.coords.latitude
-              lng = pos.coords.longitude
-              resolve()
-            },
-            () => {
-              // Fallback para Ribeirão Preto caso o usuário negue/falhe a permissão
-              lat = -21.1767
-              lng = -47.8208
-              resolve()
-            }
-          )
-        } else {
-          // Fallback se geolocalização não for suportada
-          lat = -21.1767
-          lng = -47.8208
-          resolve()
-        }
-      })
-    }
-
-    if (!lat || !lng) {
-      lat = -21.1767
-      lng = -47.8208
+    if (lat == null || lng == null) {
+      const fix = await acquireBestFix({ timeoutMs: 8_000 })
+      lat = fix?.latitude ?? FALLBACK_LAT
+      lng = fix?.longitude ?? FALLBACK_LNG
     }
 
     try {
