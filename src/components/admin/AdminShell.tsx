@@ -1,13 +1,15 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { ArrowLeft, LayoutGrid, ShieldCheck, MessageCircle, Users, Leaf } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { listPendingSpecies } from '@/lib/actions/species'
-import { getOpenSupportMessageCount } from '@/lib/actions/support'
-import { getOpenPermissionRequestCount } from '@/lib/actions/permissions'
+
+export interface AdminPendingCounts {
+  species: number
+  support: number
+  users: number
+}
 
 const NAV = [
   { href: '/admin', label: 'Visão geral', icon: LayoutGrid, key: 'overview' },
@@ -23,18 +25,25 @@ const NAV = [
  * comum; no celular, vira um cabeçalho simples + abas roláveis. Os contadores
  * de pendência (que antes viviam espalhados no Sidebar do app) moram aqui,
  * junto do que eles de fato navegam.
+ *
+ * Os contadores chegam prontos do layout (servidor). Antes eram buscados aqui
+ * num useEffect de dependência vazia, o que os deixava congelados na primeira
+ * carga: aprovar uma erva tirava o card da fila mas o badge continuava
+ * anunciando a pendência até o usuário recarregar a página na mão. Vindo do
+ * servidor, um `router.refresh()` depois da ação já os traz corretos.
  */
-export default function AdminShell({ children }: { children: React.ReactNode }) {
+export default function AdminShell({
+  children,
+  counts,
+}: {
+  children: React.ReactNode
+  counts: AdminPendingCounts
+}) {
   const pathname = usePathname()
-  const [counts, setCounts] = useState({ species: 0, support: 0, users: 0 })
 
-  useEffect(() => {
-    listPendingSpecies().then((list) => setCounts((c) => ({ ...c, species: list.length })))
-    getOpenSupportMessageCount().then((n) => setCounts((c) => ({ ...c, support: n })))
-    getOpenPermissionRequestCount().then((n) => setCounts((c) => ({ ...c, users: n })))
-  }, [])
-
-  const countFor = (key: string) => (counts as Record<string, number>)[key] ?? 0
+  // 'overview' não tem contador próprio — é a soma das outras filas, e repetir
+  // o número ali não ajudaria ninguém a decidir onde clicar.
+  const countFor = (key: (typeof NAV)[number]['key']) => (key === 'overview' ? 0 : counts[key])
   const isActive = (href: string) => (href === '/admin' ? pathname === '/admin' : pathname.startsWith(href))
 
   return (

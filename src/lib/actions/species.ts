@@ -1,5 +1,6 @@
 'use server'
 
+import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { normalizeSearchText } from '@/lib/utils'
 import { Species, SpeciesOrigin } from '@/types'
@@ -104,6 +105,15 @@ export async function reviewSpecies(
   })
 
   if (error) return { error: error.message }
+
+  // Sem isto, a fila some da lista (que filtra em memória) mas os contadores
+  // continuam nos números velhos: o rótulo "Pendentes (N)" da aba, os badges
+  // do menu admin e a triagem de /admin são renderizados no servidor e ficavam
+  // presos no payload da carga anterior até um reload manual. 'layout' alcança
+  // o layout de /admin, que é onde os contadores são calculados.
+  revalidatePath('/admin', 'layout')
+  revalidatePath('/profile')
+
   return { species }
 }
 

@@ -6,6 +6,13 @@ vi.mock('@/lib/actions/species', () => ({
   reviewSpecies: vi.fn(),
 }))
 
+// A lista dá router.refresh() depois de revisar, pra recalcular o que é
+// renderizado no servidor (contador da aba, badges do menu admin).
+const refresh = vi.fn()
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ refresh }),
+}))
+
 import { reviewSpecies, SpeciesModerationItem } from '@/lib/actions/species'
 import SpeciesModerationList from '@/components/admin/SpeciesModerationList'
 

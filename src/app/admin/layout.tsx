@@ -1,6 +1,9 @@
 import { redirect } from 'next/navigation'
 import AdminShell from '@/components/admin/AdminShell'
 import { getProfile } from '@/lib/actions/profile'
+import { listPendingSpecies } from '@/lib/actions/species'
+import { getOpenSupportMessageCount } from '@/lib/actions/support'
+import { getOpenPermissionRequestCount } from '@/lib/actions/permissions'
 
 /**
  * Checagem de admin centralizada para toda a área /admin/* — antes cada
@@ -11,5 +14,18 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   if (!profile) redirect('/auth/login')
   if (!profile.is_admin) redirect('/profile')
 
-  return <AdminShell>{children}</AdminShell>
+  // Contadores de pendência no servidor, e não dentro do AdminShell: assim
+  // um revalidatePath após aprovar/rejeitar os recalcula junto com a página,
+  // em vez de deixá-los presos na primeira renderização do cliente.
+  const [pendingSpecies, support, users] = await Promise.all([
+    listPendingSpecies(),
+    getOpenSupportMessageCount(),
+    getOpenPermissionRequestCount(),
+  ])
+
+  return (
+    <AdminShell counts={{ species: pendingSpecies.length, support, users }}>
+      {children}
+    </AdminShell>
+  )
 }

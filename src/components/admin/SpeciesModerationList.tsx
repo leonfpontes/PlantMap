@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Check, X, Leaf } from 'lucide-react'
 import { reviewSpecies, SpeciesModerationItem } from '@/lib/actions/species'
 import { ORIGIN_LABEL } from '@/constants/plant'
@@ -17,6 +18,7 @@ interface SpeciesModerationListProps {
  * admins conseguem revisar — esta lista só existe para dar a eles uma UI.
  */
 export default function SpeciesModerationList({ initialSpecies }: SpeciesModerationListProps) {
+  const router = useRouter()
   const [items, setItems] = useState(initialSpecies)
   const [rejectingId, setRejectingId] = useState<string | null>(null)
   const [reason, setReason] = useState('')
@@ -28,7 +30,14 @@ export default function SpeciesModerationList({ initialSpecies }: SpeciesModerat
     setError(null)
     const result = await reviewSpecies(id, true)
     if (result.error) setError(result.error)
-    else setItems((prev) => prev.filter((s) => s.id !== id))
+    else {
+      setItems((prev) => prev.filter((s) => s.id !== id))
+      // A remoção acima é só o retorno imediato na lista. O refresh é o que
+      // atualiza o que é renderizado no servidor — o "(N)" da aba Pendentes,
+      // os badges do menu admin e a triagem de /admin — que antes só saíam do
+      // número antigo com um reload manual.
+      router.refresh()
+    }
     setBusyId(null)
   }
 
@@ -42,6 +51,7 @@ export default function SpeciesModerationList({ initialSpecies }: SpeciesModerat
       setItems((prev) => prev.filter((s) => s.id !== id))
       setRejectingId(null)
       setReason('')
+      router.refresh()
     }
     setBusyId(null)
   }
