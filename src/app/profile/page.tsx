@@ -14,7 +14,7 @@ import { getOpenSupportMessageCount } from '@/lib/actions/support'
 import { getOpenPermissionRequestCount } from '@/lib/actions/permissions'
 import { getMyRankingSummary } from '@/lib/actions/ranking'
 import { signOut } from '@/lib/actions/auth'
-import { BADGE_TIER_CONFIG } from '@/constants/ranking'
+import { BADGE_TIER_CONFIG, getNextBadgeTier } from '@/constants/ranking'
 
 // Lista de menu é comprida — no celular fica em coluna única, mas no desktop
 // isso vira uma rolagem longa numa coluna estreita. Card mais largo + grade
@@ -32,6 +32,8 @@ export default async function ProfilePage() {
     getUnreadNotificationCount(),
     getMyRankingSummary(user.id),
   ])
+
+  const nextTier = ranking ? getNextBadgeTier(ranking.points) : null
 
   const pendingAdminCount = profile?.is_admin
     ? await Promise.all([listPendingSpecies(), getOpenSupportMessageCount(), getOpenPermissionRequestCount()]).then(
@@ -57,9 +59,20 @@ export default async function ProfilePage() {
               <h2 className="font-bold text-gray-900 text-lg dark:text-gray-100">{profile?.full_name || 'Usuário'}</h2>
               <p className="text-sm text-gray-500 dark:text-gray-400">{user.email}</p>
               {ranking && (
-                <p className="mt-1 text-xs font-medium text-gray-500 dark:text-gray-400">
-                  {BADGE_TIER_CONFIG[ranking.tier].label}
-                </p>
+                <>
+                  <p className="mt-1 text-xs font-medium text-gray-500 dark:text-gray-400">
+                    {BADGE_TIER_CONFIG[ranking.tier].label}
+                  </p>
+                  {/* Sem isso, quem alcança a moldura mais alta que existe fica
+                      sem alvo nenhum à vista — que foi exatamente o que motivou
+                      esticar a escada de tiers. */}
+                  {nextTier && (
+                    <p className="text-xs text-gray-400 dark:text-gray-500">
+                      Faltam {nextTier.pointsAway} ponto{nextTier.pointsAway === 1 ? '' : 's'} para{' '}
+                      {BADGE_TIER_CONFIG[nextTier.tier].label}
+                    </p>
+                  )}
+                </>
               )}
             </div>
           </div>

@@ -167,7 +167,16 @@ export interface PointsLogEntry {
   created_at: string
 }
 
-export type BadgeTier = 'sementeira' | 'broto' | 'raiz' | 'guardiao' | 'ancestral'
+export type BadgeTier =
+  | 'sementeira'
+  | 'broto'
+  | 'raiz'
+  | 'guardiao'
+  | 'ancestral'
+  | 'tronco'
+  | 'copa'
+  | 'mata'
+  | 'encantado'
 
 /** Linha da tela /profile/ranking: dados públicos do perfil + posição calculada. */
 export interface LeaderboardEntry {

@@ -43,7 +43,17 @@ export default function RankingRulesAccordion() {
               registro seu — no máximo uma vez a cada {POINTS_CONFIG.MAINTAIN_COOLDOWN_DAYS} dias por
               ocorrência, pra valer por cuidado de verdade, não por salvar de novo sem mudar nada
             </li>
+            <li>
+              Excluir um registro desconta os pontos que ele tinha dado — cadastrar e excluir em
+              seguida não rende nada
+            </li>
           </ul>
+
+          <p className="mt-3 text-xs text-purple-700 dark:text-purple-400">
+            As molduras mais altas se alcançam mantendo os registros vivos ao longo do tempo: cada
+            planta só paga o cadastro uma vez, mas paga a manutenção de novo a cada{' '}
+            {POINTS_CONFIG.MAINTAIN_COOLDOWN_DAYS} dias, pra sempre.
+          </p>
 
           <p className="mb-2 mt-4 text-xs font-semibold uppercase tracking-wide text-purple-700 dark:text-purple-400">
             Molduras
