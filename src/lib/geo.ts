@@ -7,6 +7,11 @@
 /** Raio equatorial da Terra (WGS-84), em metros. */
 const EARTH_RADIUS_M = 6_378_137
 
+interface Clusterable {
+  latitude: number
+  longitude: number
+}
+
 export interface GeoFix {
   latitude: number
   longitude: number
@@ -75,6 +80,25 @@ export function bestFix(a: GeoFix | null, b: GeoFix | null): GeoFix | null {
   if (!a) return b
   if (!b) return a
   return b.accuracy < a.accuracy ? b : a
+}
+
+/**
+ * Distância em metros entre dois pontos (haversine).
+ *
+ * Existe para responder "andou o bastante pra isso importar?". Comparar
+ * coordenadas por igualdade não serve: o GPS corrige a posição em centímetros
+ * o tempo todo, e tratar cada micro-correção como movimento faz o app refazer
+ * trabalho sem parar.
+ */
+export function distanceMeters(a: Clusterable, b: Clusterable): number {
+  const R = 6_371_000
+  const rad = (g: number) => (g * Math.PI) / 180
+  const dLat = rad(b.latitude - a.latitude)
+  const dLng = rad(b.longitude - a.longitude)
+  const h =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(rad(a.latitude)) * Math.cos(rad(b.latitude)) * Math.sin(dLng / 2) ** 2
+  return 2 * R * Math.asin(Math.min(1, Math.sqrt(h)))
 }
 
 /** "±8 m" / "±1,2 km" — o ± é o que comunica que aquilo é margem de erro. */

@@ -8,6 +8,7 @@ import { searchNearby } from '@/lib/actions/plants'
 import { OccurrenceWithDistance } from '@/types'
 import PlantCard from '@/components/plant/PlantCard'
 import { useGeolocation } from '@/hooks/useGeolocation'
+import { distanceMeters } from '@/lib/geo'
 import { cn, DEFAULT_MAP_ZOOM, zoomForDistance } from '@/lib/utils'
 
 const PlantMap = dynamic(() => import('@/components/map/PlantMap'), {
@@ -25,34 +26,69 @@ const FALLBACK_LNG = -47.8208
 // distância, o corte tira sempre as mais longe — as daqui do lado nunca somem.
 const MAX_MAP_OCCURRENCES = 1000
 
+/**
+ * Quanto o usuário precisa se deslocar para a busca ser refeita.
+ *
+ * A leitura do GPS é contínua e se corrige a cada instante; ligar a busca
+ * direto nela refazia a consulta a cada micro-correção. Como a busca não tem
+ * raio e já vem ordenada por distância, mover a origem alguns metros não muda
+ * o resultado — só a ordem de empate — então esperar meio quilômetro não custa
+ * nada e evita o retrabalho.
+ */
+const SEARCH_ORIGIN_THRESHOLD_M = 500
+
 export default function MapView() {
   const [occurrences, setOccurrences] = useState<OccurrenceWithDistance[]>([])
+  // Só o primeiro carregamento. Rebuscas posteriores são silenciosas: este
+  // estado troca o mapa inteiro por um esqueleto, e o mapa é quem mantém o
+  // rastreamento de GPS ligado — desmontá-lo a cada rebusca derrubava o
+  // rastreamento, que ao remontar entregava posição nova, que disparava outra
+  // rebusca. A tela piscava sem parar, sem nunca terminar de carregar.
   const [loading, setLoading] = useState(true)
   const [hoveredId, setHoveredId] = useState<string | null>(null)
   const { latitude, longitude } = useGeolocation()
 
-  const centerLat = latitude ?? FALLBACK_LAT
-  const centerLng = longitude ?? FALLBACK_LNG
+  // Origem da busca: acompanha o GPS, mas só quando ele se afasta o bastante
+  // pra mudar o resultado (ver SEARCH_ORIGIN_THRESHOLD_M).
+  const [origin, setOrigin] = useState<{ lat: number; lng: number } | null>(null)
+
+  useEffect(() => {
+    if (latitude == null || longitude == null) return
+    setOrigin((prev) => {
+      // Devolver o mesmo objeto mantém a identidade e não re-renderiza nada.
+      if (prev && distanceMeters({ latitude: prev.lat, longitude: prev.lng }, { latitude, longitude }) < SEARCH_ORIGIN_THRESHOLD_M) {
+        return prev
+      }
+      return { lat: latitude, lng: longitude }
+    })
+  }, [latitude, longitude])
+
+  const centerLat = origin?.lat ?? FALLBACK_LAT
+  const centerLng = origin?.lng ?? FALLBACK_LNG
 
   useEffect(() => {
     // Refaz a busca quando a localização real do usuário resolver, para que
     // "distância" na lista seja a partir de onde ele está de fato — antes
     // era sempre calculada a partir do centro fixo de Ribeirão Preto, mesmo
     // com o usuário a quilômetros dali.
-    setLoading(true)
+    let cancelado = false
 
     // Sem limite de raio: antes eram 100km fixos, e quem viajava para outra cidade abria
     // o app e via o mapa vazio — as plantas de casa ficavam fora do raio. Agora vem tudo,
     // do mais perto para o mais longe, limitado só pelo teto de resultados.
     searchNearby(centerLat, centerLng, null, MAX_MAP_OCCURRENCES)
       .then((data) => {
+        if (cancelado) return
         setOccurrences(data)
         setLoading(false)
       })
       .catch((err) => {
+        if (cancelado) return
         console.error('Erro ao buscar ocorrências para o mapa:', err)
         setLoading(false)
       })
+
+    return () => { cancelado = true }
   }, [centerLat, centerLng])
 
   // A busca já vem ordenada por distância, então a primeira ocorrência é a mais próxima.
