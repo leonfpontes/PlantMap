@@ -87,7 +87,12 @@ export default function EditForm({ occurrence }: EditFormProps) {
     })
 
     if (result?.error) { setServerError(result.error); return }
-    router.push(`/plant/${occurrence.id}`)
+
+    // replace, e não push: o push empilhava a tela de detalhe por cima do
+    // formulário, então o "voltar" seguinte trazia de volta o formulário de
+    // uma edição já salva. Substituindo a entrada, o formulário sai do
+    // histórico no momento em que deixa de fazer sentido voltar pra ele.
+    router.replace(`/plant/${occurrence.id}`)
     router.refresh()
   }
 
