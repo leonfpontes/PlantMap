@@ -9,6 +9,7 @@ import {
   isNight,
   msUntilNextSwitch,
   paintFor,
+  shouldUseDarkMap,
 } from '@/lib/mapTheme'
 
 const P = MAP_PALETTE_LIGHT
@@ -179,5 +180,24 @@ describe('msUntilNextSwitch', () => {
     const virada = new Date(agora.getTime() + msUntilNextSwitch(agora))
     expect(isNight(agora)).toBe(false)
     expect(isNight(virada)).toBe(true)
+  })
+})
+
+describe('shouldUseDarkMap', () => {
+  it('respeita "claro" explícito, inclusive de madrugada', () => {
+    expect(shouldUseDarkMap('light', false, true)).toBe(false)
+    // Nem o sistema em escuro derruba a escolha explícita.
+    expect(shouldUseDarkMap('light', true, true)).toBe(false)
+  })
+
+  it('respeita "escuro" explícito, inclusive ao meio-dia', () => {
+    expect(shouldUseDarkMap('dark', false, false)).toBe(true)
+  })
+
+  it('no automático, escurece com o sistema OU com o relógio', () => {
+    expect(shouldUseDarkMap('system', false, false)).toBe(false)
+    expect(shouldUseDarkMap('system', true, false)).toBe(true)
+    expect(shouldUseDarkMap('system', false, true)).toBe(true)
+    expect(shouldUseDarkMap('system', true, true)).toBe(true)
   })
 })

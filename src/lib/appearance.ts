@@ -43,9 +43,21 @@ export function getStoredFontScale(): FontScale {
   return (localStorage.getItem(FONT_SCALE_STORAGE_KEY) as FontScale) || 'normal'
 }
 
+/**
+ * Avisa a mesma aba que a *preferência* mudou.
+ *
+ * A classe `dark` no <html> já é observável, mas ela só conta o tema
+ * resolvido: trocar de 'automático' para 'claro' em pleno dia não muda classe
+ * nenhuma. Quem precisa distinguir "claro por escolha" de "claro porque agora
+ * é dia" (o mapa, ver lib/mapTheme.ts) depende deste aviso. O evento
+ * `storage` do navegador não serve porque só dispara nas outras abas.
+ */
+export const THEME_CHANGE_EVENT = 'plantmap:theme-change'
+
 export function saveTheme(theme: ThemePreference) {
   localStorage.setItem(THEME_STORAGE_KEY, theme)
   applyTheme(theme)
+  window.dispatchEvent(new CustomEvent<ThemePreference>(THEME_CHANGE_EVENT, { detail: theme }))
 }
 
 export function saveFontScale(scale: FontScale) {

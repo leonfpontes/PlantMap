@@ -14,9 +14,10 @@ import { useGeolocationWatch } from '@/hooks/useGeolocation'
 import { useHasHover } from '@/hooks/useHasHover'
 import { accuracyCircle, formatAccuracy, POOR_ACCURACY_M } from '@/lib/geo'
 import { boundsOf, clusterByScreenGrid } from '@/lib/cluster'
-import { applyMapTheme, MAP_PALETTE_DARK, MAP_PALETTE_LIGHT } from '@/lib/mapTheme'
+import { applyMapTheme, MAP_PALETTE_DARK, MAP_PALETTE_LIGHT, shouldUseDarkMap } from '@/lib/mapTheme'
 import { useIsDarkTheme } from '@/hooks/useIsDarkTheme'
 import { useIsNight } from '@/hooks/useIsNight'
+import { useThemePreference } from '@/hooks/useThemePreference'
 import { cn } from '@/lib/utils'
 
 /**
@@ -81,15 +82,14 @@ export default function PlantMap({
   // vê o próprio ponto escapar da tela.
   const [following, setFollowing] = useState(false)
 
-  // O mapa escurece à noite por conta própria, como fazem os apps de
-  // navegação: quem usa isso no mato às 20h não quer uma tela branca na cara.
-  // O tema escuro do app também força escuro, senão um mapa claro de dia
-  // dentro de uma interface escura traria de volta o descasamento.
+  // No 'automático', o mapa escurece à noite por conta própria, como fazem os
+  // apps de navegação: quem usa isso no mato às 20h não quer uma tela branca
+  // na cara. Escolha explícita de tema continua mandando — ver
+  // shouldUseDarkMap para a regra inteira.
+  const preferencia = useThemePreference()
   const temaEscuro = useIsDarkTheme()
   const noite = useIsNight()
-  // Os dois hooks são chamados sempre, e não dentro de um `||`: curto-circuito
-  // pularia o segundo e mudaria a ordem dos hooks entre renders.
-  const isDark = temaEscuro || noite
+  const isDark = shouldUseDarkMap(preferencia, temaEscuro, noite)
 
   // Controlado (lista ao lado, tela desktop) quando onPinHover é passado; senão o próprio
   // mapa cuida do próprio hover (ex.: pin único da tela de detalhe).

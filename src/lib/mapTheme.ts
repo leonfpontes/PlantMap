@@ -19,6 +19,8 @@
  * o fundo.
  */
 
+import type { ThemePreference } from '@/types'
+
 /**
  * Faixa noturna do mapa: escuro a partir das 18h, claro a partir das 6h.
  *
@@ -46,6 +48,25 @@ export function msUntilNextSwitch(date: Date): number {
   alvo.setHours(isNight(date) ? NIGHT_END_HOUR : NIGHT_START_HOUR)
   if (alvo <= date) alvo.setDate(alvo.getDate() + 1)
   return alvo.getTime() - date.getTime()
+}
+
+/**
+ * Se o mapa deve usar a paleta escura.
+ *
+ * Escolha explícita manda: quem marcou "claro" quer claro, inclusive às 22h —
+ * o mapa não passa por cima disso. É só no 'automático' que o relógio entra,
+ * ao lado da preferência do sistema, porque aí o usuário justamente pediu que
+ * o app decidisse sozinho. Ali as duas pistas somam: qualquer uma indicando
+ * escuridão basta.
+ */
+export function shouldUseDarkMap(
+  preference: ThemePreference,
+  systemIsDark: boolean,
+  night: boolean
+): boolean {
+  if (preference === 'dark') return true
+  if (preference === 'light') return false
+  return systemIsDark || night
 }
 
 export interface MapPalette {
