@@ -1,18 +1,33 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import Map, { NavigationControl, Marker, Source, Layer } from 'react-map-gl/maplibre'
+import Map, { NavigationControl, Marker, Source, Layer, type MapRef } from 'react-map-gl/maplibre'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { LocateFixed } from 'lucide-react'
 import { PlantOccurrence } from '@/types'
 import PlantPin from './PlantPin'
+import ClusterBubble from './ClusterBubble'
 import PlantPinBalloon from './PlantPinBalloon'
 import PlantTooltip from '@/components/plant/PlantTooltip'
 import { useGeolocationWatch } from '@/hooks/useGeolocation'
 import { useHasHover } from '@/hooks/useHasHover'
 import { accuracyCircle, formatAccuracy, POOR_ACCURACY_M } from '@/lib/geo'
+import { boundsOf, clusterByScreenGrid } from '@/lib/cluster'
 import { cn } from '@/lib/utils'
+
+/**
+ * A partir daqui o pin mostra a foto da espécie. Abaixo disso ele é um ponto:
+ * de longe a foto não seria legível de qualquer forma, e carregar dezenas de
+ * imagens pra desenhar 12 pixels cada é desperdício puro.
+ */
+const MEDALLION_ZOOM = 15
+
+/**
+ * Lado da célula de agrupamento, em pixels — da ordem do diâmetro do
+ * medalhão, que é a distância a partir da qual dois pins se atrapalham.
+ */
+const CLUSTER_CELL_PX = 54
 
 interface PlantMapProps {
   occurrences?: PlantOccurrence[]
@@ -72,6 +87,10 @@ export default function PlantMap({
   // pixels entre os dois já fecha o balão antes do mouse chegar lá.
   const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  // Instância do mapa: fitBounds anima o enquadramento ao abrir um cluster,
+  // coisa que setViewState sozinho não faz (saltaria sem transição).
+  const mapRef = useRef<MapRef | null>(null)
+
   const setHovered = useCallback((id: string | null) => {
     if (onPinHover) onPinHover(id)
     else setInternalHoveredId(id)
@@ -123,6 +142,28 @@ export default function PlantMap({
     setViewState((v) => ({ ...v, longitude: userLng, latitude: userLat }))
   }, [following, userLat, userLng])
 
+  // Agrupa pelo zoom, não pelo centro: o resultado não muda ao arrastar o
+  // mapa, então panorâmica não recalcula nada.
+  const clusters = useMemo(
+    () => clusterByScreenGrid(occurrences, viewState.zoom, CLUSTER_CELL_PX),
+    [occurrences, viewState.zoom]
+  )
+
+  const pinVariant = viewState.zoom >= MEDALLION_ZOOM ? 'medallion' : 'dot'
+
+  // Clicar num grupo aproxima até ele caber na tela — é o gesto que o usuário
+  // já espera de uma bolha com número, e evita o beco sem saída de um cluster
+  // que não abre.
+  const handleClusterClick = useCallback((items: PlantOccurrence[]) => {
+    const b = boundsOf(items)
+    if (!b) return
+    setFollowing(false)
+    mapRef.current?.fitBounds(
+      [[b.west, b.south], [b.east, b.north]],
+      { padding: 80, maxZoom: MEDALLION_ZOOM + 2, duration: 500 }
+    )
+  }, [])
+
   const hoveredOccurrence = hasHover && effectiveHoveredId
     ? occurrences.find((o) => o.id === effectiveHoveredId) ?? null
     : null
@@ -130,6 +171,7 @@ export default function PlantMap({
   return (
     <div className="relative h-full w-full">
       <Map
+        ref={mapRef}
         {...viewState}
         onMove={(e) => setViewState(e.viewState)}
         // originalEvent só existe quando o movimento veio de gesto; movimento
@@ -179,16 +221,27 @@ export default function PlantMap({
           </Marker>
         )}
 
-        {occurrences.map((occ) => (
-          <PlantPin
-            key={occ.id}
-            occurrence={occ}
-            onClick={handlePinClick}
-            selected={selectedOccurrence?.id === occ.id}
-            highlighted={effectiveHoveredId === occ.id}
-            onHover={(hovering) => (hovering ? hoverNow(occ.id) : clearHoverSoon())}
-          />
-        ))}
+        {clusters.map((cluster) =>
+          cluster.items.length > 1 ? (
+            <ClusterBubble
+              key={cluster.id}
+              latitude={cluster.latitude}
+              longitude={cluster.longitude}
+              count={cluster.items.length}
+              onClick={() => handleClusterClick(cluster.items)}
+            />
+          ) : (
+            <PlantPin
+              key={cluster.items[0].id}
+              occurrence={cluster.items[0]}
+              variant={pinVariant}
+              onClick={handlePinClick}
+              selected={selectedOccurrence?.id === cluster.items[0].id}
+              highlighted={effectiveHoveredId === cluster.items[0].id}
+              onHover={(hovering) => (hovering ? hoverNow(cluster.items[0].id) : clearHoverSoon())}
+            />
+          )
+        )}
 
         {selectedLocation && (
           <PlantPin
