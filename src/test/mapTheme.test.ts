@@ -2,8 +2,12 @@ import { describe, it, expect, vi } from 'vitest'
 import {
   MAP_PALETTE_DARK,
   MAP_PALETTE_LIGHT,
+  NIGHT_END_HOUR,
+  NIGHT_START_HOUR,
   StyleLayerLike,
   applyMapTheme,
+  isNight,
+  msUntilNextSwitch,
   paintFor,
 } from '@/lib/mapTheme'
 
@@ -122,5 +126,58 @@ describe('paletas', () => {
         expect(cor, chave).toMatch(/^#[0-9a-f]{6}$/i)
       }
     }
+  })
+})
+
+/** Data local no dia 21/08/2026, para os casos ficarem legíveis em horas. */
+function as(hora: number, minuto = 0) {
+  return new Date(2026, 7, 21, hora, minuto, 0, 0)
+}
+
+describe('isNight', () => {
+  it.each([
+    [0, true], [3, true], [5, true],
+    [6, false], [12, false], [17, false],
+    [18, true], [21, true], [23, true],
+  ])('%ih -> noite=%s', (hora, esperado) => {
+    expect(isNight(as(hora))).toBe(esperado)
+  })
+
+  it('vira exatamente nas bordas configuradas', () => {
+    expect(isNight(as(NIGHT_START_HOUR - 1, 59))).toBe(false)
+    expect(isNight(as(NIGHT_START_HOUR))).toBe(true)
+    expect(isNight(as(NIGHT_END_HOUR - 1, 59))).toBe(true)
+    expect(isNight(as(NIGHT_END_HOUR))).toBe(false)
+  })
+})
+
+describe('msUntilNextSwitch', () => {
+  const H = 60 * 60 * 1000
+
+  it('de dia, aponta para o começo da noite', () => {
+    expect(msUntilNextSwitch(as(12))).toBe(6 * H)
+    expect(msUntilNextSwitch(as(17, 30))).toBe(0.5 * H)
+  })
+
+  it('de noite antes da meia-noite, atravessa o dia', () => {
+    expect(msUntilNextSwitch(as(20))).toBe(10 * H)
+  })
+
+  it('de madrugada, aponta para o amanhecer do mesmo dia', () => {
+    expect(msUntilNextSwitch(as(2))).toBe(4 * H)
+  })
+
+  it('é sempre positivo, pra nunca agendar um timer no passado', () => {
+    for (let h = 0; h < 24; h++) {
+      expect(msUntilNextSwitch(as(h)), `${h}h`).toBeGreaterThan(0)
+      expect(msUntilNextSwitch(as(h, 59)), `${h}h59`).toBeGreaterThan(0)
+    }
+  })
+
+  it('cai exatamente na virada, e o instante seguinte já é da outra faixa', () => {
+    const agora = as(15)
+    const virada = new Date(agora.getTime() + msUntilNextSwitch(agora))
+    expect(isNight(agora)).toBe(false)
+    expect(isNight(virada)).toBe(true)
   })
 })

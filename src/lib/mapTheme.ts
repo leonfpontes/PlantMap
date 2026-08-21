@@ -19,6 +19,35 @@
  * o fundo.
  */
 
+/**
+ * Faixa noturna do mapa: escuro a partir das 18h, claro a partir das 6h.
+ *
+ * Hora do aparelho, não do servidor: o que importa é se está escuro onde a
+ * pessoa está andando com o celular na mão.
+ */
+export const NIGHT_START_HOUR = 18
+export const NIGHT_END_HOUR = 6
+
+/** Se o relógio local está na faixa noturna. */
+export function isNight(date: Date): boolean {
+  const h = date.getHours()
+  // A faixa cruza a meia-noite, então é "ou", não "e".
+  return h >= NIGHT_START_HOUR || h < NIGHT_END_HOUR
+}
+
+/**
+ * Milissegundos até a próxima virada de faixa, para o mapa trocar sozinho em
+ * quem deixa o app aberto atravessando as 18h ou as 6h — sem ficar acordando
+ * um timer de minuto em minuto só pra comparar a hora.
+ */
+export function msUntilNextSwitch(date: Date): number {
+  const alvo = new Date(date)
+  alvo.setMinutes(0, 0, 0)
+  alvo.setHours(isNight(date) ? NIGHT_END_HOUR : NIGHT_START_HOUR)
+  if (alvo <= date) alvo.setDate(alvo.getDate() + 1)
+  return alvo.getTime() - date.getTime()
+}
+
 export interface MapPalette {
   background: string
   water: string
