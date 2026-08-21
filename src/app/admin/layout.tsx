@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import AdminShell from '@/components/admin/AdminShell'
+import AdminRealtimeSync from '@/components/admin/AdminRealtimeSync'
 import { getProfile } from '@/lib/actions/profile'
 import { listPendingSpecies } from '@/lib/actions/species'
 import { getOpenSupportMessageCount } from '@/lib/actions/support'
@@ -25,6 +26,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   return (
     <AdminShell counts={{ species: pendingSpecies.length, support, users }}>
+      {/* Só dentro de /admin: é a única área que mostra esses contadores, e
+          não faz sentido manter a assinatura de pé no app inteiro. */}
+      <AdminRealtimeSync />
       {children}
     </AdminShell>
   )
