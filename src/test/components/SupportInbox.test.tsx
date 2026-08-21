@@ -6,6 +6,14 @@ vi.mock('@/lib/actions/support', () => ({
   resolveSupportMessage: vi.fn(),
 }))
 
+// Os componentes dão router.refresh() depois de agir, pra recalcular o que é
+// renderizado no servidor (badges do menu admin, fila de /admin).
+const refresh = vi.fn()
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ refresh }),
+}))
+
+
 import { resolveSupportMessage } from '@/lib/actions/support'
 import SupportInbox from '@/components/admin/SupportInbox'
 import { SupportMessage } from '@/types'
@@ -24,6 +32,7 @@ const OPEN_MESSAGE: SupportMessage = {
 
 beforeEach(() => {
   vi.mocked(resolveSupportMessage).mockReset()
+  refresh.mockReset()
 })
 
 describe('SupportInbox', () => {
@@ -49,6 +58,27 @@ describe('SupportInbox', () => {
     expect(resolveSupportMessage).toHaveBeenCalledWith('m-1', 'Já corrigimos, tente de novo!')
     await waitFor(() => expect(screen.getByText('Já corrigimos, tente de novo!')).toBeInTheDocument())
     expect(screen.queryByText(/abertas \(1\)/i)).not.toBeInTheDocument()
+  })
+
+  it('atualiza os contadores do servidor ao resolver, sem exigir reload', async () => {
+    vi.mocked(resolveSupportMessage).mockResolvedValue({})
+    const user = userEvent.setup()
+    render(<SupportInbox initialMessages={[OPEN_MESSAGE]} />)
+
+    await user.click(screen.getByRole('button', { name: /marcar como resolvida/i }))
+
+    await waitFor(() => expect(refresh).toHaveBeenCalled())
+  })
+
+  it('não atualiza os contadores quando a action falha', async () => {
+    vi.mocked(resolveSupportMessage).mockResolvedValue({ error: 'sem permissão' })
+    const user = userEvent.setup()
+    render(<SupportInbox initialMessages={[OPEN_MESSAGE]} />)
+
+    await user.click(screen.getByRole('button', { name: /marcar como resolvida/i }))
+
+    expect(await screen.findByText('sem permissão')).toBeInTheDocument()
+    expect(refresh).not.toHaveBeenCalled()
   })
 
   it('mostra o erro da action e mantém a mensagem em aberto', async () => {

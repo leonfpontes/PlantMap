@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { CheckCircle2, MessageCircle } from 'lucide-react'
 import Button from '@/components/ui/Button'
 import { resolveSupportMessage } from '@/lib/actions/support'
@@ -14,6 +15,7 @@ interface SupportInboxProps {
 
 /** Fila de mensagens de suporte para admins: abertas primeiro, resolver com resposta opcional. */
 export default function SupportInbox({ initialMessages }: SupportInboxProps) {
+  const router = useRouter()
   const [messages, setMessages] = useState(initialMessages)
   const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({})
   const [resolvingId, setResolvingId] = useState<string | null>(null)
@@ -40,6 +42,9 @@ export default function SupportInbox({ initialMessages }: SupportInboxProps) {
           : m
       )
     )
+    // A troca acima é o retorno imediato na lista; o refresh é o que atualiza
+    // o que vem do servidor — badges do menu admin e fila de /admin.
+    router.refresh()
   }
 
   if (messages.length === 0) {

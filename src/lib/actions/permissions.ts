@@ -1,5 +1,6 @@
 'use server'
 
+import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { AdminUserRow, PermissionRequest } from '@/types'
 
@@ -49,6 +50,14 @@ export async function reviewPermissionRequest(id: string, approve: boolean, reje
   })
 
   if (error) return { error: error.message }
+
+  // Mesmo motivo do reviewSpecies: os contadores de pendência (badges do menu
+  // admin, fila de triagem de /admin, atalho no perfil) são renderizados no
+  // servidor, e sem invalidar continuariam servindo o payload da carga
+  // anterior — anunciando pendência já resolvida até um reload manual.
+  revalidatePath('/admin', 'layout')
+  revalidatePath('/profile')
+
   return {}
 }
 
@@ -61,6 +70,14 @@ export async function setRegistrationPermission(userId: string, allowed: boolean
   })
 
   if (error) return { error: error.message }
+
+  // Mesmo motivo do reviewSpecies: os contadores de pendência (badges do menu
+  // admin, fila de triagem de /admin, atalho no perfil) são renderizados no
+  // servidor, e sem invalidar continuariam servindo o payload da carga
+  // anterior — anunciando pendência já resolvida até um reload manual.
+  revalidatePath('/admin', 'layout')
+  revalidatePath('/profile')
+
   return {}
 }
 

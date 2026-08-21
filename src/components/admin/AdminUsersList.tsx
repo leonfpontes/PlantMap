@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Check, X, ShieldCheck } from 'lucide-react'
 import Avatar from '@/components/ui/Avatar'
 import Button from '@/components/ui/Button'
@@ -19,14 +20,18 @@ interface AdminUsersListProps {
  * permissão direto, sem esperar um pedido — mesmo padrão de review_species.
  */
 export default function AdminUsersList({ initialUsers }: AdminUsersListProps) {
+  const router = useRouter()
   const [users, setUsers] = useState(initialUsers)
   const [rejectingId, setRejectingId] = useState<string | null>(null)
   const [reason, setReason] = useState('')
   const [busyId, setBusyId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
+  // A alteração local é o retorno imediato na lista; o refresh é o que
+  // atualiza o que vem do servidor — badges do menu admin e fila de /admin.
   const updateUser = (userId: string, patch: Partial<AdminUserRow>) => {
     setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, ...patch } : u)))
+    router.refresh()
   }
 
   const handleApprove = async (u: AdminUserRow) => {

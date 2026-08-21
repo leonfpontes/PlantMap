@@ -5,6 +5,13 @@ vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn(),
 }))
 
+// revalidatePath exige o contexto de request do Next, que não existe aqui.
+// O mock deixa a action rodar; que ela invalida o cache é verificado abaixo.
+const revalidatePath = vi.fn()
+vi.mock('next/cache', () => ({
+  revalidatePath: (...args: unknown[]) => revalidatePath(...args),
+}))
+
 import { createClient } from '@/lib/supabase/server'
 import {
   listAllUsers,
@@ -18,6 +25,7 @@ let mockClient: ReturnType<typeof createSupabaseMock>
 beforeEach(() => {
   mockClient = createSupabaseMock()
   vi.mocked(createClient).mockResolvedValue(mockClient as never)
+  revalidatePath.mockReset()
 })
 
 describe('listAllUsers', () => {
@@ -99,5 +107,31 @@ describe('setRegistrationPermission', () => {
     expect(result).toEqual({})
     const call = mockClient.getRpcCalls().find((c) => c.fn === 'set_registration_permission')
     expect(call?.params).toEqual({ p_user_id: 'u9', p_allowed: true })
+  })
+})
+
+describe('invalidação dos contadores de pendência', () => {
+  it.each([
+    ['reviewPermissionRequest', () => reviewPermissionRequest('r-1', true)],
+    ['setRegistrationPermission', () => setRegistrationPermission('u-1', true)],
+  ])('%s invalida /admin e /profile', async (_nome, chamar) => {
+    mockClient.setRpcResult('review_occurrence_permission_request', { data: null, error: null })
+    mockClient.setRpcResult('set_registration_permission', { data: null, error: null })
+
+    await chamar()
+
+    expect(revalidatePath).toHaveBeenCalledWith('/admin', 'layout')
+    expect(revalidatePath).toHaveBeenCalledWith('/profile')
+  })
+
+  it('não invalida nada quando a RPC falha', async () => {
+    mockClient.setRpcResult('review_occurrence_permission_request', {
+      data: null,
+      error: { message: 'sem permissão' },
+    })
+
+    await reviewPermissionRequest('r-1', true)
+
+    expect(revalidatePath).not.toHaveBeenCalled()
   })
 })

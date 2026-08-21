@@ -7,6 +7,14 @@ vi.mock('@/lib/actions/permissions', () => ({
   setRegistrationPermission: vi.fn(),
 }))
 
+// Os componentes dão router.refresh() depois de agir, pra recalcular o que é
+// renderizado no servidor (badges do menu admin, fila de /admin).
+const refresh = vi.fn()
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ refresh }),
+}))
+
+
 import { reviewPermissionRequest, setRegistrationPermission } from '@/lib/actions/permissions'
 import AdminUsersList from '@/components/admin/AdminUsersList'
 import { AdminUserRow } from '@/types'
@@ -45,6 +53,7 @@ const GRANTED_USER: AdminUserRow = {
 beforeEach(() => {
   vi.mocked(reviewPermissionRequest).mockReset()
   vi.mocked(setRegistrationPermission).mockReset()
+  refresh.mockReset()
 })
 
 describe('AdminUsersList', () => {
@@ -80,5 +89,26 @@ describe('AdminUsersList', () => {
 
     expect(setRegistrationPermission).toHaveBeenCalledWith('u2', false)
     await waitFor(() => expect(screen.getByRole('button', { name: /conceder permissão/i })).toBeInTheDocument())
+  })
+
+  it('atualiza os contadores do servidor ao aprovar, sem exigir reload', async () => {
+    vi.mocked(reviewPermissionRequest).mockResolvedValue({})
+    const user = userEvent.setup()
+    render(<AdminUsersList initialUsers={[PENDING_USER]} />)
+
+    await user.click(screen.getByRole('button', { name: /aprovar/i }))
+
+    await waitFor(() => expect(refresh).toHaveBeenCalled())
+  })
+
+  it('não atualiza os contadores quando a action falha', async () => {
+    vi.mocked(reviewPermissionRequest).mockResolvedValue({ error: 'sem permissão' })
+    const user = userEvent.setup()
+    render(<AdminUsersList initialUsers={[PENDING_USER]} />)
+
+    await user.click(screen.getByRole('button', { name: /aprovar/i }))
+
+    expect(await screen.findByText('sem permissão')).toBeInTheDocument()
+    expect(refresh).not.toHaveBeenCalled()
   })
 })
