@@ -88,12 +88,22 @@ export default function EditForm({ occurrence }: EditFormProps) {
 
     if (result?.error) { setServerError(result.error); return }
 
-    // replace, e não push: o push empilhava a tela de detalhe por cima do
-    // formulário, então o "voltar" seguinte trazia de volta o formulário de
-    // uma edição já salva. Substituindo a entrada, o formulário sai do
-    // histórico no momento em que deixa de fazer sentido voltar pra ele.
-    router.replace(`/plant/${occurrence.id}`)
-    router.refresh()
+    // Desfaz a ida ao formulário em vez de empilhar mais uma entrada.
+    //
+    // Com push, o "voltar" seguinte reabria o formulário de uma edição já
+    // salva. Com replace, o formulário saía do histórico mas sobravam duas
+    // entradas de detalhe seguidas, e um "voltar" caía na mesma tela antes do
+    // mapa. `back()` consome a entrada do formulário e devolve exatamente o
+    // histórico de antes de editar: detalhe, e o próximo "voltar" vai ao mapa.
+    //
+    // A tela de detalhe é a única porta de entrada da edição, então a entrada
+    // anterior é sempre ela — salvo quando a edição foi aberta direto por URL
+    // numa aba nova, caso em que não há para onde voltar e o replace assume.
+    if (window.history.length > 1) {
+      router.back()
+    } else {
+      router.replace(`/plant/${occurrence.id}`)
+    }
   }
 
   return (
