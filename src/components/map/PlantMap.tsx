@@ -14,6 +14,8 @@ import { useGeolocationWatch } from '@/hooks/useGeolocation'
 import { useHasHover } from '@/hooks/useHasHover'
 import { accuracyCircle, formatAccuracy, POOR_ACCURACY_M } from '@/lib/geo'
 import { boundsOf, clusterByScreenGrid } from '@/lib/cluster'
+import { applyMapTheme, MAP_PALETTE_DARK, MAP_PALETTE_LIGHT } from '@/lib/mapTheme'
+import { useIsDarkTheme } from '@/hooks/useIsDarkTheme'
 import { cn } from '@/lib/utils'
 
 /**
@@ -78,6 +80,8 @@ export default function PlantMap({
   // vê o próprio ponto escapar da tela.
   const [following, setFollowing] = useState(false)
 
+  const isDark = useIsDarkTheme()
+
   // Controlado (lista ao lado, tela desktop) quando onPinHover é passado; senão o próprio
   // mapa cuida do próprio hover (ex.: pin único da tela de detalhe).
   const effectiveHoveredId = onPinHover ? hoveredOccurrenceId ?? null : internalHoveredId
@@ -136,6 +140,17 @@ export default function PlantMap({
     }
   }, [userLat, userLng, acquireBestFix])
 
+  // Recolore o mapa base pro tema do app (ver lib/mapTheme.ts). Precisa rodar
+  // no load e a cada troca de tema; antes do estilo carregar não há camada
+  // nenhuma pra pintar, e o onLoad cobre esse primeiro caso.
+  const aplicarTema = useCallback(() => {
+    const map = mapRef.current?.getMap()
+    if (!map?.isStyleLoaded()) return
+    applyMapTheme(map, isDark ? MAP_PALETTE_DARK : MAP_PALETTE_LIGHT)
+  }, [isDark])
+
+  useEffect(aplicarTema, [aplicarTema])
+
   // Enquanto estiver seguindo, cada leitura nova reposiciona o mapa.
   useEffect(() => {
     if (!following || userLat == null || userLng == null) return
@@ -177,6 +192,7 @@ export default function PlantMap({
         // originalEvent só existe quando o movimento veio de gesto; movimento
         // programático (o próprio follow) não pode desligar o follow.
         onMoveStart={(e) => { if (e.originalEvent) setFollowing(false) }}
+        onLoad={aplicarTema}
         mapStyle="https://tiles.openfreemap.org/styles/liberty"
         onClick={(e) => {
           if (onMapClick) {

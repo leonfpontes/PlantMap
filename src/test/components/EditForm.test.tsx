@@ -3,7 +3,13 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { PlantOccurrence } from '@/types'
 
-vi.mock('@/lib/actions/plants', () => ({ updateOccurrence: vi.fn() }))
+// searchSpecies entra no mock porque o SpeciesCombobox dentro do formulário o
+// chama num timer com atraso: sem ele, o timer dispara depois do teste e cai
+// num mock incompleto, virando rejeição não tratada.
+vi.mock('@/lib/actions/plants', () => ({
+  updateOccurrence: vi.fn(),
+  searchSpecies: vi.fn(async () => []),
+}))
 
 const back = vi.fn()
 const replace = vi.fn()
