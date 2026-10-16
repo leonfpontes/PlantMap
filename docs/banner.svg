@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 360" width="1200" height="360" role="img" aria-label="PlantMap — mapa colaborativo de plantas medicinais, rituais e alimentares">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#052e16"/>
+      <stop offset="0.55" stop-color="#14532d"/>
+      <stop offset="1" stop-color="#15803d"/>
+    </linearGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0H0V40" fill="none" stroke="#ffffff" stroke-opacity="0.05" stroke-width="1"/>
+    </pattern>
+    <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#000" flood-opacity="0.35"/>
+    </filter>
+    <symbol id="pin" viewBox="0 0 24 32">
+      <path d="M12 0C5.4 0 0 5.2 0 11.7 0 20.4 12 32 12 32s12-11.6 12-20.3C24 5.2 18.6 0 12 0z"/>
+      <circle cx="12" cy="11.5" r="4.6" fill="#ffffff"/>
+    </symbol>
+  </defs>
+
+  <rect width="1200" height="360" rx="24" fill="url(#bg)"/>
+  <rect width="1200" height="360" rx="24" fill="url(#grid)"/>
+
+  <!-- ruas estilizadas do lado do mapa -->
+  <g fill="none" stroke="#ffffff" stroke-linecap="round" opacity="0.14">
+    <path d="M700 -10 C760 90 820 120 900 160 S1060 260 1210 250" stroke-width="10"/>
+    <path d="M640 380 C700 300 780 270 880 250 S1080 190 1210 90" stroke-width="6"/>
+    <path d="M980 -10 C960 80 990 170 1060 220 S1150 320 1150 380" stroke-width="4"/>
+    <path d="M760 380 C790 330 840 320 900 330" stroke-width="3"/>
+  </g>
+  <!-- rio -->
+  <path d="M1210 330 C1100 300 1040 340 960 320 S820 360 760 380" fill="none" stroke="#38bdf8" stroke-opacity="0.25" stroke-width="14" stroke-linecap="round"/>
+
+  <!-- pins por condição -->
+  <g filter="url(#shadow)">
+    <use href="#pin" x="770" y="92" width="34" height="45" fill="#16a34a"/>
+    <use href="#pin" x="905" y="190" width="40" height="53" fill="#16a34a"/>
+    <use href="#pin" x="1040" y="118" width="34" height="45" fill="#ca8a04"/>
+    <use href="#pin" x="1110" y="232" width="30" height="40" fill="#dc2626"/>
+    <use href="#pin" x="840" y="262" width="28" height="37" fill="#6b7280"/>
+  </g>
+  <!-- bolha de cluster -->
+  <g filter="url(#shadow)">
+    <circle cx="1000" cy="62" r="26" fill="#ffffff"/>
+    <circle cx="1000" cy="62" r="20" fill="#15803d"/>
+    <text x="1000" y="69" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="19" font-weight="700" fill="#ffffff">12</text>
+  </g>
+  <!-- ponto do GPS -->
+  <circle cx="955" cy="300" r="22" fill="#3b82f6" fill-opacity="0.18"/>
+  <circle cx="955" cy="300" r="8" fill="#3b82f6" stroke="#ffffff" stroke-width="3"/>
+
+  <!-- marca -->
+  <g transform="translate(72 82)">
+    <rect width="72" height="72" rx="18" fill="#ffffff" fill-opacity="0.12" stroke="#ffffff" stroke-opacity="0.25"/>
+    <g transform="translate(12 12) scale(2)" stroke="#ffffff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none">
+      <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z" fill="#ffffff"/>
+      <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>
+    </g>
+  </g>
+  <text x="166" y="140" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="58" font-weight="800" fill="#ffffff" letter-spacing="-1.5">PlantMap</text>
+  <text x="72" y="210" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="26" font-weight="600" fill="#dcfce7">Mapa colaborativo de plantas medicinais,</text>
+  <text x="72" y="244" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="26" font-weight="600" fill="#dcfce7">rituais e alimentares.</text>
+  <text x="72" y="294" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="16" fill="#86efac" opacity="0.9">Next.js 15 · Supabase · PostGIS · MapLibre</text>
+</svg>
