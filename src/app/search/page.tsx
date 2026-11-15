@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Globe, Search, SlidersHorizontal } from 'lucide-react'
 import MobileShell from '@/components/layout/MobileShell'
 import PageHeader from '@/components/layout/PageHeader'
@@ -20,6 +20,41 @@ const MAX_UNLIMITED_RESULTS = 500
 const FALLBACK_LAT = -21.1767
 const FALLBACK_LNG = -47.8208
 
+/**
+ * A última busca fica guardada na sessão da aba. Abrir uma planta da lista
+ * desmonta esta página, e voltar a montava do zero — a pessoa perdia os
+ * resultados e a posição na lista e tinha que buscar de novo. sessionStorage
+ * (e não localStorage) porque a busca é "perto de mim, agora": não deve
+ * reaparecer dias depois, em outro lugar.
+ */
+const STORAGE_KEY = 'plantmap:search'
+
+interface SavedSearch {
+  query: string
+  radius: number
+  unlimited: boolean
+  results: OccurrenceWithDistance[]
+  searched: boolean
+  scrollTop: number
+}
+
+function readSavedSearch(): SavedSearch | null {
+  try {
+    const raw = sessionStorage.getItem(STORAGE_KEY)
+    return raw ? (JSON.parse(raw) as SavedSearch) : null
+  } catch {
+    return null
+  }
+}
+
+function writeSavedSearch(s: SavedSearch) {
+  try {
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(s))
+  } catch {
+    // Sem storage (aba privada, cota cheia): a busca só não sobrevive à navegação.
+  }
+}
+
 export default function SearchPage() {
   const [query, setQuery] = useState('')
   const [radius, setRadius] = useState(5)
@@ -28,6 +63,49 @@ export default function SearchPage() {
   const [loading, setLoading] = useState(false)
   const [searched, setSearched] = useState(false)
   const { latitude, longitude, loading: locLoading, acquireBestFix } = useGeolocation()
+
+  const listRef = useRef<HTMLDivElement>(null)
+  const scrollTopRef = useRef(0)
+  // Rolagem a reaplicar depois que a lista restaurada for pintada.
+  const pendingScrollRef = useRef<number | null>(null)
+  // Só passa a gravar depois de restaurar — senão o estado vazio inicial
+  // sobrescreveria a busca salva antes de ela ser lida.
+  const [restored, setRestored] = useState(false)
+
+  // Layout effect: restaura antes da primeira pintura, sem piscar a tela vazia.
+  useLayoutEffect(() => {
+    const saved = readSavedSearch()
+    if (saved) {
+      setQuery(saved.query)
+      setRadius(saved.radius)
+      setUnlimited(saved.unlimited)
+      setResults(saved.results)
+      setSearched(saved.searched)
+      scrollTopRef.current = saved.scrollTop
+      pendingScrollRef.current = saved.scrollTop
+    }
+    setRestored(true)
+  }, [])
+
+  useLayoutEffect(() => {
+    if (pendingScrollRef.current == null || !listRef.current || results.length === 0) return
+    listRef.current.scrollTop = pendingScrollRef.current
+    pendingScrollRef.current = null
+  }, [results])
+
+  useEffect(() => {
+    if (!restored) return
+    writeSavedSearch({ query, radius, unlimited, results, searched, scrollTop: scrollTopRef.current })
+  }, [restored, query, radius, unlimited, results, searched])
+
+  // A rolagem muda muito pra regravar tudo a cada evento: guarda no ref e
+  // grava junto com o resto ao sair da página (é aí que ela importa).
+  useEffect(() => {
+    return () => {
+      const saved = readSavedSearch()
+      if (saved) writeSavedSearch({ ...saved, scrollTop: scrollTopRef.current })
+    }
+  }, [])
 
   const handleSearch = async () => {
     setLoading(true)
@@ -137,7 +215,11 @@ export default function SearchPage() {
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 pb-4">
+      <div
+        ref={listRef}
+        onScroll={(e) => { scrollTopRef.current = e.currentTarget.scrollTop }}
+        className="flex-1 overflow-y-auto px-4 pb-4"
+      >
         {loading && (
           <div className="flex flex-col gap-3">
             {[1, 2, 3].map((i) => (

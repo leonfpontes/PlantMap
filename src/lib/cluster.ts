@@ -42,6 +42,19 @@ export function toWorld(longitude: number, latitude: number): { x: number; y: nu
 }
 
 /**
+ * Nível de zoom em que o agrupamento é calculado: o inteiro mais próximo.
+ *
+ * Agrupar no zoom fracionado faz a grade mudar de tamanho a cada quadro de um
+ * gesto de pinça, e os grupos se refazem sem parar (pins piscando e trocando
+ * de bolha). Em níveis inteiros a composição só muda ao cruzar um nível, e a
+ * célula na tela fica entre ~0,7× e ~1,4× de `cellPx` — ainda da ordem do
+ * marcador.
+ */
+export function clusterZoomLevel(zoom: number): number {
+  return Math.round(zoom)
+}
+
+/**
  * Agrupa por células de `cellPx` pixels no zoom informado. `cellPx` deve ser
  * da ordem do diâmetro do marcador: é a distância abaixo da qual dois pins
  * se atrapalhariam.

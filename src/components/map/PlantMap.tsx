@@ -13,7 +13,7 @@ import PlantTooltip from '@/components/plant/PlantTooltip'
 import { useGeolocationWatch } from '@/hooks/useGeolocation'
 import { useHasHover } from '@/hooks/useHasHover'
 import { accuracyCircle, formatAccuracy, POOR_ACCURACY_M } from '@/lib/geo'
-import { boundsOf, clusterByScreenGrid } from '@/lib/cluster'
+import { boundsOf, clusterByScreenGrid, clusterZoomLevel } from '@/lib/cluster'
 import { applyMapTheme, MAP_PALETTE_DARK, MAP_PALETTE_LIGHT, shouldUseDarkMap } from '@/lib/mapTheme'
 import { useIsDarkTheme } from '@/hooks/useIsDarkTheme'
 import { useIsNight } from '@/hooks/useIsNight'
@@ -32,6 +32,13 @@ const MEDALLION_ZOOM = 15
  * medalhão, que é a distância a partir da qual dois pins se atrapalham.
  */
 const CLUSTER_CELL_PX = 54
+
+/**
+ * Quanto o zoom precisa ficar parado num nível novo antes de os grupos serem
+ * refeitos. Curto o bastante pra parecer imediato ao soltar a pinça, longo o
+ * bastante pra não reagrupar no meio do gesto.
+ */
+const CLUSTER_SETTLE_MS = 180
 
 interface PlantMapProps {
   occurrences?: PlantOccurrence[]
@@ -166,11 +173,26 @@ export default function PlantMap({
     setViewState((v) => ({ ...v, longitude: userLng, latitude: userLat }))
   }, [following, userLat, userLng])
 
+  // Zoom usado no agrupamento: inteiro e só atualizado quando o gesto assenta.
+  // Antes o agrupamento usava o zoom fracionado de cada quadro da pinça — as
+  // células da grade mudavam de tamanho continuamente, os grupos se refaziam a
+  // cada quadro e todas as bolhas eram desmontadas e remontadas (a key leva a
+  // contagem). Era isso que fazia os balões piscarem, sumirem e embaralharem
+  // durante o zoom. Com nível inteiro + espera curta, a composição só muda
+  // depois que o usuário solta o gesto, uma vez.
+  const zoomLevel = clusterZoomLevel(viewState.zoom)
+  const [clusterZoom, setClusterZoom] = useState(zoomLevel)
+  useEffect(() => {
+    if (zoomLevel === clusterZoom) return
+    const t = setTimeout(() => setClusterZoom(zoomLevel), CLUSTER_SETTLE_MS)
+    return () => clearTimeout(t)
+  }, [zoomLevel, clusterZoom])
+
   // Agrupa pelo zoom, não pelo centro: o resultado não muda ao arrastar o
   // mapa, então panorâmica não recalcula nada.
   const clusters = useMemo(
-    () => clusterByScreenGrid(occurrences, viewState.zoom, CLUSTER_CELL_PX),
-    [occurrences, viewState.zoom]
+    () => clusterByScreenGrid(occurrences, clusterZoom, CLUSTER_CELL_PX),
+    [occurrences, clusterZoom]
   )
 
   const pinVariant = viewState.zoom >= MEDALLION_ZOOM ? 'medallion' : 'dot'

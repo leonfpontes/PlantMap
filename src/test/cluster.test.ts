@@ -98,3 +98,24 @@ describe('boundsOf', () => {
     expect(boundsOf([])).toBeNull()
   })
 })
+
+describe('clusterZoomLevel', () => {
+  it('arredonda para o nível inteiro mais próximo', async () => {
+    const { clusterZoomLevel } = await import('@/lib/cluster')
+    expect(clusterZoomLevel(12.2)).toBe(12)
+    expect(clusterZoomLevel(12.7)).toBe(13)
+  })
+
+  it('mantém o mesmo agrupamento ao longo de um gesto de pinça dentro do nível', async () => {
+    const { clusterZoomLevel, clusterByScreenGrid } = await import('@/lib/cluster')
+    const pts = [
+      { id: 'a', latitude: -21.17, longitude: -47.82 },
+      { id: 'b', latitude: -21.171, longitude: -47.821 },
+      { id: 'c', latitude: -21.2, longitude: -47.8 },
+    ]
+    const ids = (z: number) =>
+      clusterByScreenGrid(pts, clusterZoomLevel(z), 54).map((c) => c.id).sort().join('|')
+    const base = ids(12.0)
+    for (const z of [11.6, 11.8, 12.1, 12.3, 12.49]) expect(ids(z)).toBe(base)
+  })
+})
