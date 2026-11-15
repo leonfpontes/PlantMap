@@ -11,6 +11,7 @@ import BottomNav from '@/components/layout/BottomNav'
 import Badge from '@/components/ui/Badge'
 import Button from '@/components/ui/Button'
 import ShareSheet from '@/components/plant/ShareSheet'
+import DirectionsButton from '@/components/plant/DirectionsButton'
 import SpeciesAvatar from '@/components/plant/SpeciesAvatar'
 import AuthorshipCard from '@/components/plant/AuthorshipCard'
 import ImageLightbox from '@/components/plant/ImageLightbox'
@@ -234,6 +235,13 @@ export default function PlantDetailPage() {
               <p className="text-sm text-gray-600 bg-gray-50 rounded-xl p-3 dark:bg-gray-800/60 dark:text-gray-300">{occurrence.notes}</p>
             </div>
           )}
+
+          {/* Ação principal da tela: quem abre uma planta quase sempre quer ir até ela. */}
+          <DirectionsButton
+            latitude={occurrence.latitude}
+            longitude={occurrence.longitude}
+            className="lg:col-span-2"
+          />
 
           <Button
             variant="secondary"
