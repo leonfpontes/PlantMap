@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { CheckCircle, MapPin } from 'lucide-react'
 import DirectionsButton from '@/components/plant/DirectionsButton'
 import { formatDistance } from '@/lib/utils'
+import { daysSince, formatSeenAgo } from '@/lib/careMissions'
 import { cn } from '@/lib/utils'
 import { PlantOccurrence } from '@/types'
 import Badge from '@/components/ui/Badge'
@@ -27,6 +28,7 @@ const conditionLabel: Record<string, { label: string; variant: 'green' | 'yellow
 export default function PlantTooltipContent({ occurrence, compact, distanceM }: PlantTooltipContentProps) {
   const condition = conditionLabel[occurrence.condition] || conditionLabel.healthy
   const avatarSize = compact ? 32 : 40
+  const vista = formatSeenAgo(daysSince(occurrence.last_seen_at))
 
   return (
     <div>
@@ -61,6 +63,9 @@ export default function PlantTooltipContent({ occurrence, compact, distanceM }: 
               <CheckCircle className="mr-1 h-3 w-3" />
               Verificado
             </Badge>
+          )}
+          {vista && (
+            <span className="text-xs text-gray-500 dark:text-gray-400">· {vista}</span>
           )}
           {distanceM != null && (
             <span className="flex items-center gap-0.5 text-xs font-medium text-gray-600 dark:text-gray-300">

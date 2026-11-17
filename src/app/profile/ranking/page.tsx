@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
-import { Trophy } from 'lucide-react'
+import Link from 'next/link'
+import { ChevronRight, HeartHandshake, Trophy } from 'lucide-react'
 import MobileShell from '@/components/layout/MobileShell'
 import PageHeader from '@/components/layout/PageHeader'
 import BottomNav from '@/components/layout/BottomNav'
@@ -24,6 +25,19 @@ export default async function RankingPage() {
       <PageHeader title="Ranking" />
 
       <div className="flex-1 overflow-y-auto p-4">
+        {/* O jeito mais direto de subir no ranking: visitar plantas que precisam. */}
+        <Link
+          href="/missions"
+          className="mb-4 flex items-center gap-3 rounded-2xl bg-green-700 p-4 text-white shadow-sm transition-colors hover:bg-green-800 dark:bg-green-600 dark:hover:bg-green-700"
+        >
+          <HeartHandshake className="h-7 w-7 flex-shrink-0" />
+          <span className="flex-1">
+            <span className="block font-semibold">Missões de cuidado</span>
+            <span className="block text-sm text-green-50">Visite plantas perto de você · +10 pontos cada</span>
+          </span>
+          <ChevronRight className="h-5 w-5 flex-shrink-0" />
+        </Link>
+
         <RankingRulesAccordion />
 
         {leaderboard.length === 0 ? (

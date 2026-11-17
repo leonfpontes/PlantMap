@@ -5,6 +5,7 @@ import { PlantOccurrence, OccurrenceWithDistance } from '@/types'
 import Badge from '@/components/ui/Badge'
 import { CONDITION_CONFIG } from '@/constants/plant'
 import { formatDistance } from '@/lib/utils'
+import { daysSince, formatSeenAgo } from '@/lib/careMissions'
 
 interface PlantCardProps {
   occurrence: PlantOccurrence | OccurrenceWithDistance
@@ -17,6 +18,9 @@ export default function PlantCard({ occurrence }: PlantCardProps) {
   // cai na foto de referência da espécie (species.image_url) em vez do ícone genérico.
   const referenceOnly = !occurrence.photo_url && !!occurrence.species?.image_url
   const thumbnailUrl = occurrence.photo_url || occurrence.species?.image_url
+  // Responde a pergunta de quem vai sair de casa: ela ainda está lá?
+  const vista = formatSeenAgo(daysSince(occurrence.last_seen_at))
+  const sumiu = occurrence.gone_reports ?? 0
 
   return (
     <Link href={`/plant/${occurrence.id}`}>
@@ -68,6 +72,13 @@ export default function PlantCard({ occurrence }: PlantCardProps) {
               </span>
             )}
           </div>
+          {(vista || sumiu > 0) && (
+            <p className={sumiu > 0 ? 'mt-1 text-xs font-medium text-amber-700 dark:text-amber-400' : 'mt-1 text-xs text-gray-500 dark:text-gray-400'}>
+              {sumiu > 0
+                ? `${sumiu} ${sumiu === 1 ? 'pessoa não encontrou' : 'pessoas não encontraram'} recentemente`
+                : vista!.charAt(0).toUpperCase() + vista!.slice(1)}
+            </p>
+          )}
         </div>
       </div>
     </Link>

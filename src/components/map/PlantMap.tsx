@@ -4,13 +4,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Map, { NavigationControl, Marker, Source, Layer, type MapRef, type ViewStateChangeEvent } from 'react-map-gl/maplibre'
 import 'maplibre-gl/dist/maplibre-gl.css'
-import { LocateFixed } from 'lucide-react'
+import { LocateFixed, MapPin } from 'lucide-react'
 import { PlantOccurrence } from '@/types'
 import PlantPin from './PlantPin'
 import ClusterBubble from './ClusterBubble'
 import PlantPinBalloon from './PlantPinBalloon'
 import PlantTooltip from '@/components/plant/PlantTooltip'
-import { useGeolocationWatch } from '@/hooks/useGeolocation'
+import { useGeolocationWatch, useLocationPermission } from '@/hooks/useGeolocation'
 import { useHasHover } from '@/hooks/useHasHover'
 import { accuracyCircle, distanceMeters, formatAccuracy, POOR_ACCURACY_M } from '@/lib/geo'
 import {
@@ -72,6 +72,31 @@ interface PlantMapProps {
   hoveredOccurrenceId?: string | null
   /** Avisa quando o mouse entra/sai de um pin, para realçar o card correspondente na lista. */
   onPinHover?: (id: string | null) => void
+  /**
+   * Explica antes de o navegador pedir a localização (mapa principal). Sem
+   * isso, o pedido do sistema aparecia sem contexto ao abrir o app e muita
+   * gente negava — e o "perto de mim" deixava de funcionar.
+   */
+  askLocationFirst?: boolean
+}
+
+const LOCATION_OK_KEY = 'plantmap:location-ok'
+const LOCATION_LATER_KEY = 'plantmap:location-later'
+
+function lerFlag(storage: 'local' | 'session', key: string): boolean {
+  try {
+    return (storage === 'local' ? localStorage : sessionStorage).getItem(key) === '1'
+  } catch {
+    return false
+  }
+}
+
+function gravarFlag(storage: 'local' | 'session', key: string) {
+  try {
+    (storage === 'local' ? localStorage : sessionStorage).setItem(key, '1')
+  } catch {
+    // Sem armazenamento: o pré-pedido só volta a aparecer na próxima visita.
+  }
 }
 
 export default function PlantMap({
@@ -84,6 +109,7 @@ export default function PlantMap({
   interactive = false,
   hoveredOccurrenceId,
   onPinHover,
+  askLocationFirst = false,
 }: PlantMapProps) {
   const router = useRouter()
   const hasHover = useHasHover()
@@ -107,6 +133,24 @@ export default function PlantMap({
   const [visibleBounds, setVisibleBounds] = useState<GeoBounds | null>(null)
   // Grupo que nem o zoom máximo separa: abre como lista (ver handleClusterClick).
   const [stackedItems, setStackedItems] = useState<PlantOccurrence[] | null>(null)
+  // Pré-pedido de localização (só no mapa principal, ver askLocationFirst).
+  const permissao = useLocationPermission()
+  const [consentiu, setConsentiu] = useState(false)
+  const [adiou, setAdiou] = useState(false)
+  useEffect(() => {
+    setConsentiu(lerFlag('local', LOCATION_OK_KEY))
+    setAdiou(lerFlag('session', LOCATION_LATER_KEY))
+  }, [])
+  // Negada também "libera": o navegador não pergunta de novo, e o erro que
+  // volta é o que acende o aviso "Localização desligada" no mapa.
+  const gpsLiberado = !askLocationFirst || permissao === 'granted' || permissao === 'denied' || consentiu
+  const mostrarPrePedido = askLocationFirst && !gpsLiberado && !adiou
+
+  const liberarGps = useCallback(() => {
+    gravarFlag('local', LOCATION_OK_KEY)
+    setConsentiu(true)
+  }, [])
+
   // Watch contínuo (e não leitura única): é o que faz o ponto acompanhar quem
   // está andando pelo mapa.
   const {
@@ -115,7 +159,7 @@ export default function PlantMap({
     accuracy: userAccuracy,
     loading: locLoading,
     acquireBestFix,
-  } = useGeolocationWatch()
+  } = useGeolocationWatch(gpsLiberado)
 
   // Modo "seguir": depois de tocar em localizar, o mapa acompanha o usuário até
   // ele mexer no mapa com a mão. Sem isso, quem toca em localizar e sai andando
@@ -189,11 +233,13 @@ export default function PlantMap({
   }, [])
 
   const handleLocate = useCallback(async () => {
+    // Tocar em localizar já é o "sim" para a localização.
+    liberarGps()
     setFollowing(true)
     if (userLat != null && userLng != null) centerOn(userLng, userLat, 17)
     const fix = await acquireBestFix()
     if (fix) centerOn(fix.longitude, fix.latitude, 17)
-  }, [userLat, userLng, acquireBestFix, centerOn])
+  }, [userLat, userLng, acquireBestFix, centerOn, liberarGps])
 
   // Recolore o mapa base pro tema do app (ver lib/mapTheme.ts). Precisa rodar
   // no load e a cada troca de tema; antes do estilo carregar não há camada
@@ -437,6 +483,39 @@ export default function PlantMap({
             ? distanceMeters({ latitude: userLat, longitude: userLng }, selectedOccurrence)
             : null}
         />
+      )}
+
+      {mostrarPrePedido && (
+        <div className="absolute inset-x-4 bottom-20 z-20 rounded-2xl border border-gray-100 bg-white p-4 shadow-xl dark:border-gray-800 dark:bg-gray-900">
+          <div className="flex items-start gap-3">
+            <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-900/30">
+              <MapPin className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+            </span>
+            <div>
+              <p className="font-semibold text-gray-900 dark:text-gray-100">Ver plantas perto de você?</p>
+              <p className="mt-0.5 text-sm text-gray-600 dark:text-gray-300">
+                Usamos sua localização só para mostrar onde você está e a distância até cada planta. Ela não é
+                compartilhada.
+              </p>
+            </div>
+          </div>
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => { gravarFlag('session', LOCATION_LATER_KEY); setAdiou(true) }}
+              className="min-h-11 rounded-xl border border-gray-200 text-sm font-semibold text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
+            >
+              Agora não
+            </button>
+            <button
+              type="button"
+              onClick={liberarGps}
+              className="min-h-11 rounded-xl bg-green-700 text-sm font-semibold text-white hover:bg-green-800 dark:bg-green-600 dark:hover:bg-green-700"
+            >
+              Ativar localização
+            </button>
+          </div>
+        </div>
       )}
 
       <BottomSheet

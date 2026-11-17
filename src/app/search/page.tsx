@@ -1,7 +1,8 @@
 'use client'
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { RefreshCw, Search, X } from 'lucide-react'
+import Link from 'next/link'
+import { Plus, RefreshCw, Search, X } from 'lucide-react'
 import MobileShell from '@/components/layout/MobileShell'
 import PageHeader from '@/components/layout/PageHeader'
 import BottomNav from '@/components/layout/BottomNav'
@@ -9,6 +10,7 @@ import PlantCard from '@/components/plant/PlantCard'
 import { searchNearby } from '@/lib/actions/plants'
 import { OccurrenceWithDistance } from '@/types'
 import { useGeolocation } from '@/hooks/useGeolocation'
+import { useUser } from '@/hooks/useUser'
 import { cn, matchesSearchTerms } from '@/lib/utils'
 
 // Teto de resultados da busca sem raio (ver migration 024). Como o retorno vem ordenado
@@ -86,6 +88,7 @@ export default function SearchPage() {
   const [loading, setLoading] = useState(false)
   const [loadFailed, setLoadFailed] = useState(false)
   const { latitude, longitude, acquireBestFix } = useGeolocation()
+  const { user } = useUser()
 
   const listRef = useRef<HTMLDivElement>(null)
   const scrollTopRef = useRef(0)
@@ -97,8 +100,18 @@ export default function SearchPage() {
 
   // Layout effect: restaura antes da primeira pintura, sem piscar a tela vazia.
   useLayoutEffect(() => {
+    // Vindo da ficha da erva ("Onde encontrar"), o nome chega na URL e vale
+    // mais que a busca guardada.
+    const fromUrl = new URLSearchParams(window.location.search).get('q')
     const saved = readSavedSearch()
-    if (saved) {
+    if (fromUrl) {
+      setQuery(fromUrl)
+      setUnlimited(true)
+      if (saved?.searched && saved.unlimited) {
+        setPool(saved.results)
+        setPoolFor(poolKey(true, saved.radius))
+      }
+    } else if (saved) {
       setQuery(saved.query)
       setRadius(saved.radius)
       setUnlimited(saved.unlimited)
@@ -294,6 +307,16 @@ export default function SearchPage() {
                 ? 'Confira a grafia ou tente outro nome'
                 : 'Tente “Qualquer distância” para buscar em todo lugar'}
             </p>
+            {/* Não é beco sem saída: quem conhece um pé pode pôr no mapa. */}
+            {unlimited && trimmed && user && (
+              <Link
+                href="/plant/register"
+                className="mt-4 flex min-h-11 items-center gap-2 rounded-xl bg-green-700 px-4 text-sm font-semibold text-white hover:bg-green-800 dark:bg-green-600 dark:hover:bg-green-700"
+              >
+                <Plus className="h-4 w-4" />
+                Sabe onde tem? Cadastre no mapa
+              </Link>
+            )}
             {!unlimited && (
               <button
                 type="button"

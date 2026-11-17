@@ -243,11 +243,42 @@ export function useGeolocation() {
  * estiver montado. É o que faz o ponto do usuário acompanhar quem está
  * andando — use nas telas com mapa, não nas outras.
  */
-export function useGeolocationWatch() {
+export function useGeolocationWatch(enabled = true) {
   const context = useGeolocation()
   const { retainWatch } = context
 
-  useEffect(() => retainWatch(), [retainWatch])
+  // Desligado = não liga o GPS (e o navegador não pede permissão) até a
+  // pessoa concordar — ver o pré-pedido do mapa em PlantMap.
+  useEffect(() => (enabled ? retainWatch() : undefined), [enabled, retainWatch])
 
   return context
+}
+
+export type LocationPermission = 'granted' | 'prompt' | 'denied' | 'unknown'
+
+/**
+ * Estado da permissão de localização no navegador, sem pedir nada. 'unknown'
+ * quando o navegador não informa (Safari antigo): aí vale o pré-pedido.
+ */
+export function useLocationPermission(): LocationPermission {
+  const [state, setState] = useState<LocationPermission>('unknown')
+
+  useEffect(() => {
+    let status: PermissionStatus | null = null
+    let ativo = true
+    const atualizar = () => { if (status && ativo) setState(status.state as LocationPermission) }
+    navigator.permissions?.query({ name: 'geolocation' })
+      .then((s) => {
+        status = s
+        atualizar()
+        s.addEventListener('change', atualizar)
+      })
+      .catch(() => { /* sem Permissions API: fica 'unknown' */ })
+    return () => {
+      ativo = false
+      status?.removeEventListener('change', atualizar)
+    }
+  }, [])
+
+  return state
 }

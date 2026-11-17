@@ -76,6 +76,36 @@ export interface PlantOccurrence {
   updated_at: string
   /** Quem fez a última edição; null enquanto ninguém editou (migration 026). */
   updated_by?: string | null
+  /** Última vez que alguém confirmou a planta no lugar (migration 032). */
+  last_seen_at?: string | null
+  /** Pessoas diferentes que não a encontraram desde o último "está aqui". */
+  gone_reports?: number
+}
+
+/** Relato de visita ("Visitei", migration 032). */
+export type ReportStatus = 'present' | 'gone'
+
+export interface ReportResult {
+  points_awarded: number
+  gone_reports: number
+  flagged: boolean
+}
+
+/** Ficha de uso de uma erva (migration 032). `casa` = guia do terreiro; `web` = pesquisa pública. */
+export interface SpeciesProfile {
+  species_id: string
+  fonte: 'casa' | 'web'
+  resumo: string | null
+  temperatura: string | null
+  parte_usada: string | null
+  cor: string | null
+  orixas: string[]
+  verbos: string[]
+  para_que_serve: string[]
+  uso_ritual: string[]
+  cuidados: string[]
+  fontes_urls: string[]
+  updated_at: string
 }
 
 export interface OccurrenceWithDistance extends PlantOccurrence {
@@ -101,6 +131,9 @@ export type NotificationType =
   | 'registration_requested'
   | 'registration_approved'
   | 'registration_rejected'
+  | 'occurrence_reported_gone'
+  | 'occurrence_gone_flagged'
+  | 'occurrence_archived'
 
 export interface AppNotification {
   id: string
@@ -156,7 +189,7 @@ export interface AdminUserRow {
   latest_request: PermissionRequest | null
 }
 
-export type PointsReason = 'register' | 'maintain'
+export type PointsReason = 'register' | 'maintain' | 'revoke' | 'restore' | 'report'
 
 export interface PointsLogEntry {
   id: string

@@ -2,13 +2,14 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { ArrowLeft, LayoutGrid, ShieldCheck, MessageCircle, Users, Leaf } from 'lucide-react'
+import { ArrowLeft, LayoutGrid, ShieldCheck, MessageCircle, Users, Leaf, SearchX } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export interface AdminPendingCounts {
   species: number
   support: number
   users: number
+  gone: number
 }
 
 const NAV = [
@@ -16,6 +17,7 @@ const NAV = [
   { href: '/admin/species', label: 'Moderação de ervas', icon: ShieldCheck, key: 'species' },
   { href: '/admin/support', label: 'Suporte', icon: MessageCircle, key: 'support' },
   { href: '/admin/users', label: 'Usuários', icon: Users, key: 'users' },
+  { href: '/admin/gone', label: 'Plantas que sumiram', icon: SearchX, key: 'gone' },
 ] as const
 
 /**

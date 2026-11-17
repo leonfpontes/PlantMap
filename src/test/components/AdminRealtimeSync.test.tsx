@@ -40,11 +40,12 @@ beforeEach(() => {
 afterEach(() => vi.useRealTimers())
 
 describe('AdminRealtimeSync', () => {
-  it('assina as três filas de pendência', () => {
+  it('assina as quatro filas de pendência', () => {
     render(<AdminRealtimeSync />)
 
     expect(Object.keys(handlers).sort()).toEqual([
       'occurrence_permission_requests',
+      'occurrence_reports',
       'species',
       'support_messages',
     ])

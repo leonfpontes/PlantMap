@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
 /** Filas de pendência publicadas no Realtime pela migration 030. */
-const TABELAS = ['species', 'support_messages', 'occurrence_permission_requests'] as const
+const TABELAS = ['species', 'support_messages', 'occurrence_permission_requests', 'occurrence_reports'] as const
 
 /**
  * Junta a rajada de eventos de uma mesma ação numa atualização só. Um pedido

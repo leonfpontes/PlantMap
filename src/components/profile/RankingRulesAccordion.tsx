@@ -53,7 +53,11 @@ export default function RankingRulesAccordion() {
                 valor: `+${POINTS_CONFIG.MAINTAIN}`,
                 regra: `Cuidar de um registro seu: atualizar condição, estágio, foto ou observações (1× a cada ${POINTS_CONFIG.MAINTAIN_COOLDOWN_DAYS} dias por planta)`,
               },
-              { valor: '−', regra: 'Excluir um registro desconta o que ele deu' },
+              {
+                valor: `+${POINTS_CONFIG.REPORT}`,
+                regra: `Visitar qualquer planta e contar como ela está em "Estive aqui" (1× a cada ${POINTS_CONFIG.REPORT_COOLDOWN_DAYS} dias por planta)`,
+              },
+              { valor: '−', regra: 'Excluir um registro desconta o que ele deu. Planta arquivada porque sumiu não desconta nada' },
             ].map(({ valor, regra }) => (
               <div key={regra} className="flex gap-2.5">
                 <dt className="w-8 flex-shrink-0 text-right text-sm font-semibold tabular-nums text-purple-900 dark:text-purple-200">

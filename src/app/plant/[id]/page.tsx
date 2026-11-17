@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Heart, Share2, CheckCircle, Leaf, MapPin, Calendar, Edit, Trash2 } from 'lucide-react'
+import { Heart, Share2, CheckCircle, Leaf, MapPin, Calendar, Edit, Trash2, BookOpen } from 'lucide-react'
 import dynamic from 'next/dynamic'
 import MobileShell from '@/components/layout/MobileShell'
 import PageHeader from '@/components/layout/PageHeader'
@@ -12,6 +12,7 @@ import BottomNav from '@/components/layout/BottomNav'
 import Button from '@/components/ui/Button'
 import ShareSheet from '@/components/plant/ShareSheet'
 import DirectionsButton from '@/components/plant/DirectionsButton'
+import VisitReport from '@/components/plant/VisitReport'
 import SpeciesAvatar from '@/components/plant/SpeciesAvatar'
 import AuthorshipCard from '@/components/plant/AuthorshipCard'
 import ImageLightbox from '@/components/plant/ImageLightbox'
@@ -170,6 +171,14 @@ export default function PlantDetailPage() {
                 <div>
                   <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">{occurrence.species?.common_name}</h2>
                   <p className="text-sm italic text-gray-500 dark:text-gray-400">{occurrence.species?.scientific_name}</p>
+                  {/* Ficha da erva: para que serve, orixás, uso ritual e cuidados. */}
+                  <Link
+                    href={`/species/${occurrence.species_id}`}
+                    className="mt-1 inline-flex items-center gap-1 text-sm font-semibold text-green-700 hover:underline dark:text-green-400"
+                  >
+                    <BookOpen className="h-4 w-4" />
+                    Usos e cuidados
+                  </Link>
                 </div>
               </div>
               {occurrence.verified && (
@@ -230,6 +239,18 @@ export default function PlantDetailPage() {
             <ActionButton label="Compartilhar" onClick={() => setShareOpen(true)}>
               <Share2 className="h-5 w-5 text-gray-700 dark:text-gray-200" />
             </ActionButton>
+          </div>
+
+          {/* Visitei: logo depois das ações, porque é a outra coisa que quem
+              está diante da planta faz — contar se ela segue lá. */}
+          <div className="lg:col-span-2">
+            <VisitReport
+              occurrenceId={occurrence.id}
+              lastSeenAt={occurrence.last_seen_at}
+              goneReports={occurrence.gone_reports}
+              loggedIn={!!user}
+              onReported={() => { getOccurrence(id).then((data) => data && setOccurrence(data)) }}
+            />
           </div>
 
           {/* Autoria: quem cuidou do registro por último (editou, ou registrou se

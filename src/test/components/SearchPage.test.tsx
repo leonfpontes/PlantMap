@@ -3,6 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 
 vi.mock('@/lib/actions/plants', () => ({ searchNearby: vi.fn() }))
+vi.mock('@/hooks/useUser', () => ({ useUser: () => ({ user: null, loading: false }) }))
 vi.mock('@/hooks/useGeolocation', () => ({
   useGeolocation: () => ({ latitude: -21.17, longitude: -47.82, acquireBestFix: vi.fn() }),
 }))

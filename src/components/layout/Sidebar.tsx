@@ -11,6 +11,7 @@ import { useUnreadNotifications } from '@/hooks/useUnreadNotifications'
 import { listPendingSpecies } from '@/lib/actions/species'
 import { getOpenSupportMessageCount } from '@/lib/actions/support'
 import { getOpenPermissionRequestCount } from '@/lib/actions/permissions'
+import { getGoneFlaggedCount } from '@/lib/actions/reports'
 import { getProfile } from '@/lib/actions/profile'
 import Avatar from '@/components/ui/Avatar'
 
@@ -29,7 +30,8 @@ export default function Sidebar() {
       listPendingSpecies().then((list) => list.length),
       getOpenSupportMessageCount(),
       getOpenPermissionRequestCount(),
-    ]).then(([species, support, permissions]) => setPendingAdminCount(species + support + permissions))
+      getGoneFlaggedCount(),
+    ]).then(([species, support, permissions, gone]) => setPendingAdminCount(species + support + permissions + gone))
   }, [isAdmin])
 
   useEffect(() => {

@@ -240,3 +240,27 @@ export async function deleteOccurrence(id: string) {
   if (error) return { error: error.message }
   return { success: true }
 }
+
+/**
+ * Registros da própria pessoa (tela "Meus registros"). Antes o menu levava ao
+ * mapa geral, com as plantas de todo mundo misturadas.
+ */
+export async function listMyOccurrences(): Promise<PlantOccurrence[]> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return []
+
+  const { data } = await supabase
+    .from('occurrences')
+    .select('id, user_id, species_id, condition, stage, notes, photo_url, verified, created_at, updated_at, last_seen_at, gone_reports, species:species_id (*)')
+    .eq('user_id', user.id)
+    .is('deleted_at', null)
+    .order('created_at', { ascending: false })
+
+  return ((data ?? []) as unknown as (PlantOccurrence & { species: Species | Species[] | null })[]).map((o) => ({
+    ...o,
+    latitude: 0,
+    longitude: 0,
+    species: (Array.isArray(o.species) ? o.species[0] : o.species) ?? undefined,
+  }))
+}

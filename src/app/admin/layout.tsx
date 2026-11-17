@@ -5,6 +5,7 @@ import { getProfile } from '@/lib/actions/profile'
 import { listPendingSpecies } from '@/lib/actions/species'
 import { getOpenSupportMessageCount } from '@/lib/actions/support'
 import { getOpenPermissionRequestCount } from '@/lib/actions/permissions'
+import { getGoneFlaggedCount } from '@/lib/actions/reports'
 
 /**
  * Checagem de admin centralizada para toda a área /admin/* — antes cada
@@ -18,14 +19,15 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   // Contadores de pendência no servidor, e não dentro do AdminShell: assim
   // um revalidatePath após aprovar/rejeitar os recalcula junto com a página,
   // em vez de deixá-los presos na primeira renderização do cliente.
-  const [pendingSpecies, support, users] = await Promise.all([
+  const [pendingSpecies, support, users, gone] = await Promise.all([
     listPendingSpecies(),
     getOpenSupportMessageCount(),
     getOpenPermissionRequestCount(),
+    getGoneFlaggedCount(),
   ])
 
   return (
-    <AdminShell counts={{ species: pendingSpecies.length, support, users }}>
+    <AdminShell counts={{ species: pendingSpecies.length, support, users, gone }}>
       {/* Só dentro de /admin: é a única área que mostra esses contadores, e
           não faz sentido manter a assinatura de pé no app inteiro. */}
       <AdminRealtimeSync />

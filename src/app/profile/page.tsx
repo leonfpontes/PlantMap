@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { Heart, LogOut, ChevronRight, Bell, Lock, Palette, HelpCircle, Leaf, Sprout, UserCheck, LayoutGrid, Trophy } from 'lucide-react'
+import { Heart, LogOut, ChevronRight, Bell, Lock, Palette, HelpCircle, Leaf, Sprout, UserCheck, LayoutGrid, Trophy, HeartHandshake } from 'lucide-react'
 import MobileShell from '@/components/layout/MobileShell'
 import PageHeader from '@/components/layout/PageHeader'
 import BottomNav from '@/components/layout/BottomNav'
@@ -12,6 +12,7 @@ import { listPendingSpecies } from '@/lib/actions/species'
 import { getUnreadNotificationCount } from '@/lib/actions/notifications'
 import { getOpenSupportMessageCount } from '@/lib/actions/support'
 import { getOpenPermissionRequestCount } from '@/lib/actions/permissions'
+import { getGoneFlaggedCount } from '@/lib/actions/reports'
 import { getMyRankingSummary } from '@/lib/actions/ranking'
 import { signOut } from '@/lib/actions/auth'
 import { BADGE_TIER_CONFIG, getNextBadgeTier } from '@/constants/ranking'
@@ -36,8 +37,8 @@ export default async function ProfilePage() {
   const nextTier = ranking ? getNextBadgeTier(ranking.points) : null
 
   const pendingAdminCount = profile?.is_admin
-    ? await Promise.all([listPendingSpecies(), getOpenSupportMessageCount(), getOpenPermissionRequestCount()]).then(
-        ([species, support, permissions]) => species.length + support + permissions
+    ? await Promise.all([listPendingSpecies(), getOpenSupportMessageCount(), getOpenPermissionRequestCount(), getGoneFlaggedCount()]).then(
+        ([species, support, permissions, gone]) => species.length + support + permissions + gone
       )
     : 0
 
@@ -96,8 +97,9 @@ export default async function ProfilePage() {
           {/* Agrupado por assunto: nove cartões soltos, cada um de uma cor,
               obrigavam a ler a lista inteira pra achar uma opção. */}
           <MenuGroup title="Minhas plantas">
+            <MenuItem href="/missions" icon={HeartHandshake} label="Missões de cuidado" />
             <MenuItem href="/profile/favorites" icon={Heart} label="Plantas favoritas" />
-            <MenuItem href="/map" icon={Leaf} label="Meus registros no mapa" />
+            <MenuItem href="/profile/plants" icon={Leaf} label="Meus registros" />
             <MenuItem href="/profile/species" icon={Sprout} label="Ervas que sugeri" />
           </MenuGroup>
 

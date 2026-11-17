@@ -1,10 +1,11 @@
 import Link from 'next/link'
-import { Leaf, MessageCircle, Sparkles, ArrowRight } from 'lucide-react'
+import { Leaf, MessageCircle, Sparkles, ArrowRight, SearchX } from 'lucide-react'
 import AdminReviewCard from '@/components/admin/AdminReviewCard'
 import Avatar from '@/components/ui/Avatar'
 import { listPendingSpecies } from '@/lib/actions/species'
 import { listSupportMessages } from '@/lib/actions/support'
 import { listAllUsers } from '@/lib/actions/permissions'
+import { listGoneFlagged } from '@/lib/actions/reports'
 import { formatRelativeTime } from '@/lib/utils'
 
 /**
@@ -14,10 +15,11 @@ import { formatRelativeTime } from '@/lib/utils'
  * (aprovar/rejeitar/responder). Evita repetir aquela lógica pela 3ª vez aqui.
  */
 export default async function AdminOverviewPage() {
-  const [pendingSpecies, supportMessages, users] = await Promise.all([
+  const [pendingSpecies, supportMessages, users, gone] = await Promise.all([
     listPendingSpecies(),
     listSupportMessages(),
     listAllUsers(),
+    listGoneFlagged(),
   ])
 
   const openSupport = supportMessages.filter((m) => m.status === 'open')
@@ -68,6 +70,22 @@ export default async function AdminOverviewPage() {
       domainVariant: 'yellow' as const,
       footerNote: undefined,
     })),
+    ...gone.map((g) => ({
+      key: `gone-${g.id}`,
+      createdAt: g.gone_flagged_at,
+      href: '/admin/gone',
+      avatar: (
+        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-50 dark:bg-amber-900/30">
+          <SearchX className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+        </div>
+      ),
+      title: g.species?.common_name ?? 'Planta',
+      subtitle: g.species?.scientific_name || undefined,
+      message: `${g.gone_reports} pessoas não encontraram esta planta no lugar.`,
+      domainLabel: 'Planta sumiu?',
+      domainVariant: 'red' as const,
+      footerNote: undefined,
+    })),
   ].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
 
   return (
@@ -75,7 +93,7 @@ export default async function AdminOverviewPage() {
       <p className="mb-1 text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Administração</p>
       <h1 className="mb-2 font-serif text-2xl text-gray-900 dark:text-gray-100">Visão geral</h1>
       <p className="mb-6 max-w-prose text-sm text-gray-500 dark:text-gray-400">
-        Tudo que está esperando uma decisão, das três filas, mais antigo primeiro. Cada card leva
+        Tudo que está esperando uma decisão, de todas as filas, mais antigo primeiro. Cada card leva
         para a tela do assunto, onde dá pra aprovar, rejeitar ou responder.
       </p>
 

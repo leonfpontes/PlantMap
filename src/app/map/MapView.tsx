@@ -238,6 +238,7 @@ export default function MapView() {
             initialZoom={initialZoom}
             hoveredOccurrenceId={hoveredId}
             onPinHover={setHoveredId}
+            askLocationFirst
           />
         )}
       </div>

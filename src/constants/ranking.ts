@@ -87,4 +87,7 @@ export const POINTS_CONFIG = {
   REGISTER: 10,
   MAINTAIN: 5,
   MAINTAIN_COOLDOWN_DAYS: 30,
+  /** "Estive aqui": relato de visita a qualquer planta (migration 032). */
+  REPORT: 10,
+  REPORT_COOLDOWN_DAYS: 7,
 } as const

@@ -11,6 +11,7 @@ import { Species, PlantCondition, PlantStage } from '@/types'
 import Button from '@/components/ui/Button'
 import dynamic from 'next/dynamic'
 import SpeciesCombobox from '@/components/plant/SpeciesCombobox'
+import PlantIdSuggestions from '@/components/plant/PlantIdSuggestions'
 import { usePhotoUpload } from '@/hooks/usePhotoUpload'
 import { useGeolocationWatch } from '@/hooks/useGeolocation'
 import { formatAccuracy, GOOD_ACCURACY_M, POOR_ACCURACY_M } from '@/lib/geo'
@@ -46,7 +47,7 @@ export default function RegisterForm() {
   const [serverError, setServerError]         = useState<string | null>(null)
   const [mapExpanded, setMapExpanded]         = useState(false)
 
-  const { upload, uploading, preview, pickFile } = usePhotoUpload()
+  const { upload, uploading, preview, pickFile, file: photoFile } = usePhotoUpload()
   const { latitude: userLat, longitude: userLng, loading: locLoading, acquireBestFix } = useGeolocationWatch()
   const centerLat = userLat ?? FALLBACK_LAT
   const centerLng = userLng ?? FALLBACK_LNG
@@ -225,20 +226,6 @@ export default function RegisterForm() {
         )}
       </div>
 
-      {/* Species search */}
-      <div>
-        <SpeciesCombobox
-          selected={selectedSpecies}
-          onSelect={selectSpecies}
-          error={errors.species_id?.message}
-        />
-        <input type="hidden" {...register('species_id')} />
-      </div>
-
-      {/* Condição e estágio: botões grandes no lugar de listas (ver ChoiceChips) */}
-      <ChoiceChips legend="Como ela está?" options={CONDITION_CHOICES} registration={register('condition')} />
-      <ChoiceChips legend="Estágio" options={STAGE_OPTIONS} registration={register('stage')} />
-
       {/* Photo */}
       <div>
         <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Foto <span className="font-normal text-gray-500 dark:text-gray-400">(opcional)</span></label>
@@ -254,12 +241,29 @@ export default function RegisterForm() {
             <>
               <Camera className="h-8 w-8 text-green-700 dark:text-green-400" />
               <span className="text-sm font-medium text-gray-700 dark:text-gray-200">Tirar ou escolher foto</span>
-              <span className="text-xs text-gray-500 dark:text-gray-400">Ajuda quem for procurar a planta depois</span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">A foto ajuda a identificar a erva</span>
             </>
           )}
           <input type="file" accept="image/*" capture="environment" onChange={handlePhotoChange} className="hidden" />
         </label>
+        {/* Foto antes da espécie, como nos apps de identificação: a foto já
+            sugere qual erva é, e o cadastro vira escolher em vez de digitar. */}
+        <PlantIdSuggestions file={photoFile} selectedId={selectedSpecies?.id ?? null} onSelect={selectSpecies} />
       </div>
+
+      {/* Species search */}
+      <div>
+        <SpeciesCombobox
+          selected={selectedSpecies}
+          onSelect={selectSpecies}
+          error={errors.species_id?.message}
+        />
+        <input type="hidden" {...register('species_id')} />
+      </div>
+
+      {/* Condição e estágio: botões grandes no lugar de listas (ver ChoiceChips) */}
+      <ChoiceChips legend="Como ela está?" options={CONDITION_CHOICES} registration={register('condition')} />
+      <ChoiceChips legend="Estágio" options={STAGE_OPTIONS} registration={register('stage')} />
 
       {/* Notes */}
       <div>
