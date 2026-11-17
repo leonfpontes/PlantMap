@@ -16,7 +16,7 @@
 ![MapLibre](https://img.shields.io/badge/MapLibre_GL-396cb2?logo=maplibre&logoColor=white)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind_v4-06b6d4?logo=tailwindcss&logoColor=white)
 
-**[Abrir o app](https://plantasliamaria.vercel.app)** · [Guia de onboarding](ONBOARDING.md) · [Migrations](supabase/migrations)
+**[Abrir o app](https://plantastiamaria.vercel.app)** · [Guia de onboarding](ONBOARDING.md) · [Migrations](supabase/migrations)
 
 </div>
 
