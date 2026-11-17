@@ -1,5 +1,7 @@
 import Link from 'next/link'
-import { CheckCircle, ChevronRight } from 'lucide-react'
+import { CheckCircle, MapPin } from 'lucide-react'
+import DirectionsButton from '@/components/plant/DirectionsButton'
+import { formatDistance } from '@/lib/utils'
 import { cn } from '@/lib/utils'
 import { PlantOccurrence } from '@/types'
 import Badge from '@/components/ui/Badge'
@@ -10,6 +12,8 @@ interface PlantTooltipContentProps {
   occurrence: PlantOccurrence
   /** Avatar/tipografia menores, para caber num balão de mapa em vez de um cartão de tela cheia. */
   compact?: boolean
+  /** Distância até a pessoa, em metros — mostrada quando há localização. */
+  distanceM?: number | null
 }
 
 const conditionLabel: Record<string, { label: string; variant: 'green' | 'yellow' | 'red' | 'gray' }> = {
@@ -20,7 +24,7 @@ const conditionLabel: Record<string, { label: string; variant: 'green' | 'yellow
 }
 
 /** Conteúdo compartilhado entre o balão do pin (desktop) e o card do mapa (mobile). */
-export default function PlantTooltipContent({ occurrence, compact }: PlantTooltipContentProps) {
+export default function PlantTooltipContent({ occurrence, compact, distanceM }: PlantTooltipContentProps) {
   const condition = conditionLabel[occurrence.condition] || conditionLabel.healthy
   const avatarSize = compact ? 32 : 40
 
@@ -50,13 +54,19 @@ export default function PlantTooltipContent({ occurrence, compact }: PlantToolti
       </div>
 
       <div className="mt-3 flex items-center justify-between gap-3">
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex flex-wrap items-center gap-1.5">
           <Badge variant={condition.variant}>{condition.label}</Badge>
           {occurrence.verified && (
             <Badge variant="blue">
               <CheckCircle className="mr-1 h-3 w-3" />
               Verificado
             </Badge>
+          )}
+          {distanceM != null && (
+            <span className="flex items-center gap-0.5 text-xs font-medium text-gray-600 dark:text-gray-300">
+              <MapPin className="h-3.5 w-3.5" />
+              a {formatDistance(distanceM)}
+            </span>
           )}
         </div>
         {compact && (
@@ -69,15 +79,18 @@ export default function PlantTooltipContent({ occurrence, compact }: PlantToolti
         )}
       </div>
 
-      {/* No celular, um botão de verdade: o link de texto pequeno era difícil de acertar com o dedo. */}
+      {/* No celular, as duas ações que todo app de mapa põe no cartão do
+          lugar: ir até lá e ver mais. Botões de verdade, fáceis de acertar. */}
       {!compact && (
-        <Link
-          href={`/plant/${occurrence.id}`}
-          className="mt-3 flex min-h-11 items-center justify-center gap-1 rounded-xl bg-green-700 px-4 text-sm font-semibold text-white transition-colors hover:bg-green-800 active:bg-green-800 dark:bg-green-600 dark:hover:bg-green-700"
-        >
-          Ver detalhes
-          <ChevronRight className="h-4 w-4" />
-        </Link>
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          <DirectionsButton latitude={occurrence.latitude} longitude={occurrence.longitude} compact />
+          <Link
+            href={`/plant/${occurrence.id}`}
+            className="flex min-h-11 items-center justify-center rounded-xl border border-gray-200 px-4 text-sm font-semibold text-gray-800 transition-colors hover:bg-gray-50 active:bg-gray-100 dark:border-gray-700 dark:text-gray-100 dark:hover:bg-gray-800"
+          >
+            Ver detalhes
+          </Link>
+        </div>
       )}
     </div>
   )

@@ -17,19 +17,23 @@ describe('cn', () => {
 
 describe('formatDistance', () => {
   it('formats meters below 1000', () => {
-    expect(formatDistance(500)).toBe('500m')
+    expect(formatDistance(500)).toBe('500 m')
   })
 
   it('rounds meters', () => {
-    expect(formatDistance(450.7)).toBe('451m')
+    expect(formatDistance(450.7)).toBe('451 m')
   })
 
   it('formats kilometres', () => {
-    expect(formatDistance(1500)).toBe('1.5km')
+    expect(formatDistance(1500)).toBe('1,5 km')
+  })
+
+  it('arredonda sem decimal a partir de 100 km', () => {
+    expect(formatDistance(153_240)).toBe('153 km')
   })
 
   it('formats exactly 1000 as km', () => {
-    expect(formatDistance(1000)).toBe('1.0km')
+    expect(formatDistance(1000)).toBe('1,0 km')
   })
 })
 

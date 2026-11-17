@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -63,7 +63,7 @@ export default function RegisterForm() {
     return () => { document.body.style.overflow = '' }
   }, [mapExpanded])
 
-  const { register, handleSubmit, setValue, watch, formState: { errors, isSubmitting } } = useForm<FormData>({
+  const { register, handleSubmit, setValue, getValues, watch, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: { condition: 'healthy', stage: 'adult' },
   })
@@ -98,21 +98,40 @@ export default function RegisterForm() {
    * planta com esse ponto colocaria ela no quarteirão errado. A precisão
    * obtida fica visível pra quem registra decidir se aceita ou ajusta na mão.
    */
-  const handleUseMyLocation = useCallback(async () => {
+  const locateMe = useCallback(async (automatic: boolean) => {
     setLocating(true)
     setServerError(null)
     const fix = await acquireBestFix({ targetAccuracy: GOOD_ACCURACY_M, timeoutMs: 15_000 })
     setLocating(false)
 
     if (!fix) {
-      setServerError('Não foi possível obter sua localização. Marque o ponto no mapa.')
+      // No automático, falhar em silêncio: a pessoa nem pediu.
+      if (!automatic) setServerError('Não foi possível obter sua localização. Marque o ponto no mapa.')
       return
     }
+    // Se ela marcou no mapa enquanto o GPS pensava, a escolha dela vale.
+    if (automatic && getValues('latitude') != null) return
 
     setValue('latitude', fix.latitude)
     setValue('longitude', fix.longitude)
     setPickedAccuracy(fix.accuracy)
-  }, [acquireBestFix, setValue])
+  }, [acquireBestFix, setValue, getValues])
+
+  const handleUseMyLocation = useCallback(() => locateMe(false), [locateMe])
+
+  // Preenche o ponto sozinho ao abrir, como os apps de registro em campo
+  // fazem — mas só se a localização já estiver autorizada: pedir permissão
+  // sem a pessoa tocar em nada assusta. Sem autorização, o botão continua lá.
+  const autoLocateTried = useRef(false)
+  useEffect(() => {
+    if (autoLocateTried.current) return
+    autoLocateTried.current = true
+    navigator.permissions?.query({ name: 'geolocation' })
+      .then((status) => {
+        if (status.state === 'granted') locateMe(true)
+      })
+      .catch(() => { /* navegador sem Permissions API: segue pelo botão */ })
+  }, [locateMe])
 
   const onSubmit = async (data: FormData) => {
     setServerError(null)

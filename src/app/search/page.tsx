@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { Globe, Search, SlidersHorizontal } from 'lucide-react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { RefreshCw, Search, X } from 'lucide-react'
 import MobileShell from '@/components/layout/MobileShell'
 import PageHeader from '@/components/layout/PageHeader'
 import BottomNav from '@/components/layout/BottomNav'
@@ -28,6 +28,24 @@ const FALLBACK_LNG = -47.8208
  * reaparecer dias depois, em outro lugar.
  */
 const STORAGE_KEY = 'plantmap:search'
+
+/**
+ * Filtros de distância em botões, como os "chips" do Google Maps. Antes era um
+ * controle deslizante de 1 a 50 km mais um botão "Mundo todo" — dois
+ * controles para uma decisão só, e o deslizante é ruim de acertar com o dedo.
+ * `null` é "qualquer distância" (busca sem raio, ver migration 024).
+ */
+const DISTANCE_CHIPS: { km: number | null; label: string }[] = [
+  { km: null, label: 'Qualquer distância' },
+  { km: 1, label: 'Até 1 km' },
+  { km: 5, label: 'Até 5 km' },
+  { km: 25, label: 'Até 25 km' },
+]
+
+/** Identifica para qual filtro de distância a lista carregada vale. */
+function poolKey(unlimited: boolean, radius: number): string {
+  return unlimited ? 'all' : `${radius}km`
+}
 
 interface SavedSearch {
   query: string
@@ -58,11 +76,16 @@ function writeSavedSearch(s: SavedSearch) {
 export default function SearchPage() {
   const [query, setQuery] = useState('')
   const [radius, setRadius] = useState(5)
-  const [unlimited, setUnlimited] = useState(false)
-  const [results, setResults] = useState<OccurrenceWithDistance[]>([])
+  // Padrão sem limite: abre já mostrando as mais próximas, como um app de
+  // mapa — antes a tela abria vazia e exigia escolher raio e apertar buscar.
+  const [unlimited, setUnlimited] = useState(true)
+  // Todas as plantas do filtro de distância atual, mais perto primeiro. O nome
+  // digitado filtra isto na hora, sem ir ao servidor a cada letra.
+  const [pool, setPool] = useState<OccurrenceWithDistance[]>([])
+  const [poolFor, setPoolFor] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
-  const [searched, setSearched] = useState(false)
-  const { latitude, longitude, loading: locLoading, acquireBestFix } = useGeolocation()
+  const [loadFailed, setLoadFailed] = useState(false)
+  const { latitude, longitude, acquireBestFix } = useGeolocation()
 
   const listRef = useRef<HTMLDivElement>(null)
   const scrollTopRef = useRef(0)
@@ -79,13 +102,25 @@ export default function SearchPage() {
       setQuery(saved.query)
       setRadius(saved.radius)
       setUnlimited(saved.unlimited)
-      setResults(saved.results)
-      setSearched(saved.searched)
+      if (saved.searched) {
+        setPool(saved.results)
+        setPoolFor(poolKey(saved.unlimited, saved.radius))
+      }
       scrollTopRef.current = saved.scrollTop
       pendingScrollRef.current = saved.scrollTop
     }
     setRestored(true)
   }, [])
+
+  const results = useMemo(
+    () => query.trim()
+      // Mesma regra da busca de espécies (ver matchesSearchTerms e migration 027):
+      // ignora acento e pontuação e exige todas as palavras digitadas — quem busca
+      // "espada de sao jorge" ou "guine" encontra os registros correspondentes.
+      ? pool.filter((o) => matchesSearchTerms(query, o.species?.common_name, o.species?.scientific_name))
+      : pool,
+    [pool, query]
+  )
 
   useLayoutEffect(() => {
     if (pendingScrollRef.current == null || !listRef.current || results.length === 0) return
@@ -95,8 +130,13 @@ export default function SearchPage() {
 
   useEffect(() => {
     if (!restored) return
-    writeSavedSearch({ query, radius, unlimited, results, searched, scrollTop: scrollTopRef.current })
-  }, [restored, query, radius, unlimited, results, searched])
+    writeSavedSearch({
+      query, radius, unlimited,
+      results: pool,
+      searched: poolFor === poolKey(unlimited, radius),
+      scrollTop: scrollTopRef.current,
+    })
+  }, [restored, query, radius, unlimited, pool, poolFor])
 
   // A rolagem muda muito pra regravar tudo a cada evento: guarda no ref e
   // grava junto com o resto ao sair da página (é aí que ela importa).
@@ -107,17 +147,15 @@ export default function SearchPage() {
     }
   }, [])
 
-  const handleSearch = async () => {
+  const load = useCallback(async (isUnlimited: boolean, km: number) => {
     setLoading(true)
-    setSearched(true)
+    setLoadFailed(false)
 
     // "Perto de mim" só significa alguma coisa se o ponto de partida estiver
     // certo, então quando ainda não há leitura vale esperar o GPS convergir
-    // um pouco — antes daqui saía a primeira leitura que aparecesse, que num
-    // fix de rede pode estar quilômetros fora e desloca o raio inteiro.
+    // um pouco — a primeira leitura de rede pode estar quilômetros fora.
     let lat = latitude
     let lng = longitude
-
     if (lat == null || lng == null) {
       const fix = await acquireBestFix({ timeoutMs: 8_000 })
       lat = fix?.latitude ?? FALLBACK_LAT
@@ -125,30 +163,48 @@ export default function SearchPage() {
     }
 
     try {
-      const data = unlimited
+      const data = isUnlimited
         ? await searchNearby(lat, lng, null, MAX_UNLIMITED_RESULTS)
-        : await searchNearby(lat, lng, radius * 1000)
-      // Mesma regra da busca de espécies (ver matchesSearchTerms e migration 027):
-      // ignora acento e pontuação e exige todas as palavras digitadas — quem busca
-      // "espada de sao jorge" ou "guine" encontra os registros correspondentes.
-      const filtered = query.trim()
-        ? data.filter((o) =>
-            matchesSearchTerms(query, o.species?.common_name, o.species?.scientific_name)
-          )
-        : data
-      setResults(filtered)
+        : await searchNearby(lat, lng, km * 1000)
+      setPool(data)
+      setPoolFor(poolKey(isUnlimited, km))
+    } catch (err) {
+      console.error('Erro na busca:', err)
+      setLoadFailed(true)
     } finally {
       setLoading(false)
     }
+  }, [latitude, longitude, acquireBestFix])
+
+  // Carrega sozinho ao abrir e a cada troca de distância — sem botão de buscar.
+  const currentKey = poolKey(unlimited, radius)
+  useEffect(() => {
+    if (!restored || poolFor === currentKey || loading || loadFailed) return
+    load(unlimited, radius)
+  }, [restored, poolFor, currentKey, loading, loadFailed, load, unlimited, radius])
+
+  const chooseDistance = (km: number | null) => {
+    setLoadFailed(false)
+    if (km == null) {
+      setUnlimited(true)
+    } else {
+      setUnlimited(false)
+      setRadius(km)
+    }
+    if (listRef.current) listRef.current.scrollTop = 0
+    scrollTopRef.current = 0
   }
+
+  const showingStale = poolFor !== currentKey
+  const trimmed = query.trim()
 
   return (
     <MobileShell>
       <PageHeader title="Buscar plantas" showBack={false} />
 
-      <div className="flex flex-col gap-4 p-4 flex-shrink-0">
+      <div className="flex flex-col gap-3 px-4 pt-4 pb-3">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-green-700 dark:text-green-400" />
+          <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-green-700 dark:text-green-400" />
           <input
             type="search"
             enterKeyHint="search"
@@ -159,67 +215,45 @@ export default function SearchPage() {
             autoFocus={query === ''}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+            onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
             placeholder="Nome da planta (ex.: arruda)"
-            className="w-full rounded-xl border border-gray-200 bg-white min-h-12 pl-10 pr-4 py-2.5 text-base focus:outline-none focus:ring-2 focus:ring-green-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+            className="min-h-12 w-full rounded-xl border border-gray-200 bg-white py-2.5 pl-10 pr-11 text-base placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-green-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 [&::-webkit-search-cancel-button]:hidden"
           />
-        </div>
-
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">
-              <SlidersHorizontal className="h-4 w-4" />
-              Raio:{' '}
-              <span className="text-green-700 dark:text-green-400">
-                {unlimited ? 'sem limite' : `${radius} km`}
-              </span>
-            </label>
-
-            {/* Busca sem raio: útil pra quem está viajando e quer ver as plantas de casa
-                (ou de qualquer outro lugar), que ficariam fora de qualquer raio do slider. */}
+          {query && (
             <button
               type="button"
-              onClick={() => setUnlimited((v) => !v)}
-              aria-pressed={unlimited}
-              className={cn(
-                'flex min-h-9 items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors',
-                unlimited
-                  ? 'border-green-700 bg-green-700 text-white dark:border-green-600 dark:bg-green-600'
-                  : 'border-gray-200 text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800'
-              )}
+              onClick={() => setQuery('')}
+              aria-label="Limpar busca"
+              className="absolute right-1.5 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
             >
-              <Globe className="h-3.5 w-3.5" />
-              Mundo todo
+              <X className="h-4 w-4" />
             </button>
-          </div>
-          <input
-            type="range"
-            min={1}
-            max={50}
-            value={radius}
-            disabled={unlimited}
-            onChange={(e) => setRadius(Number(e.target.value))}
-            className={cn('w-full accent-green-700', unlimited && 'opacity-40')}
-          />
-          <div className={cn('flex justify-between text-xs text-gray-500 dark:text-gray-400', unlimited && 'opacity-40')}>
-            <span>1 km</span>
-            <span>50 km</span>
-          </div>
+          )}
         </div>
 
-        <button
-          type="button"
-          onClick={handleSearch}
-          disabled={loading || locLoading}
-          className="flex min-h-12 items-center justify-center gap-2 rounded-xl bg-green-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-green-800 disabled:opacity-50 transition-colors dark:bg-green-600 dark:hover:bg-green-700"
-        >
-          {loading ? (
-            <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-          ) : (
-            <Search className="h-4 w-4" />
-          )}
-          Buscar próximo a mim
-        </button>
+        {/* Rolagem lateral em vez de quebrar linha: os quatro cabem em telas
+            largas e continuam alcançáveis nas estreitas. */}
+        <div className="-mx-4 flex gap-2 overflow-x-auto px-4 [scrollbar-width:none]" role="group" aria-label="Distância">
+          {DISTANCE_CHIPS.map((chip) => {
+            const active = chip.km == null ? unlimited : !unlimited && radius === chip.km
+            return (
+              <button
+                key={chip.label}
+                type="button"
+                onClick={() => chooseDistance(chip.km)}
+                aria-pressed={active}
+                className={cn(
+                  'min-h-9 flex-shrink-0 rounded-full border px-3.5 text-sm font-medium transition-colors',
+                  active
+                    ? 'border-green-700 bg-green-700 text-white dark:border-green-600 dark:bg-green-600'
+                    : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:bg-gray-800'
+                )}
+              >
+                {chip.label}
+              </button>
+            )
+          })}
+        </div>
       </div>
 
       <div
@@ -227,7 +261,7 @@ export default function SearchPage() {
         onScroll={(e) => { scrollTopRef.current = e.currentTarget.scrollTop }}
         className="flex-1 overflow-y-auto px-4 pb-4"
       >
-        {loading && (
+        {loading && showingStale && (
           <div className="flex flex-col gap-3">
             {[1, 2, 3].map((i) => (
               <div key={i} className="h-20 rounded-2xl bg-gray-100 animate-pulse dark:bg-gray-800" />
@@ -235,23 +269,60 @@ export default function SearchPage() {
           </div>
         )}
 
-        {!loading && searched && results.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-16 text-center">
-            <Search className="h-12 w-12 text-gray-300 mb-3 dark:text-gray-700" />
-            <p className="font-medium text-gray-600 dark:text-gray-300">Nenhuma planta encontrada</p>
-            <p className="text-sm text-gray-500 mt-1 dark:text-gray-400">
-              {unlimited
-                ? 'Nenhum registro corresponde à busca, em nenhum lugar'
-                : 'Tente aumentar o raio ou buscar no mundo todo'}
-            </p>
+        {loadFailed && (
+          <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
+            <p className="font-medium text-gray-700 dark:text-gray-200">Não foi possível carregar as plantas</p>
+            <button
+              type="button"
+              onClick={() => load(unlimited, radius)}
+              className="flex min-h-11 items-center gap-2 rounded-xl border border-gray-200 px-4 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Tentar de novo
+            </button>
           </div>
         )}
 
-        {!loading && results.length > 0 && (
-          <>
-            <p className="mb-3 text-sm text-gray-500 dark:text-gray-400">
-              {results.length} resultado{results.length !== 1 ? 's' : ''} encontrado{results.length !== 1 ? 's' : ''}
+        {!showingStale && !loadFailed && results.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-16 text-center">
+            <Search className="mb-3 h-12 w-12 text-gray-300 dark:text-gray-700" />
+            <p className="font-medium text-gray-700 dark:text-gray-200">
+              {trimmed ? `Nenhuma planta com o nome “${trimmed}”` : 'Nenhuma planta nesta distância'}
             </p>
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              {unlimited
+                ? 'Confira a grafia ou tente outro nome'
+                : 'Tente “Qualquer distância” para buscar em todo lugar'}
+            </p>
+            {!unlimited && (
+              <button
+                type="button"
+                onClick={() => chooseDistance(null)}
+                className="mt-4 min-h-11 rounded-xl bg-green-700 px-4 text-sm font-semibold text-white hover:bg-green-800 dark:bg-green-600 dark:hover:bg-green-700"
+              >
+                Buscar em qualquer distância
+              </button>
+            )}
+          </div>
+        )}
+
+        {!showingStale && results.length > 0 && (
+          <>
+            <div className="mb-3 flex items-center justify-between gap-2">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                {results.length} planta{results.length !== 1 ? 's' : ''}
+                {trimmed ? ` com “${trimmed}”` : ''} · mais perto primeiro
+              </p>
+              <button
+                type="button"
+                onClick={() => load(unlimited, radius)}
+                disabled={loading}
+                aria-label="Atualizar a partir da minha localização"
+                className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 disabled:opacity-50 dark:text-gray-400 dark:hover:bg-gray-800"
+              >
+                <RefreshCw className={cn('h-4 w-4', loading && 'animate-spin')} />
+              </button>
+            </div>
             <div className="flex flex-col gap-3">
               {results.map((occ) => (
                 <PlantCard key={occ.id} occurrence={occ} />

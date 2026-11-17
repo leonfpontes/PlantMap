@@ -108,15 +108,6 @@ export default function PlantDetailPage() {
                 <Edit className="h-5 w-5" />
               </Link>
             )}
-            <button
-              type="button"
-              onClick={() => toggle(occurrence.id)}
-              aria-label={isFav ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
-              aria-pressed={isFav}
-              className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-gray-100 transition-colors dark:hover:bg-gray-800"
-            >
-              <Heart className={`h-5 w-5 ${isFav ? 'fill-red-500 text-red-500' : 'text-gray-500 dark:text-gray-400'}`} />
-            </button>
           </div>
         }
       />
@@ -213,13 +204,33 @@ export default function PlantDetailPage() {
             )}
           </dl>
 
-          {/* Ação principal da tela: quem abre uma planta quase sempre quer ir até ela —
-              por isso logo abaixo do nome, sem precisar rolar a tela. */}
-          <DirectionsButton
-            latitude={occurrence.latitude}
-            longitude={occurrence.longitude}
-            className="lg:col-span-2"
-          />
+          {/* Fileira de ações, como no cartão de um lugar no Google Maps: ir
+              até lá (a principal, por isso maior), salvar e compartilhar —
+              juntas e logo abaixo do nome, sem precisar rolar. Antes salvar
+              ficava no cabeçalho e compartilhar no fim da página. */}
+          {/* Em tela bem estreita (320 px) "Como chegar" ocupa a linha toda e
+              os outros dois dividem a de baixo; daí pra cima, tudo numa linha. */}
+          <div className="flex flex-wrap items-start gap-2 lg:col-span-2">
+            <DirectionsButton
+              latitude={occurrence.latitude}
+              longitude={occurrence.longitude}
+              className="min-w-0 basis-full min-[360px]:basis-0 min-[360px]:flex-1"
+              // Ao lado de Salvar e Compartilhar não cabe o nome do app; o
+              // "Abrir em outro app" embaixo continua mostrando a troca.
+              showAppName={false}
+            />
+            <ActionButton
+              label={isFav ? 'Salva' : 'Salvar'}
+              ariaLabel={isFav ? 'Remover dos favoritos' : 'Salvar nos favoritos'}
+              pressed={isFav}
+              onClick={() => toggle(occurrence.id)}
+            >
+              <Heart className={cn('h-5 w-5', isFav ? 'fill-red-500 text-red-500' : 'text-gray-700 dark:text-gray-200')} />
+            </ActionButton>
+            <ActionButton label="Compartilhar" onClick={() => setShareOpen(true)}>
+              <Share2 className="h-5 w-5 text-gray-700 dark:text-gray-200" />
+            </ActionButton>
+          </div>
 
           {/* Autoria: quem cuidou do registro por último (editou, ou registrou se
               ninguém editou), no mesmo formato do perfil/ranking. Full width
@@ -272,19 +283,10 @@ export default function PlantDetailPage() {
             </div>
           )}
 
-          <Button
-            variant="secondary"
-            className={cn('w-full', !canDelete && 'lg:col-span-2')}
-            onClick={() => setShareOpen(true)}
-          >
-            <Share2 className="h-4 w-4" />
-            Compartilhar
-          </Button>
-
           {canDelete && (
             <Button
               variant="secondary"
-              className="w-full !text-red-600 !border-red-200 hover:!bg-red-50 dark:!text-red-400 dark:!border-red-900 dark:hover:!bg-red-900/20"
+              className="w-full lg:col-span-2 !text-red-600 !border-red-200 hover:!bg-red-50 dark:!text-red-400 dark:!border-red-900 dark:hover:!bg-red-900/20"
               onClick={() => setConfirmDelete(true)}
             >
               <Trash2 className="h-4 w-4" />
@@ -348,5 +350,29 @@ function FactTile({ label, children }: { label: string; children: React.ReactNod
       <dt className="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">{label}</dt>
       <dd className="mt-0.5 truncate text-sm font-semibold text-gray-900 dark:text-gray-100">{children}</dd>
     </div>
+  )
+}
+
+/** Botão de ação secundária da fileira (ícone em cima, rótulo embaixo). */
+function ActionButton({
+  label, ariaLabel, pressed, onClick, children,
+}: {
+  label: string
+  ariaLabel?: string
+  pressed?: boolean
+  onClick: () => void
+  children: React.ReactNode
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={ariaLabel}
+      aria-pressed={pressed}
+      className="flex min-h-11 flex-1 flex-col min-[360px]:w-[88px] min-[360px]:flex-none items-center justify-center gap-0.5 rounded-xl border border-gray-200 px-1 py-1.5 text-[11px] font-semibold text-gray-700 transition-colors hover:bg-gray-50 active:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
+    >
+      {children}
+      {label}
+    </button>
   )
 }

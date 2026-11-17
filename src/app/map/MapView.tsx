@@ -3,11 +3,12 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
-import { Leaf, LocateOff, Search } from 'lucide-react'
+import { Leaf, List, LocateOff, Search } from 'lucide-react'
 import { searchNearby } from '@/lib/actions/plants'
 import { OccurrenceWithDistance } from '@/types'
 import PlantCard from '@/components/plant/PlantCard'
 import MapLegend from '@/components/map/MapLegend'
+import BottomSheet from '@/components/ui/BottomSheet'
 import { useGeolocation } from '@/hooks/useGeolocation'
 import { distanceMeters } from '@/lib/geo'
 import { cn, DEFAULT_MAP_ZOOM, zoomForDistance } from '@/lib/utils'
@@ -38,6 +39,13 @@ const MAX_MAP_OCCURRENCES = 1000
  */
 const SEARCH_ORIGIN_THRESHOLD_M = 500
 
+/**
+ * Quantas plantas a lista do celular mostra. A busca já vem ordenada por
+ * distância, então são sempre as mais próximas; mais que isso numa lista só
+ * pesaria em celular fraco sem ajudar ninguém.
+ */
+const MOBILE_LIST_LIMIT = 60
+
 export default function MapView() {
   const [occurrences, setOccurrences] = useState<OccurrenceWithDistance[]>([])
   // Só o primeiro carregamento. Rebuscas posteriores são silenciosas: este
@@ -48,6 +56,7 @@ export default function MapView() {
   const [loading, setLoading] = useState(true)
   // Falha de rede no 3G não pode se passar por "mapa vazio".
   const [loadFailed, setLoadFailed] = useState(false)
+  const [listOpen, setListOpen] = useState(false)
   const [hoveredId, setHoveredId] = useState<string | null>(null)
   const { latitude, longitude, error: geoError } = useGeolocation()
 
@@ -167,6 +176,40 @@ export default function MapView() {
         </div>
 
         {!loading && <MapLegend />}
+
+        {/* Lista no celular, como em todo app de mapa: no desktop ela já fica
+            ao lado; no telefone não havia jeito de ver as plantas próximas
+            em lista sem sair do mapa. */}
+        {!loading && occurrences.length > 0 && (
+          <button
+            type="button"
+            onClick={() => setListOpen(true)}
+            className="absolute bottom-4 left-1/2 z-10 flex min-h-11 -translate-x-1/2 items-center gap-2 rounded-full bg-gray-900 px-5 text-sm font-semibold text-white shadow-lg transition-colors hover:bg-gray-800 lg:hidden dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100"
+          >
+            <List className="h-4 w-4" />
+            Lista
+          </button>
+        )}
+
+        <BottomSheet
+          title={latitude != null ? 'Mais perto de você' : 'Plantas no mapa'}
+          open={listOpen}
+          onClose={() => setListOpen(false)}
+        >
+          <div className="-mx-1 flex max-h-[65dvh] flex-col gap-2 overflow-y-auto px-1 pb-1">
+            {occurrences.slice(0, MOBILE_LIST_LIMIT).map((occ) => (
+              <PlantCard key={occ.id} occurrence={occ} />
+            ))}
+          </div>
+          {occurrences.length > MOBILE_LIST_LIMIT && (
+            <Link
+              href="/search"
+              className="mt-3 flex min-h-11 items-center justify-center rounded-xl text-sm font-medium text-green-700 hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-900/30"
+            >
+              Buscar entre todas as {occurrences.length} plantas
+            </Link>
+          )}
+        </BottomSheet>
 
         {/* Mapa vazio no celular: sem lista ao lado, a tela em branco não diz nada. */}
         {!loading && occurrences.length === 0 && (

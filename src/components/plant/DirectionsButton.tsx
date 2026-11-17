@@ -23,7 +23,7 @@ const ICONS: Record<NavApp, typeof Map> = {
 }
 
 const PRIMARY =
-  'inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all ' +
+  'inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all ' +
   'bg-green-700 text-white hover:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-700 focus:ring-offset-2 ' +
   'dark:bg-green-600 dark:hover:bg-green-700'
 
@@ -31,6 +31,14 @@ interface DirectionsButtonProps {
   latitude: number
   longitude: number
   className?: string
+  /**
+   * Versão para espaço apertado (cartão do pin no mapa): sem o nome do app
+   * no botão e sem o link "Abrir em outro app" — a troca continua possível
+   * pela tela da planta.
+   */
+  compact?: boolean
+  /** Mostra o nome do app escolhido no botão ("· Waze"). Some no `compact`. */
+  showAppName?: boolean
 }
 
 /**
@@ -39,7 +47,9 @@ interface DirectionsButtonProps {
  * lembrada, o botão vira um toque só — direto pro app — e um link discreto
  * embaixo permite abrir em outro app ou trocar o padrão.
  */
-export default function DirectionsButton({ latitude, longitude, className }: DirectionsButtonProps) {
+export default function DirectionsButton({
+  latitude, longitude, className, compact, showAppName = !compact,
+}: DirectionsButtonProps) {
   const [apps, setApps] = useState<NavApp[]>(['google', 'waze'])
   const [preferred, setPreferred] = useState<NavApp | null>(null)
   const [open, setOpen] = useState(false)
@@ -80,7 +90,7 @@ export default function DirectionsButton({ latitude, longitude, className }: Dir
         <a {...linkProps(preferred)} className={PRIMARY}>
           <Navigation className="h-4 w-4" />
           Como chegar
-          <span className="font-normal opacity-80">· {NAV_APPS[preferred].label}</span>
+          {showAppName && <span className="font-normal opacity-80">· {NAV_APPS[preferred].label}</span>}
         </a>
       ) : (
         <button type="button" onClick={() => setOpen(true)} className={PRIMARY}>
@@ -89,7 +99,7 @@ export default function DirectionsButton({ latitude, longitude, className }: Dir
         </button>
       )}
 
-      {preferred && (
+      {preferred && !compact && (
         <button
           type="button"
           onClick={() => {

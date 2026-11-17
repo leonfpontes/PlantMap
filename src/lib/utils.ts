@@ -6,10 +6,14 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function formatDistance(meters: number): string {
+  // No jeito brasileiro: vírgula decimal e espaço antes da unidade ("1,5 km").
   if (meters < 1000) {
-    return `${Math.round(meters)}m`
+    return `${Math.round(meters)} m`
   }
-  return `${(meters / 1000).toFixed(1)}km`
+  const km = meters / 1000
+  // Longe, a casa decimal só polui ("153 km", não "153,2 km").
+  if (km >= 100) return `${Math.round(km)} km`
+  return `${km.toFixed(1).replace('.', ',')} km`
 }
 
 /** Formata uma data como tempo relativo em português ("há 2 dias"). Usado nas notificações. */

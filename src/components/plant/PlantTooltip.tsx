@@ -7,10 +7,11 @@ import PlantTooltipContent from './PlantTooltipContent'
 interface PlantTooltipProps {
   occurrence: PlantOccurrence
   onClose: () => void
+  distanceM?: number | null
 }
 
 /** Card fixo na base do mapa — usado no toque (sem hover), ver PlantMap.tsx. */
-export default function PlantTooltip({ occurrence, onClose }: PlantTooltipProps) {
+export default function PlantTooltip({ occurrence, onClose, distanceM }: PlantTooltipProps) {
   return (
     <div className="absolute bottom-20 left-4 right-4 z-10 rounded-2xl border border-gray-100 bg-white p-4 shadow-xl dark:border-gray-800 dark:bg-gray-900">
       <button
@@ -21,7 +22,7 @@ export default function PlantTooltip({ occurrence, onClose }: PlantTooltipProps)
       >
         <X className="h-5 w-5" />
       </button>
-      <PlantTooltipContent occurrence={occurrence} />
+      <PlantTooltipContent occurrence={occurrence} distanceM={distanceM} />
     </div>
   )
 }

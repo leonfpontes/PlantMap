@@ -22,13 +22,16 @@ export default function MobileShell({ children, className, desktopWidth = 'comfo
   return (
     <div
       className={cn(
-        'flex flex-1 items-center justify-center',
+        // min-w-0 (aqui e no cartão): sem isso, um filho largo que rola na
+        // horizontal (os filtros de distância da busca) esticava a página
+        // além da tela, em vez de rolar dentro do próprio espaço.
+        'flex min-w-0 flex-1 items-center justify-center',
         desktopWidth === 'full' ? 'lg:p-0' : 'lg:p-10'
       )}
     >
       <div
         className={cn(
-          'relative flex h-dvh w-full max-w-[430px] flex-col bg-white dark:bg-gray-950',
+          'relative flex h-dvh w-full min-w-0 max-w-[430px] flex-col bg-white dark:bg-gray-950',
           desktopWidth === 'full'
             ? 'lg:max-w-none'
             : 'lg:h-[calc(100dvh-5rem)] lg:max-w-2xl lg:rounded-3xl lg:border lg:border-gray-100 lg:shadow-sm dark:lg:border-gray-800',

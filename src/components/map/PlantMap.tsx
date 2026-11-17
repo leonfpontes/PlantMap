@@ -12,7 +12,7 @@ import PlantPinBalloon from './PlantPinBalloon'
 import PlantTooltip from '@/components/plant/PlantTooltip'
 import { useGeolocationWatch } from '@/hooks/useGeolocation'
 import { useHasHover } from '@/hooks/useHasHover'
-import { accuracyCircle, formatAccuracy, POOR_ACCURACY_M } from '@/lib/geo'
+import { accuracyCircle, distanceMeters, formatAccuracy, POOR_ACCURACY_M } from '@/lib/geo'
 import {
   boundsOf,
   clusterByScreenGrid,
@@ -433,6 +433,9 @@ export default function PlantMap({
         <PlantTooltip
           occurrence={selectedOccurrence}
           onClose={() => setSelectedOccurrence(null)}
+          distanceM={userLat != null && userLng != null
+            ? distanceMeters({ latitude: userLat, longitude: userLng }, selectedOccurrence)
+            : null}
         />
       )}
 
