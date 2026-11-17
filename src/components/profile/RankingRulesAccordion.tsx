@@ -48,7 +48,7 @@ export default function RankingRulesAccordion() {
               números. */}
           <dl className="flex flex-col gap-1.5">
             {[
-              { valor: `+${POINTS_CONFIG.REGISTER}`, regra: 'Registrar uma ocorrência nova' },
+              { valor: `+${POINTS_CONFIG.REGISTER}`, regra: 'Registrar uma planta nova' },
               {
                 valor: `+${POINTS_CONFIG.MAINTAIN}`,
                 regra: `Cuidar de um registro seu: atualizar condição, estágio, foto ou observações (1× a cada ${POINTS_CONFIG.MAINTAIN_COOLDOWN_DAYS} dias por planta)`,

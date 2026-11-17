@@ -19,7 +19,7 @@ export default async function FavoritesPage() {
 
   return (
     <MobileShell>
-      <PageHeader title="Plantas Favoritas" />
+      <PageHeader title="Plantas favoritas" />
 
       <div className="flex-1 overflow-y-auto p-4">
         {favorites.length === 0 ? (

@@ -4,6 +4,7 @@ import { GeolocationProvider } from '@/hooks/useGeolocation'
 import AppShell from '@/components/layout/AppShell'
 import AppearanceSync from '@/components/layout/AppearanceSync'
 import PrivacyConsentGate from '@/components/profile/PrivacyConsentGate'
+import FlashToast from '@/components/ui/FlashToast'
 import { NO_FLASH_SCRIPT } from '@/lib/appearance'
 
 export const metadata: Metadata = {
@@ -40,6 +41,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </GeolocationProvider>
         <AppearanceSync />
         <PrivacyConsentGate />
+        <FlashToast />
       </body>
     </html>
   )

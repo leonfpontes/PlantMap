@@ -17,6 +17,8 @@ interface AdminReviewCardProps {
   footer?: React.ReactNode
   /** Itens já resolvidos/arquivados ficam com opacidade reduzida. */
   dimmed?: boolean
+  /** Realça o cartão (ex.: a linha da própria pessoa no ranking). */
+  highlighted?: boolean
 }
 
 /**
@@ -25,12 +27,15 @@ interface AdminReviewCardProps {
  * o conteúdo, mas a moldura e o ritmo visual são os mesmos em todo lugar.
  */
 export default function AdminReviewCard({
-  avatar, title, subtitle, meta, pills, message, tags, footer, dimmed,
+  avatar, title, subtitle, meta, pills, message, tags, footer, dimmed, highlighted,
 }: AdminReviewCardProps) {
   return (
     <div
       className={
-        'rounded-2xl border border-gray-100 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900' +
+        'rounded-2xl border bg-white p-4 shadow-sm dark:bg-gray-900' +
+        (highlighted
+          ? ' border-green-600 ring-1 ring-green-600 dark:border-green-500 dark:ring-green-500'
+          : ' border-gray-100 dark:border-gray-800') +
         (dimmed ? ' opacity-75' : '')
       }
     >

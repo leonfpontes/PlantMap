@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useState, Suspense } from 'react'
 import { Leaf } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
@@ -41,7 +42,9 @@ function LoginForm() {
             <Leaf className="h-8 w-8 text-white" />
           </div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">PlantMap</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400">Mapeie a flora da sua região</p>
+          <p className="text-center text-sm text-gray-600 dark:text-gray-400">
+            Encontre e cuide de ervas medicinais, rituais e alimentares perto de você
+          </p>
         </div>
 
         {/* URL query error display */}
@@ -55,7 +58,7 @@ function LoginForm() {
         <button
           type="button"
           onClick={handleGoogleLogin}
-          className="flex w-full items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 transition-colors dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+          className="flex min-h-12 w-full items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 text-base font-medium text-gray-700 shadow-sm hover:bg-gray-50 transition-colors dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
         >
           <svg className="h-5 w-5" viewBox="0 0 24 24" aria-hidden="true">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -66,6 +69,19 @@ function LoginForm() {
           Continuar com Google
         </button>
 
+
+        <p className="mt-3 text-center text-xs text-gray-500 dark:text-gray-400">
+          Entrando, você pode registrar plantas, favoritar e acompanhar o ranking.
+        </p>
+
+        {/* Login não é obrigatório pra ver o mapa: sem esta saída, quem
+            caía aqui só tinha o botão voltar do navegador. */}
+        <Link
+          href="/map"
+          className="mt-6 flex min-h-11 w-full items-center justify-center rounded-xl text-sm font-medium text-green-700 transition-colors hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-900/30"
+        >
+          Explorar o mapa sem entrar
+        </Link>
 
         {serverError && (
           <p className="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-400">{serverError}</p>

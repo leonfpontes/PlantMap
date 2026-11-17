@@ -32,7 +32,7 @@ export async function registerOccurrence(data: {
     .single()
 
   if (!profile?.can_register_occurrences) {
-    return { error: 'Você ainda não tem permissão para registrar ocorrências. Peça acesso em Perfil.' }
+    return { error: 'Você ainda não tem permissão para registrar plantas. Peça acesso em Perfil.' }
   }
 
   const { error } = await supabase.from('occurrences').insert({

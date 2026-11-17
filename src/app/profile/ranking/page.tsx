@@ -10,6 +10,8 @@ import { createClient } from '@/lib/supabase/server'
 import { getLeaderboard } from '@/lib/actions/ranking'
 import { BADGE_TIER_CONFIG } from '@/constants/ranking'
 
+const MEDALHAS = ['🥇', '🥈', '🥉']
+
 export default async function RankingPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -31,7 +33,7 @@ export default async function RankingPage() {
             </div>
             <p className="font-medium text-gray-600 dark:text-gray-300">Ninguém pontuou ainda</p>
             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-              Registre uma ocorrência e mantenha ela atualizada para começar a pontuar
+              Registre uma planta e volte para atualizá-la para começar a pontuar
             </p>
           </div>
         ) : (
@@ -45,7 +47,10 @@ export default async function RankingPage() {
                   avatar={<AvatarFrame src={entry.avatar_url} name={entry.full_name} tier={entry.tier} size="md" />}
                   title={entry.full_name || 'Usuário'}
                   subtitle={`${tier.label} · ${entry.points} ponto${entry.points === 1 ? '' : 's'}`}
-                  meta={`#${entry.rank}`}
+                  // Pódio com medalha: o topo do ranking é o que motiva, e um
+                  // "#1" solto não chamava atenção nenhuma.
+                  meta={entry.rank <= 3 ? `${MEDALHAS[entry.rank - 1]} ${entry.rank}º` : `${entry.rank}º`}
+                  highlighted={isMe}
                   tags={isMe ? ['Você'] : undefined}
                   dimmed={entry.points === 0}
                 />

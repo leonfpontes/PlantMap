@@ -17,7 +17,7 @@ describe('PermissionRequestForm', () => {
   it('quem já pode registrar só vê a confirmação, sem formulário', () => {
     render(<PermissionRequestForm canRegister initialRequests={[]} />)
 
-    expect(screen.getByText(/você já pode registrar novas ocorrências/i)).toBeInTheDocument()
+    expect(screen.getByText(/você já pode registrar novas plantas/i)).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /pedir permissão/i })).not.toBeInTheDocument()
   })
 

@@ -144,7 +144,7 @@ export default function SearchPage() {
 
   return (
     <MobileShell>
-      <PageHeader title="Buscar Plantas" showBack={false} />
+      <PageHeader title="Buscar plantas" showBack={false} />
 
       <div className="flex flex-col gap-4 p-4 flex-shrink-0">
         <div className="relative">

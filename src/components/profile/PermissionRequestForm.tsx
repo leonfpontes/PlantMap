@@ -58,7 +58,7 @@ export default function PermissionRequestForm({ canRegister, initialRequests }: 
         <div className="flex h-14 w-14 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/40">
           <ShieldCheck className="h-7 w-7 text-green-700 dark:text-green-400" />
         </div>
-        <p className="font-medium text-green-800 dark:text-green-300">Você já pode registrar novas ocorrências</p>
+        <p className="font-medium text-green-800 dark:text-green-300">Você já pode registrar novas plantas</p>
         <p className="text-sm text-green-700/80 dark:text-green-400/80">
           Use o botão &quot;Registrar&quot; para marcar uma planta no mapa a qualquer momento.
         </p>

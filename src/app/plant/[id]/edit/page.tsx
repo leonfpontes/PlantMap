@@ -53,7 +53,7 @@ export default function EditPlantPage() {
 
   return (
     <MobileShell>
-      <PageHeader title="Editar Planta" />
+      <PageHeader title="Editar planta" />
       <div className="flex-1 overflow-y-auto p-4">
         <EditForm occurrence={occurrence} />
       </div>

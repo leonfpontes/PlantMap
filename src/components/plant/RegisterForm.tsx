@@ -17,6 +17,7 @@ import { formatAccuracy, GOOD_ACCURACY_M, POOR_ACCURACY_M } from '@/lib/geo'
 import { CONDITION_CHOICES, STAGE_OPTIONS } from '@/constants/plant'
 import ChoiceChips from '@/components/ui/ChoiceChips'
 import { cn } from '@/lib/utils'
+import { setFlash } from '@/lib/flash'
 
 const PlantMap = dynamic(() => import('@/components/map/PlantMap'), { ssr: false })
 
@@ -126,6 +127,7 @@ export default function RegisterForm() {
     })
 
     if (result?.error) { setServerError(result.error); return }
+    setFlash('Planta salva! Obrigado por cuidar do mapa.')
     router.push('/map')
   }
 
@@ -172,7 +174,7 @@ export default function RegisterForm() {
           type="button"
           onClick={handleUseMyLocation}
           disabled={locating}
-          className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl border border-green-700 px-3 py-2.5 text-sm font-medium text-green-700 transition-colors hover:bg-green-50 disabled:opacity-60 dark:border-green-500 dark:text-green-400 dark:hover:bg-green-900/30"
+          className="mt-2 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-green-700 px-3 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-green-800 disabled:opacity-60 dark:bg-green-600 dark:hover:bg-green-700"
         >
           <Crosshair className={cn('h-4 w-4', locating && 'animate-pulse')} />
           {locating ? 'Buscando o ponto mais preciso...' : 'Usar minha localização atual'}

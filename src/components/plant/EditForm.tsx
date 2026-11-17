@@ -1,5 +1,6 @@
 'use client'
 
+import { setFlash } from '@/lib/flash'
 import { useState, useCallback } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -100,6 +101,7 @@ export default function EditForm({ occurrence }: EditFormProps) {
     // A tela de detalhe é a única porta de entrada da edição, então a entrada
     // anterior é sempre ela — salvo quando a edição foi aberta direto por URL
     // numa aba nova, caso em que não há para onde voltar e o replace assume.
+    setFlash('Alterações salvas')
     if (window.history.length > 1) {
       router.back()
     } else {

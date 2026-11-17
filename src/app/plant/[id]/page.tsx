@@ -9,7 +9,6 @@ import dynamic from 'next/dynamic'
 import MobileShell from '@/components/layout/MobileShell'
 import PageHeader from '@/components/layout/PageHeader'
 import BottomNav from '@/components/layout/BottomNav'
-import Badge from '@/components/ui/Badge'
 import Button from '@/components/ui/Button'
 import ShareSheet from '@/components/plant/ShareSheet'
 import DirectionsButton from '@/components/plant/DirectionsButton'
@@ -18,11 +17,12 @@ import AuthorshipCard from '@/components/plant/AuthorshipCard'
 import ImageLightbox from '@/components/plant/ImageLightbox'
 import BottomSheet from '@/components/ui/BottomSheet'
 import { deleteOccurrence, getOccurrence } from '@/lib/actions/plants'
+import { setFlash } from '@/lib/flash'
 import { useUser } from '@/hooks/useUser'
 import { useFavorites } from '@/hooks/useFavorites'
 import { useIsAdmin } from '@/hooks/useIsAdmin'
 import { PlantOccurrence } from '@/types'
-import { CONDITION_CONFIG, STAGE_LABEL, ORIGIN_LABEL } from '@/constants/plant'
+import { CONDITION_CONFIG, STAGE_LABEL, ORIGIN_LABEL, CONDITION_PIN_COLOR } from '@/constants/plant'
 import { cn } from '@/lib/utils'
 
 // Card mais largo que o padrão 'comfortable' — mapa e foto lado a lado
@@ -81,6 +81,7 @@ export default function PlantDetailPage() {
       setDeleting(false)
       setConfirmDelete(false)
     } else {
+      setFlash('Registro excluído')
       window.location.href = '/map'
     }
   }
@@ -189,17 +190,28 @@ export default function PlantDetailPage() {
             </div>
           </div>
 
-          {/* Badges */}
-          <div className="flex flex-wrap gap-2 lg:col-span-2">
-            <Badge variant={condition.variant}>{condition.label}</Badge>
-            <Badge variant="gray">{STAGE_LABEL[occurrence.stage] ?? occurrence.stage}</Badge>
+          {/* Ficha: cada dado com o próprio rótulo. Antes eram quatro selos
+              soltos lado a lado ("Regular", "Adulta", "Nativa", "Rutaceae"),
+              e quem não conhecia o app não sabia o que cada um queria dizer. */}
+          <dl className="grid grid-cols-2 gap-2 lg:col-span-2 lg:grid-cols-4">
+            <FactTile label="Condição">
+              <span className="flex items-center gap-1.5">
+                <span
+                  className="h-2.5 w-2.5 flex-shrink-0 rounded-full"
+                  style={{ backgroundColor: CONDITION_PIN_COLOR[occurrence.condition] ?? CONDITION_PIN_COLOR.healthy }}
+                  aria-hidden="true"
+                />
+                {condition.label}
+              </span>
+            </FactTile>
+            <FactTile label="Estágio">{STAGE_LABEL[occurrence.stage] ?? occurrence.stage}</FactTile>
             {occurrence.species?.origin && (
-              <Badge variant="blue">{ORIGIN_LABEL[occurrence.species.origin] ?? occurrence.species.origin}</Badge>
+              <FactTile label="Origem">{ORIGIN_LABEL[occurrence.species.origin] ?? occurrence.species.origin}</FactTile>
             )}
             {occurrence.species?.family && (
-              <Badge variant="gray">{occurrence.species.family}</Badge>
+              <FactTile label="Família">{occurrence.species.family}</FactTile>
             )}
-          </div>
+          </dl>
 
           {/* Ação principal da tela: quem abre uma planta quase sempre quer ir até ela —
               por isso logo abaixo do nome, sem precisar rolar a tela. */}
@@ -327,5 +339,14 @@ export default function PlantDetailPage() {
         />
       )}
     </MobileShell>
+  )
+}
+
+function FactTile({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="rounded-xl bg-gray-50 px-3 py-2.5 dark:bg-gray-800/60">
+      <dt className="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">{label}</dt>
+      <dd className="mt-0.5 truncate text-sm font-semibold text-gray-900 dark:text-gray-100">{children}</dd>
+    </div>
   )
 }

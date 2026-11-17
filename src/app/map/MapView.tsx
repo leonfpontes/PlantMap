@@ -7,6 +7,7 @@ import { Leaf, LocateOff, Search } from 'lucide-react'
 import { searchNearby } from '@/lib/actions/plants'
 import { OccurrenceWithDistance } from '@/types'
 import PlantCard from '@/components/plant/PlantCard'
+import MapLegend from '@/components/map/MapLegend'
 import { useGeolocation } from '@/hooks/useGeolocation'
 import { distanceMeters } from '@/lib/geo'
 import { cn, DEFAULT_MAP_ZOOM, zoomForDistance } from '@/lib/utils'
@@ -164,6 +165,8 @@ export default function MapView() {
             </p>
           )}
         </div>
+
+        {!loading && <MapLegend />}
 
         {/* Mapa vazio no celular: sem lista ao lado, a tela em branco não diz nada. */}
         {!loading && occurrences.length === 0 && (
