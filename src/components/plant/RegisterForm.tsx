@@ -14,7 +14,8 @@ import SpeciesCombobox from '@/components/plant/SpeciesCombobox'
 import { usePhotoUpload } from '@/hooks/usePhotoUpload'
 import { useGeolocationWatch } from '@/hooks/useGeolocation'
 import { formatAccuracy, GOOD_ACCURACY_M, POOR_ACCURACY_M } from '@/lib/geo'
-import { CONDITION_OPTIONS, STAGE_OPTIONS } from '@/constants/plant'
+import { CONDITION_CHOICES, STAGE_OPTIONS } from '@/constants/plant'
+import ChoiceChips from '@/components/ui/ChoiceChips'
 import { cn } from '@/lib/utils'
 
 const PlantMap = dynamic(() => import('@/components/map/PlantMap'), { ssr: false })
@@ -138,14 +139,14 @@ export default function RegisterForm() {
         <div className={cn(
           mapExpanded
             ? 'fixed inset-0 z-50 bg-white dark:bg-gray-950'
-            : 'relative h-48 w-full overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700'
+            : 'relative h-60 w-full overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700'
         )}>
           {/* Só segura o mapa enquanto não há posição nenhuma. Gatilhar no
               `locLoading` puro faria o mapa sumir toda vez que "Usar minha
               localização" fosse acionado, que é justo quando ele importa. */}
           {locLoading && userLat == null ? (
             <div className="flex h-full w-full items-center justify-center bg-gray-50 dark:bg-gray-900">
-              <span className="text-xs text-gray-400 dark:text-gray-500">Localizando você...</span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">Localizando você...</span>
             </div>
           ) : (
             <PlantMap
@@ -213,43 +214,26 @@ export default function RegisterForm() {
         <input type="hidden" {...register('species_id')} />
       </div>
 
-      {/* Condition & Stage */}
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Condição</label>
-          <select
-            {...register('condition')}
-            className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
-          >
-            {CONDITION_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>{o.label}</option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Estágio</label>
-          <select
-            {...register('stage')}
-            className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
-          >
-            {STAGE_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>{o.label}</option>
-            ))}
-          </select>
-        </div>
-      </div>
+      {/* Condição e estágio: botões grandes no lugar de listas (ver ChoiceChips) */}
+      <ChoiceChips legend="Como ela está?" options={CONDITION_CHOICES} registration={register('condition')} />
+      <ChoiceChips legend="Estágio" options={STAGE_OPTIONS} registration={register('stage')} />
 
       {/* Photo */}
       <div>
-        <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Foto (opcional)</label>
+        <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Foto <span className="font-normal text-gray-500 dark:text-gray-400">(opcional)</span></label>
         <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-200 p-4 hover:border-green-400 hover:bg-green-50 transition-colors dark:border-gray-700 dark:hover:bg-green-900/20">
           {preview ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={preview} alt="Preview" className="h-32 w-full object-cover rounded-lg" />
+            <>
+              {/* Preview local (blob:), que o otimizador de imagens não alcança. */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={preview} alt="Foto escolhida" className="h-40 w-full rounded-lg object-cover" />
+              <span className="text-xs font-medium text-green-700 dark:text-green-400">Toque para trocar a foto</span>
+            </>
           ) : (
             <>
-              <Camera className="h-8 w-8 text-gray-400 dark:text-gray-500" />
-              <span className="text-sm text-gray-500 dark:text-gray-400">Adicionar foto</span>
+              <Camera className="h-8 w-8 text-green-700 dark:text-green-400" />
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-200">Tirar ou escolher foto</span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">Ajuda quem for procurar a planta depois</span>
             </>
           )}
           <input type="file" accept="image/*" capture="environment" onChange={handlePhotoChange} className="hidden" />
@@ -258,12 +242,12 @@ export default function RegisterForm() {
 
       {/* Notes */}
       <div>
-        <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Observações</label>
+        <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Observações <span className="font-normal text-gray-500 dark:text-gray-400">(opcional)</span></label>
         <textarea
           {...register('notes')}
           rows={3}
           placeholder="Descreva o local, características especiais..."
-          className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-green-700 resize-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+          className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-green-700 resize-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
         />
       </div>
 
@@ -277,7 +261,7 @@ export default function RegisterForm() {
         loading={isSubmitting || uploading}
         className="w-full"
       >
-        {uploading ? 'Enviando foto...' : 'Registrar Ocorrência'}
+        {uploading ? 'Enviando foto...' : 'Salvar planta'}
       </Button>
     </form>
   )

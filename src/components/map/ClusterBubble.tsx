@@ -1,13 +1,15 @@
 'use client'
 
+import { memo } from 'react'
 import { Marker } from 'react-map-gl/maplibre'
 import { cn } from '@/lib/utils'
 
-interface ClusterBubbleProps {
+interface ClusterBubbleProps<T> {
   latitude: number
   longitude: number
-  count: number
-  onClick: () => void
+  items: T[]
+  /** Recebe os itens do grupo, pra que o pai possa passar sempre a mesma função (ver memo). */
+  onClick: (items: T[]) => void
 }
 
 /**
@@ -25,7 +27,8 @@ function tamanhoPara(count: number): number {
   return 56
 }
 
-export default function ClusterBubble({ latitude, longitude, count, onClick }: ClusterBubbleProps) {
+function ClusterBubble<T>({ latitude, longitude, items, onClick }: ClusterBubbleProps<T>) {
+  const count = items.length
   const size = tamanhoPara(count)
 
   return (
@@ -35,12 +38,12 @@ export default function ClusterBubble({ latitude, longitude, count, onClick }: C
       anchor="center"
       onClick={(e) => {
         e.originalEvent.stopPropagation()
-        onClick()
+        onClick(items)
       }}
     >
       <button
         type="button"
-        aria-label={`${count} plantas agrupadas aqui. Ampliar para ver`}
+        aria-label={`${count} plantas agrupadas aqui. Toque para ver`}
         className={cn(
           'flex items-center justify-center rounded-full bg-green-600/90 font-semibold text-white',
           'ring-4 ring-green-600/25 shadow-md transition-transform hover:scale-110',
@@ -53,3 +56,5 @@ export default function ClusterBubble({ latitude, longitude, count, onClick }: C
     </Marker>
   )
 }
+
+export default memo(ClusterBubble) as typeof ClusterBubble

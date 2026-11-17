@@ -23,7 +23,7 @@ export default async function HelpPage() {
 
         <section>
           <h2 className="mb-2 text-sm font-semibold text-gray-700 dark:text-gray-300">Fale com a administração</h2>
-          <p className="mb-3 text-xs text-gray-400 dark:text-gray-500">
+          <p className="mb-3 text-xs text-gray-500 dark:text-gray-400">
             Não achou a resposta no FAQ acima? Escreva para a administração do terreiro — você recebe uma notificação assim que responderem.
           </p>
           <SupportMessageForm initialMessages={myMessages} />

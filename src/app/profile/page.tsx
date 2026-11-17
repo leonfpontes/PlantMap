@@ -67,7 +67,7 @@ export default async function ProfilePage() {
                       sem alvo nenhum à vista — que foi exatamente o que motivou
                       esticar a escada de tiers. */}
                   {nextTier && (
-                    <p className="text-xs text-gray-400 dark:text-gray-500">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
                       Faltam {nextTier.pointsAway} ponto{nextTier.pointsAway === 1 ? '' : 's'} para{' '}
                       {BADGE_TIER_CONFIG[nextTier.tier].label}
                     </p>
@@ -92,128 +92,53 @@ export default async function ProfilePage() {
           </div>
         </div>
 
-        <div className="p-4 flex flex-col gap-2 lg:grid lg:grid-cols-2 lg:gap-3 lg:p-6">
-          <Link
-            href="/profile/notifications"
-            className="flex items-center gap-3 rounded-2xl bg-white border border-gray-100 px-4 py-3 hover:bg-gray-50 transition-colors shadow-sm dark:bg-gray-900 dark:border-gray-800 dark:hover:bg-gray-800"
-          >
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-900/30">
-              <Bell className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-            </div>
-            <span className="flex-1 text-sm font-medium text-gray-900 dark:text-gray-100">Notificações</span>
-            {unreadNotifications > 0 && (
-              <Badge variant="red">{unreadNotifications} nova{unreadNotifications !== 1 ? 's' : ''}</Badge>
-            )}
-            <ChevronRight className="h-4 w-4 text-gray-400 dark:text-gray-500" />
-          </Link>
+        <div className="flex flex-col gap-5 p-4 lg:grid lg:grid-cols-2 lg:gap-6 lg:p-6">
+          {/* Agrupado por assunto: nove cartões soltos, cada um de uma cor,
+              obrigavam a ler a lista inteira pra achar uma opção. */}
+          <MenuGroup title="Minhas plantas">
+            <MenuItem href="/profile/favorites" icon={Heart} label="Plantas favoritas" />
+            <MenuItem href="/map" icon={Leaf} label="Meus registros no mapa" />
+            <MenuItem href="/profile/species" icon={Sprout} label="Ervas que sugeri" />
+          </MenuGroup>
 
-          {/* Favorites link */}
-          <Link
-            href="/profile/favorites"
-            className="flex items-center gap-3 rounded-2xl bg-white border border-gray-100 px-4 py-3 hover:bg-gray-50 transition-colors shadow-sm dark:bg-gray-900 dark:border-gray-800 dark:hover:bg-gray-800"
-          >
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-red-50 dark:bg-red-900/30">
-              <Heart className="h-5 w-5 text-red-500 dark:text-red-400" />
-            </div>
-            <span className="flex-1 text-sm font-medium text-gray-900 dark:text-gray-100">Plantas favoritas</span>
-            <ChevronRight className="h-4 w-4 text-gray-400 dark:text-gray-500" />
-          </Link>
+          <MenuGroup title="Conta">
+            <MenuItem
+              href="/profile/notifications"
+              icon={Bell}
+              label="Notificações"
+              badge={unreadNotifications > 0
+                ? <Badge variant="red">{unreadNotifications} nova{unreadNotifications !== 1 ? 's' : ''}</Badge>
+                : undefined}
+            />
+            <MenuItem
+              href="/profile/ranking"
+              icon={Trophy}
+              label="Ranking"
+              badge={ranking
+                ? <Badge variant={BADGE_TIER_CONFIG[ranking.tier].variant}>{BADGE_TIER_CONFIG[ranking.tier].label}</Badge>
+                : undefined}
+            />
+            <MenuItem href="/profile/permission" icon={UserCheck} label="Permissão para registrar" />
+          </MenuGroup>
 
-          <Link
-            href="/profile/ranking"
-            className="flex items-center gap-3 rounded-2xl bg-white border border-gray-100 px-4 py-3 hover:bg-gray-50 transition-colors shadow-sm dark:bg-gray-900 dark:border-gray-800 dark:hover:bg-gray-800"
-          >
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-purple-50 dark:bg-purple-900/30">
-              <Trophy className="h-5 w-5 text-purple-600 dark:text-purple-400" />
-            </div>
-            <span className="flex-1 text-sm font-medium text-gray-900 dark:text-gray-100">Ranking</span>
-            {ranking && (
-              <Badge variant={BADGE_TIER_CONFIG[ranking.tier].variant}>{BADGE_TIER_CONFIG[ranking.tier].label}</Badge>
-            )}
-            <ChevronRight className="h-4 w-4 text-gray-400 dark:text-gray-500" />
-          </Link>
-
-          <Link
-            href="/map"
-            className="flex items-center gap-3 rounded-2xl bg-white border border-gray-100 px-4 py-3 hover:bg-gray-50 transition-colors shadow-sm dark:bg-gray-900 dark:border-gray-800 dark:hover:bg-gray-800"
-          >
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-green-50 dark:bg-green-900/30">
-              <Leaf className="h-5 w-5 text-green-600 dark:text-green-400" />
-            </div>
-            <span className="flex-1 text-sm font-medium text-gray-900 dark:text-gray-100">Meus registros no mapa</span>
-            <ChevronRight className="h-4 w-4 text-gray-400 dark:text-gray-500" />
-          </Link>
-
-          <Link
-            href="/profile/species"
-            className="flex items-center gap-3 rounded-2xl bg-white border border-gray-100 px-4 py-3 hover:bg-gray-50 transition-colors shadow-sm dark:bg-gray-900 dark:border-gray-800 dark:hover:bg-gray-800"
-          >
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-yellow-50 dark:bg-yellow-900/30">
-              <Sprout className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
-            </div>
-            <span className="flex-1 text-sm font-medium text-gray-900 dark:text-gray-100">Ervas que sugeri</span>
-            <ChevronRight className="h-4 w-4 text-gray-400 dark:text-gray-500" />
-          </Link>
-
-          <Link
-            href="/profile/permission"
-            className="flex items-center gap-3 rounded-2xl bg-white border border-gray-100 px-4 py-3 hover:bg-gray-50 transition-colors shadow-sm dark:bg-gray-900 dark:border-gray-800 dark:hover:bg-gray-800"
-          >
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-teal-50 dark:bg-teal-900/30">
-              <UserCheck className="h-5 w-5 text-teal-600 dark:text-teal-400" />
-            </div>
-            <span className="flex-1 text-sm font-medium text-gray-900 dark:text-gray-100">Permissão para registrar</span>
-            <ChevronRight className="h-4 w-4 text-gray-400 dark:text-gray-500" />
-          </Link>
-
-          <Link
-            href="/profile/appearance"
-            className="flex items-center gap-3 rounded-2xl bg-white border border-gray-100 px-4 py-3 hover:bg-gray-50 transition-colors shadow-sm dark:bg-gray-900 dark:border-gray-800 dark:hover:bg-gray-800"
-          >
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-purple-50 dark:bg-purple-900/30">
-              <Palette className="h-5 w-5 text-purple-600 dark:text-purple-400" />
-            </div>
-            <span className="flex-1 text-sm font-medium text-gray-900 dark:text-gray-100">Aparência</span>
-            <ChevronRight className="h-4 w-4 text-gray-400 dark:text-gray-500" />
-          </Link>
-
-          <Link
-            href="/profile/privacy"
-            className="flex items-center gap-3 rounded-2xl bg-white border border-gray-100 px-4 py-3 hover:bg-gray-50 transition-colors shadow-sm dark:bg-gray-900 dark:border-gray-800 dark:hover:bg-gray-800"
-          >
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800">
-              <Lock className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-            </div>
-            <span className="flex-1 text-sm font-medium text-gray-900 dark:text-gray-100">Privacidade</span>
-            <ChevronRight className="h-4 w-4 text-gray-400 dark:text-gray-500" />
-          </Link>
+          <MenuGroup title="Preferências">
+            <MenuItem href="/profile/appearance" icon={Palette} label="Aparência e tamanho do texto" />
+            <MenuItem href="/profile/privacy" icon={Lock} label="Privacidade" />
+            <MenuItem href="/profile/help" icon={HelpCircle} label="Ajuda e suporte" />
+          </MenuGroup>
 
           {profile?.is_admin && (
-            <Link
-              href="/admin"
-              className="flex items-center gap-3 rounded-2xl bg-white border border-gray-100 px-4 py-3 hover:bg-gray-50 transition-colors shadow-sm dark:bg-gray-900 dark:border-gray-800 dark:hover:bg-gray-800"
-            >
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-900/30">
-                <LayoutGrid className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-              </div>
-              <span className="flex-1 text-sm font-medium text-gray-900 dark:text-gray-100">Administração</span>
-              {pendingAdminCount > 0 && (
-                <Badge variant="yellow">{pendingAdminCount} pendente{pendingAdminCount !== 1 ? 's' : ''}</Badge>
-              )}
-              <ChevronRight className="h-4 w-4 text-gray-400 dark:text-gray-500" />
-            </Link>
+            <MenuGroup title="Administração">
+              <MenuItem
+                href="/admin"
+                icon={LayoutGrid}
+                label="Painel do admin"
+                badge={pendingAdminCount > 0
+                  ? <Badge variant="yellow">{pendingAdminCount} pendente{pendingAdminCount !== 1 ? 's' : ''}</Badge>
+                  : undefined}
+              />
+            </MenuGroup>
           )}
-
-          <Link
-            href="/profile/help"
-            className="flex items-center gap-3 rounded-2xl bg-white border border-gray-100 px-4 py-3 hover:bg-gray-50 transition-colors shadow-sm dark:bg-gray-900 dark:border-gray-800 dark:hover:bg-gray-800"
-          >
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800">
-              <HelpCircle className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-            </div>
-            <span className="flex-1 text-sm font-medium text-gray-900 dark:text-gray-100">Ajuda e suporte</span>
-            <ChevronRight className="h-4 w-4 text-gray-400 dark:text-gray-500" />
-          </Link>
 
           {/* Sign out */}
           <form action={signOut} className="mt-2 lg:col-span-2 lg:mt-0">
@@ -230,5 +155,39 @@ export default async function ProfilePage() {
 
       <BottomNav />
     </MobileShell>
+  )
+}
+
+function MenuGroup({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section>
+      <h2 className="mb-1.5 px-1 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">{title}</h2>
+      <div className="divide-y divide-gray-100 overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm dark:divide-gray-800 dark:border-gray-800 dark:bg-gray-900">
+        {children}
+      </div>
+    </section>
+  )
+}
+
+function MenuItem({
+  href, icon: Icon, label, badge,
+}: {
+  href: string
+  icon: React.ElementType
+  label: string
+  badge?: React.ReactNode
+}) {
+  return (
+    <Link
+      href={href}
+      className="flex min-h-14 items-center gap-3 px-4 py-2.5 transition-colors hover:bg-gray-50 active:bg-gray-100 dark:hover:bg-gray-800 dark:active:bg-gray-800"
+    >
+      <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-green-50 dark:bg-green-900/30">
+        <Icon className="h-5 w-5 text-green-700 dark:text-green-400" />
+      </span>
+      <span className="flex-1 text-[15px] font-medium text-gray-900 dark:text-gray-100">{label}</span>
+      {badge}
+      <ChevronRight className="h-4 w-4 flex-shrink-0 text-gray-400 dark:text-gray-500" />
+    </Link>
   )
 }

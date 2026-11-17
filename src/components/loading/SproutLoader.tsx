@@ -45,7 +45,7 @@ export default function SproutLoader({ label = 'Brotando...' }: { label?: string
           <circle cx="60" cy="66" r="4.5" className="fill-yellow-400 dark:fill-yellow-500" />
         </g>
       </svg>
-      <p className="text-sm font-medium text-gray-400 dark:text-gray-500">{label}</p>
+      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{label}</p>
     </div>
   )
 }

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { boundsOf, clusterByScreenGrid, toWorld } from '@/lib/cluster'
+import { boundsOf, clusterByScreenGrid, expandBounds, inBounds, staysClusteredAt, toWorld } from '@/lib/cluster'
 
 const RP = { latitude: -21.1767, longitude: -47.8208 }
 
@@ -117,5 +117,36 @@ describe('clusterZoomLevel', () => {
       clusterByScreenGrid(pts, clusterZoomLevel(z), 54).map((c) => c.id).sort().join('|')
     const base = ids(12.0)
     for (const z of [11.6, 11.8, 12.1, 12.3, 12.49]) expect(ids(z)).toBe(base)
+  })
+})
+
+describe('staysClusteredAt', () => {
+  it('reconhece plantas na mesma coordenada (localização aproximada) como inseparáveis', () => {
+    expect(staysClusteredAt([RP, RP, RP], 17, 54)).toBe(true)
+  })
+
+  it('reconhece plantas a poucos metros como inseparáveis no zoom máximo', () => {
+    expect(staysClusteredAt([RP, offset(RP, 3, 2)], 17, 54)).toBe(true)
+  })
+
+  it('deixa aproximar quando o zoom separa o grupo', () => {
+    expect(staysClusteredAt([RP, offset(RP, 200, 0)], 17, 54)).toBe(false)
+  })
+
+  it('um item só nunca é grupo', () => {
+    expect(staysClusteredAt([RP], 17, 54)).toBe(false)
+  })
+})
+
+describe('expandBounds / inBounds', () => {
+  const b = { west: -48, south: -22, east: -47, north: -21 }
+
+  it('amplia a mesma fração para cada lado', () => {
+    expect(expandBounds(b, 0.5)).toEqual({ west: -48.5, south: -22.5, east: -46.5, north: -20.5 })
+  })
+
+  it('inclui pontos dentro e exclui os de fora', () => {
+    expect(inBounds({ latitude: -21.5, longitude: -47.5 }, b)).toBe(true)
+    expect(inBounds({ latitude: -23, longitude: -47.5 }, b)).toBe(false)
   })
 })

@@ -130,7 +130,7 @@ export default function SpeciesSubmitSheet({
             {...register('description')}
             rows={3}
             placeholder="Uso ritual, orixá associado, onde costuma ser encontrada..."
-            className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-green-700 resize-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+            className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-green-700 resize-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
           />
         </div>
 
@@ -138,7 +138,7 @@ export default function SpeciesSubmitSheet({
           <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
             Foto de referência (opcional)
           </label>
-          <p className="mb-1 text-xs text-gray-400 dark:text-gray-500">
+          <p className="mb-1 text-xs text-gray-500 dark:text-gray-400">
             Uma foto que identifique a espécie em si — diferente da foto que você tira de cada
             ocorrência registrada.
           </p>

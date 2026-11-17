@@ -87,7 +87,7 @@ export default function SupportInbox({ initialMessages }: SupportInboxProps) {
                       placeholder="Resposta (opcional)"
                       value={replyDrafts[m.id] || ''}
                       onChange={(e) => setReplyDrafts((prev) => ({ ...prev, [m.id]: e.target.value }))}
-                      className="w-full resize-none rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-green-600 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+                      className="w-full resize-none rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:border-green-600 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
                     />
                     <Button
                       size="sm"

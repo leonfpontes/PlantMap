@@ -4,7 +4,7 @@ import { PRIVACY_POLICY_SECTIONS, PRIVACY_POLICY_UPDATED_AT } from '@/constants/
 export default function PrivacyPolicyContent() {
   return (
     <div className="flex flex-col gap-4">
-      <p className="text-xs text-gray-400 dark:text-gray-500">
+      <p className="text-xs text-gray-500 dark:text-gray-400">
         Última atualização: {new Date(PRIVACY_POLICY_UPDATED_AT).toLocaleDateString('pt-BR')}
       </p>
       {PRIVACY_POLICY_SECTIONS.map((section) => (

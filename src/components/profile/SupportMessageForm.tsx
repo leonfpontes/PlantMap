@@ -64,7 +64,7 @@ export default function SupportMessageForm({ initialMessages }: SupportMessageFo
           placeholder="Assunto"
           value={subject}
           onChange={(e) => setSubject(e.target.value)}
-          className="rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-green-600 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+          className="rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-500 focus:border-green-600 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
         />
         <textarea
           required
@@ -73,7 +73,7 @@ export default function SupportMessageForm({ initialMessages }: SupportMessageFo
           placeholder="Descreva sua dúvida ou problema..."
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          className="resize-none rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-green-600 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+          className="resize-none rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-500 focus:border-green-600 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
         />
         {error && <p className="text-xs text-red-600 dark:text-red-400">{error}</p>}
         {sent && <p className="text-xs text-green-700 dark:text-green-400">Mensagem enviada! A administração vai te responder por aqui.</p>}
@@ -98,7 +98,7 @@ export default function SupportMessageForm({ initialMessages }: SupportMessageFo
                 </Badge>
               </div>
               <p className="text-sm text-gray-600 dark:text-gray-300">{m.message}</p>
-              <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">{formatRelativeTime(m.created_at)}</p>
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{formatRelativeTime(m.created_at)}</p>
               {m.admin_reply && (
                 <div className="mt-2 rounded-xl bg-green-50 p-3 dark:bg-green-900/20">
                   <p className="text-xs font-medium text-green-700 dark:text-green-400">Resposta da administração</p>

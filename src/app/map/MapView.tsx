@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
-import { Leaf, Search } from 'lucide-react'
+import { Leaf, LocateOff, Search } from 'lucide-react'
 import { searchNearby } from '@/lib/actions/plants'
 import { OccurrenceWithDistance } from '@/types'
 import PlantCard from '@/components/plant/PlantCard'
@@ -45,8 +45,10 @@ export default function MapView() {
   // rastreamento, que ao remontar entregava posição nova, que disparava outra
   // rebusca. A tela piscava sem parar, sem nunca terminar de carregar.
   const [loading, setLoading] = useState(true)
+  // Falha de rede no 3G não pode se passar por "mapa vazio".
+  const [loadFailed, setLoadFailed] = useState(false)
   const [hoveredId, setHoveredId] = useState<string | null>(null)
-  const { latitude, longitude } = useGeolocation()
+  const { latitude, longitude, error: geoError } = useGeolocation()
 
   // Origem da busca: acompanha o GPS, mas só quando ele se afasta o bastante
   // pra mudar o resultado (ver SEARCH_ORIGIN_THRESHOLD_M).
@@ -80,11 +82,13 @@ export default function MapView() {
       .then((data) => {
         if (cancelado) return
         setOccurrences(data)
+        setLoadFailed(false)
         setLoading(false)
       })
       .catch((err) => {
         if (cancelado) return
         console.error('Erro ao buscar ocorrências para o mapa:', err)
+        setLoadFailed(true)
         setLoading(false)
       })
 
@@ -118,7 +122,7 @@ export default function MapView() {
         ) : occurrences.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-2 p-6 text-center">
             <Leaf className="h-8 w-8 text-gray-300 dark:text-gray-700" />
-            <p className="text-sm text-gray-400 dark:text-gray-500">Nenhum registro ainda</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Nenhum registro ainda</p>
           </div>
         ) : (
           <div className="flex flex-col gap-2 p-3">
@@ -141,15 +145,42 @@ export default function MapView() {
 
       {/* Coluna do mapa */}
       <div className="relative flex-1">
-        <div className="absolute top-3 left-4 right-4 z-10">
+        {/* right-14 deixa livre o controle de zoom no canto direito. */}
+        <div className="absolute top-3 left-4 right-14 z-10 flex flex-col items-start gap-2">
           <Link
             href="/search"
-            className="flex items-center gap-2 rounded-2xl bg-white px-4 py-3 shadow-md border border-gray-100 text-gray-400 text-sm dark:bg-gray-900 dark:border-gray-800 dark:text-gray-500"
+            className="flex min-h-12 w-full items-center gap-2.5 rounded-2xl border border-gray-200 bg-white px-4 text-sm text-gray-600 shadow-md transition-shadow hover:shadow-lg dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300"
           >
-            <Search className="h-4 w-4" />
-            <span>Buscar espécie...</span>
+            <Search className="h-5 w-5 text-green-700 dark:text-green-400" />
+            <span>Buscar planta pelo nome</span>
           </Link>
+
+          {/* Sem isso, quem negou a localização via o mapa num lugar qualquer
+              e as distâncias contadas de lá, sem saber por quê. */}
+          {geoError && latitude == null && (
+            <p className="flex items-center gap-1.5 whitespace-nowrap rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-800 shadow-sm dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200">
+              <LocateOff className="h-3.5 w-3.5 flex-shrink-0" />
+              Localização desligada
+            </p>
+          )}
         </div>
+
+        {/* Mapa vazio no celular: sem lista ao lado, a tela em branco não diz nada. */}
+        {!loading && occurrences.length === 0 && (
+          <div className="pointer-events-none absolute inset-x-6 top-1/2 z-10 -translate-y-1/2 lg:hidden">
+            <div className="mx-auto flex max-w-xs flex-col items-center gap-1.5 rounded-2xl bg-white/95 p-5 text-center shadow-lg dark:bg-gray-900/95">
+              <Leaf className="h-7 w-7 text-green-600 dark:text-green-400" />
+              <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                {loadFailed ? 'Não foi possível carregar as plantas' : 'Nenhuma planta no mapa ainda'}
+              </p>
+              <p className="text-xs text-gray-600 dark:text-gray-400">
+                {loadFailed
+                  ? 'Confira sua conexão e abra o mapa de novo.'
+                  : 'As plantas registradas pela comunidade aparecem aqui.'}
+              </p>
+            </div>
+          </div>
+        )}
 
         {loading ? (
           <div className="h-full w-full bg-green-50 animate-pulse dark:bg-green-950/40" />

@@ -18,7 +18,7 @@ export default async function RegisterPage() {
 
   return (
     <MobileShell>
-      <PageHeader title="Registrar Ocorrência" />
+      <PageHeader title="Nova planta" />
       <div className="flex-1 overflow-y-auto p-4">
         {profile?.can_register_occurrences ? (
           <RegisterForm />
@@ -27,8 +27,8 @@ export default async function RegisterPage() {
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-yellow-50 dark:bg-yellow-900/30">
               <ShieldCheck className="h-8 w-8 text-yellow-500 dark:text-yellow-400" />
             </div>
-            <p className="font-medium text-gray-600 dark:text-gray-300">Você ainda não pode registrar plantas</p>
-            <p className="max-w-xs text-sm text-gray-400 dark:text-gray-500">
+            <p className="font-semibold text-gray-900 dark:text-gray-100">Você ainda não pode registrar plantas</p>
+            <p className="max-w-xs text-sm text-gray-600 dark:text-gray-400">
               Para manter a qualidade do catálogo, novos registros de localização dependem de aprovação da administração do terreiro.
             </p>
             <Link href="/profile/permission" className="mt-2">

@@ -110,7 +110,7 @@ export default function Sidebar() {
             )}>
               {profile?.full_name || 'Perfil'}
             </span>
-            <span className="block truncate text-xs text-gray-400 dark:text-gray-500">{user.email}</span>
+            <span className="block truncate text-xs text-gray-500 dark:text-gray-400">{user.email}</span>
           </span>
         </Link>
       )}

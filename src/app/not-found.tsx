@@ -29,7 +29,7 @@ export default function NotFound() {
 
         {/* Fichinha de espécie, no mesmo estilo dos cards do app — a piada é o conteúdo. */}
         <div className="w-full max-w-xs rounded-2xl border border-gray-100 bg-white p-4 text-left shadow-sm dark:border-gray-800 dark:bg-gray-900">
-          <p className="text-xs font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500">
+          <p className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
             Ficha da ocorrência
           </p>
           <p className="mt-1 font-semibold text-gray-900 dark:text-gray-100">Página perdida</p>

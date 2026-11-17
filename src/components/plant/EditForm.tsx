@@ -12,7 +12,8 @@ import Button from '@/components/ui/Button'
 import dynamic from 'next/dynamic'
 import SpeciesCombobox from '@/components/plant/SpeciesCombobox'
 import { usePhotoUpload } from '@/hooks/usePhotoUpload'
-import { CONDITION_OPTIONS, STAGE_OPTIONS } from '@/constants/plant'
+import { CONDITION_CHOICES, STAGE_OPTIONS } from '@/constants/plant'
+import ChoiceChips from '@/components/ui/ChoiceChips'
 
 const PlantMap = dynamic(() => import('@/components/map/PlantMap'), { ssr: false })
 
@@ -113,7 +114,7 @@ export default function EditForm({ occurrence }: EditFormProps) {
         <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
           Localização <span className="text-red-500">*</span>
         </label>
-        <div className="h-48 w-full overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700">
+        <div className="h-60 w-full overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700">
           <PlantMap
             onMapClick={handleMapClick}
             selectedLocation={lat && lng ? { lat, lng } : null}
@@ -147,43 +148,26 @@ export default function EditForm({ occurrence }: EditFormProps) {
         <input type="hidden" {...register('species_id')} />
       </div>
 
-      {/* Condition & Stage */}
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Condição</label>
-          <select
-            {...register('condition')}
-            className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
-          >
-            {CONDITION_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>{o.label}</option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Estágio</label>
-          <select
-            {...register('stage')}
-            className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
-          >
-            {STAGE_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>{o.label}</option>
-            ))}
-          </select>
-        </div>
-      </div>
+      {/* Condição e estágio: botões grandes no lugar de listas (ver ChoiceChips) */}
+      <ChoiceChips legend="Como ela está?" options={CONDITION_CHOICES} registration={register('condition')} />
+      <ChoiceChips legend="Estágio" options={STAGE_OPTIONS} registration={register('stage')} />
 
       {/* Photo */}
       <div>
-        <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Foto (opcional)</label>
+        <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Foto <span className="font-normal text-gray-500 dark:text-gray-400">(opcional)</span></label>
         <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-200 p-4 hover:border-green-400 hover:bg-green-50 transition-colors dark:border-gray-700 dark:hover:bg-green-900/20">
           {preview ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={preview} alt="Preview" className="h-32 w-full object-cover rounded-lg" />
+            <>
+              {/* Preview local (blob:), que o otimizador de imagens não alcança. */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={preview} alt="Foto escolhida" className="h-40 w-full rounded-lg object-cover" />
+              <span className="text-xs font-medium text-green-700 dark:text-green-400">Toque para trocar a foto</span>
+            </>
           ) : (
             <>
-              <Camera className="h-8 w-8 text-gray-400 dark:text-gray-500" />
-              <span className="text-sm text-gray-500 dark:text-gray-400">Adicionar foto</span>
+              <Camera className="h-8 w-8 text-green-700 dark:text-green-400" />
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-200">Tirar ou escolher foto</span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">Ajuda quem for procurar a planta depois</span>
             </>
           )}
           <input type="file" accept="image/*" capture="environment" onChange={handlePhotoChange} className="hidden" />
@@ -192,12 +176,12 @@ export default function EditForm({ occurrence }: EditFormProps) {
 
       {/* Notes */}
       <div>
-        <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Observações</label>
+        <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Observações <span className="font-normal text-gray-500 dark:text-gray-400">(opcional)</span></label>
         <textarea
           {...register('notes')}
           rows={3}
           placeholder="Descreva o local, características especiais..."
-          className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-green-700 resize-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+          className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-green-700 resize-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
         />
       </div>
 
@@ -219,7 +203,7 @@ export default function EditForm({ occurrence }: EditFormProps) {
           loading={isSubmitting || uploading}
           className="w-1/2"
         >
-          {uploading ? 'Enviando foto...' : 'Salvar Alterações'}
+          {uploading ? 'Enviando foto...' : 'Salvar alterações'}
         </Button>
       </div>
     </form>

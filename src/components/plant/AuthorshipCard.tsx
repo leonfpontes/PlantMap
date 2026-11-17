@@ -44,12 +44,12 @@ export default function AuthorshipCard({ credit, isMe }: AuthorshipCardProps) {
         size="lg"
       />
       <div className="min-w-0">
-        <p className="text-xs font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500">
+        <p className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
           {label}
         </p>
         <p className="truncate font-semibold text-gray-900 dark:text-gray-100">
           {name}
-          {isMe && <span className="ml-1.5 text-sm font-normal text-gray-400 dark:text-gray-500">(você)</span>}
+          {isMe && <span className="ml-1.5 text-sm font-normal text-gray-500 dark:text-gray-400">(você)</span>}
         </p>
         {!credit.deleted && (
           <p className="text-sm text-gray-500 dark:text-gray-400">

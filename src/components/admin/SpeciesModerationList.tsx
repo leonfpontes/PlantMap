@@ -63,7 +63,7 @@ export default function SpeciesModerationList({ initialSpecies }: SpeciesModerat
           <Leaf className="h-8 w-8 text-green-500 dark:text-green-400" />
         </div>
         <p className="font-medium text-gray-600 dark:text-gray-300">Nenhuma erva pendente</p>
-        <p className="mt-1 text-sm text-gray-400 dark:text-gray-500">Sugestões de novas espécies aparecem aqui</p>
+        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Sugestões de novas espécies aparecem aqui</p>
       </div>
     )
   }
@@ -89,7 +89,7 @@ export default function SpeciesModerationList({ initialSpecies }: SpeciesModerat
           message={sp.description || undefined}
           footer={
             <div className="flex flex-col gap-2">
-              <p className="text-xs text-gray-400 dark:text-gray-500">
+              <p className="text-xs text-gray-500 dark:text-gray-400">
                 Sugerido por {sp.submitter?.full_name || sp.submitter?.email || 'usuário removido'}
               </p>
               {rejectingId === sp.id ? (
@@ -99,7 +99,7 @@ export default function SpeciesModerationList({ initialSpecies }: SpeciesModerat
                     onChange={(e) => setReason(e.target.value)}
                     rows={2}
                     placeholder="Motivo da rejeição (obrigatório)"
-                    className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-red-400 resize-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+                    className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-red-400 resize-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
                   />
                   <div className="flex gap-2">
                     <Button

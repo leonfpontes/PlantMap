@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import Map, { NavigationControl, Marker, Source, Layer, type MapRef } from 'react-map-gl/maplibre'
+import Map, { NavigationControl, Marker, Source, Layer, type MapRef, type ViewStateChangeEvent } from 'react-map-gl/maplibre'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { LocateFixed } from 'lucide-react'
 import { PlantOccurrence } from '@/types'
@@ -13,7 +13,17 @@ import PlantTooltip from '@/components/plant/PlantTooltip'
 import { useGeolocationWatch } from '@/hooks/useGeolocation'
 import { useHasHover } from '@/hooks/useHasHover'
 import { accuracyCircle, formatAccuracy, POOR_ACCURACY_M } from '@/lib/geo'
-import { boundsOf, clusterByScreenGrid, clusterZoomLevel } from '@/lib/cluster'
+import {
+  boundsOf,
+  clusterByScreenGrid,
+  clusterZoomLevel,
+  expandBounds,
+  inBounds,
+  staysClusteredAt,
+  type GeoBounds,
+} from '@/lib/cluster'
+import BottomSheet from '@/components/ui/BottomSheet'
+import PlantCard from '@/components/plant/PlantCard'
 import { applyMapTheme, MAP_PALETTE_DARK, MAP_PALETTE_LIGHT, shouldUseDarkMap } from '@/lib/mapTheme'
 import { useIsDarkTheme } from '@/hooks/useIsDarkTheme'
 import { useIsNight } from '@/hooks/useIsNight'
@@ -39,6 +49,16 @@ const CLUSTER_CELL_PX = 54
  * bastante pra não reagrupar no meio do gesto.
  */
 const CLUSTER_SETTLE_MS = 180
+
+/** Zoom máximo ao abrir um grupo — perto o bastante pra mostrar os medalhões. */
+const CLUSTER_OPEN_MAX_ZOOM = MEDALLION_ZOOM + 2
+
+/**
+ * Folga, em fração da tela para cada lado, dos pins desenhados fora da área
+ * visível. Os de longe não existem na página; os da folga já estão prontos
+ * quando o arrasto os traz pra dentro.
+ */
+const OFFSCREEN_MARGIN = 0.5
 
 interface PlantMapProps {
   occurrences?: PlantOccurrence[]
@@ -69,11 +89,24 @@ export default function PlantMap({
   const hasHover = useHasHover()
   const [selectedOccurrence, setSelectedOccurrence] = useState<PlantOccurrence | null>(null)
   const [internalHoveredId, setInternalHoveredId] = useState<string | null>(null)
-  const [viewState, setViewState] = useState({
+  // O mapa cuida da própria câmera (modo não controlado). Antes a posição
+  // vivia num estado do React atualizado a cada quadro do arrasto, e cada
+  // quadro redesenhava a árvore inteira — todos os pins juntos. Em celular
+  // fraco era isso que travava. Agora o React só fica sabendo do que muda a
+  // aparência: o nível de zoom (inteiro) e o recorte visível quando o gesto
+  // termina.
+  const [initialViewState] = useState(() => ({
     longitude: initialLng,
     latitude: initialLat,
     zoom: initialZoom,
-  })
+  }))
+  const [zoomLevel, setZoomLevel] = useState(() => clusterZoomLevel(initialZoom))
+  const [pinVariant, setPinVariant] = useState<'dot' | 'medallion'>(
+    initialZoom >= MEDALLION_ZOOM ? 'medallion' : 'dot'
+  )
+  const [visibleBounds, setVisibleBounds] = useState<GeoBounds | null>(null)
+  // Grupo que nem o zoom máximo separa: abre como lista (ver handleClusterClick).
+  const [stackedItems, setStackedItems] = useState<PlantOccurrence[] | null>(null)
   // Watch contínuo (e não leitura única): é o que faz o ponto acompanhar quem
   // está andando pelo mapa.
   const {
@@ -129,6 +162,11 @@ export default function PlantMap({
     closeTimeoutRef.current = setTimeout(() => setHovered(null), 120)
   }, [setHovered])
 
+  const handlePinHover = useCallback((id: string, hovering: boolean) => {
+    if (hovering) hoverNow(id)
+    else clearHoverSoon()
+  }, [hoverNow, clearHoverSoon])
+
   const handlePinClick = useCallback((occ: PlantOccurrence) => {
     if (hasHover) {
       router.push(`/plant/${occ.id}`)
@@ -140,21 +178,22 @@ export default function PlantMap({
   // Recentra já no que tiver (resposta imediata ao toque) e, em paralelo, pede
   // um fix melhor — antes o botão só recentrava na leitura antiga e nunca
   // pedia uma nova quando já existia alguma, então ficava preso nela.
+  const centerOn = useCallback((lng: number, lat: number, minZoom?: number) => {
+    const map = mapRef.current
+    if (!map) return
+    map.easeTo({
+      center: [lng, lat],
+      zoom: minZoom != null ? Math.max(map.getZoom(), minZoom) : undefined,
+      duration: 400,
+    })
+  }, [])
+
   const handleLocate = useCallback(async () => {
     setFollowing(true)
-    if (userLat != null && userLng != null) {
-      setViewState((v) => ({ ...v, longitude: userLng, latitude: userLat, zoom: Math.max(v.zoom, 17) }))
-    }
+    if (userLat != null && userLng != null) centerOn(userLng, userLat, 17)
     const fix = await acquireBestFix()
-    if (fix) {
-      setViewState((v) => ({
-        ...v,
-        longitude: fix.longitude,
-        latitude: fix.latitude,
-        zoom: Math.max(v.zoom, 17),
-      }))
-    }
-  }, [userLat, userLng, acquireBestFix])
+    if (fix) centerOn(fix.longitude, fix.latitude, 17)
+  }, [userLat, userLng, acquireBestFix, centerOn])
 
   // Recolore o mapa base pro tema do app (ver lib/mapTheme.ts). Precisa rodar
   // no load e a cada troca de tema; antes do estilo carregar não há camada
@@ -170,8 +209,30 @@ export default function PlantMap({
   // Enquanto estiver seguindo, cada leitura nova reposiciona o mapa.
   useEffect(() => {
     if (!following || userLat == null || userLng == null) return
-    setViewState((v) => ({ ...v, longitude: userLng, latitude: userLat }))
-  }, [following, userLat, userLng])
+    centerOn(userLng, userLat)
+  }, [following, userLat, userLng, centerOn])
+
+  // Chamado a cada quadro do gesto, então só grava estado quando o valor
+  // muda de fato — com o mesmo valor o React nem redesenha.
+  const handleMove = useCallback((e: ViewStateChangeEvent) => {
+    const z = e.viewState.zoom
+    setZoomLevel(clusterZoomLevel(z))
+    setPinVariant(z >= MEDALLION_ZOOM ? 'medallion' : 'dot')
+  }, [])
+
+  const updateVisibleBounds = useCallback(() => {
+    const b = mapRef.current?.getBounds()
+    if (!b) return
+    setVisibleBounds(expandBounds(
+      { west: b.getWest(), south: b.getSouth(), east: b.getEast(), north: b.getNorth() },
+      OFFSCREEN_MARGIN
+    ))
+  }, [])
+
+  const handleLoad = useCallback(() => {
+    aplicarTema()
+    updateVisibleBounds()
+  }, [aplicarTema, updateVisibleBounds])
 
   // Zoom usado no agrupamento: inteiro e só atualizado quando o gesto assenta.
   // Antes o agrupamento usava o zoom fracionado de cada quadro da pinça — as
@@ -180,7 +241,6 @@ export default function PlantMap({
   // contagem). Era isso que fazia os balões piscarem, sumirem e embaralharem
   // durante o zoom. Com nível inteiro + espera curta, a composição só muda
   // depois que o usuário solta o gesto, uma vez.
-  const zoomLevel = clusterZoomLevel(viewState.zoom)
   const [clusterZoom, setClusterZoom] = useState(zoomLevel)
   useEffect(() => {
     if (zoomLevel === clusterZoom) return
@@ -195,7 +255,14 @@ export default function PlantMap({
     [occurrences, clusterZoom]
   )
 
-  const pinVariant = viewState.zoom >= MEDALLION_ZOOM ? 'medallion' : 'dot'
+  // Só os grupos perto da tela viram elementos na página. Antes do primeiro
+  // recorte (mapa ainda carregando) desenha tudo, como sempre foi.
+  const visibleClusters = useMemo(
+    () => visibleBounds
+      ? clusters.filter((c) => inBounds(c, visibleBounds))
+      : clusters,
+    [clusters, visibleBounds]
+  )
 
   // Clicar num grupo aproxima até ele caber na tela — é o gesto que o usuário
   // já espera de uma bolha com número, e evita o beco sem saída de um cluster
@@ -204,9 +271,17 @@ export default function PlantMap({
     const b = boundsOf(items)
     if (!b) return
     setFollowing(false)
+    // Se nem o zoom máximo separa o grupo (plantas com localização aproximada
+    // caem todas na mesma coordenada), aproximar seria um beco sem saída:
+    // a bolha continuaria lá. Nesse caso mostra a lista do que tem ali.
+    if (staysClusteredAt(items, CLUSTER_OPEN_MAX_ZOOM, CLUSTER_CELL_PX)) {
+      setSelectedOccurrence(null)
+      setStackedItems(items)
+      return
+    }
     mapRef.current?.fitBounds(
       [[b.west, b.south], [b.east, b.north]],
-      { padding: 80, maxZoom: MEDALLION_ZOOM + 2, duration: 500 }
+      { padding: 80, maxZoom: CLUSTER_OPEN_MAX_ZOOM, duration: 500 }
     )
   }, [])
 
@@ -218,12 +293,13 @@ export default function PlantMap({
     <div className="relative h-full w-full">
       <Map
         ref={mapRef}
-        {...viewState}
-        onMove={(e) => setViewState(e.viewState)}
+        initialViewState={initialViewState}
+        onMove={handleMove}
+        onMoveEnd={updateVisibleBounds}
         // originalEvent só existe quando o movimento veio de gesto; movimento
         // programático (o próprio follow) não pode desligar o follow.
         onMoveStart={(e) => { if (e.originalEvent) setFollowing(false) }}
-        onLoad={aplicarTema}
+        onLoad={handleLoad}
         mapStyle="https://tiles.openfreemap.org/styles/liberty"
         onClick={(e) => {
           if (onMapClick) {
@@ -268,14 +344,14 @@ export default function PlantMap({
           </Marker>
         )}
 
-        {clusters.map((cluster) =>
+        {visibleClusters.map((cluster) =>
           cluster.items.length > 1 ? (
             <ClusterBubble
               key={cluster.id}
               latitude={cluster.latitude}
               longitude={cluster.longitude}
-              count={cluster.items.length}
-              onClick={() => handleClusterClick(cluster.items)}
+              items={cluster.items}
+              onClick={handleClusterClick}
             />
           ) : (
             <PlantPin
@@ -285,7 +361,7 @@ export default function PlantMap({
               onClick={handlePinClick}
               selected={selectedOccurrence?.id === cluster.items[0].id}
               highlighted={effectiveHoveredId === cluster.items[0].id}
-              onHover={(hovering) => (hovering ? hoverNow(cluster.items[0].id) : clearHoverSoon())}
+              onHover={handlePinHover}
             />
           )
         )}
@@ -359,6 +435,21 @@ export default function PlantMap({
           onClose={() => setSelectedOccurrence(null)}
         />
       )}
+
+      <BottomSheet
+        title={stackedItems ? `${stackedItems.length} plantas neste ponto` : undefined}
+        open={stackedItems != null}
+        onClose={() => setStackedItems(null)}
+      >
+        <p className="mb-3 text-sm text-gray-600 dark:text-gray-300">
+          Estão tão próximas (ou com localização aproximada) que no mapa ocupam o mesmo lugar.
+        </p>
+        <div className="-mx-1 flex max-h-[55dvh] flex-col gap-2 overflow-y-auto px-1 pb-1">
+          {stackedItems?.map((occ) => (
+            <PlantCard key={occ.id} occurrence={occ} />
+          ))}
+        </div>
+      </BottomSheet>
     </div>
   )
 }

@@ -89,7 +89,7 @@ export default function PermissionRequestForm({ canRegister, initialRequests }: 
             placeholder="Ex.: sou médium do terreiro e quero ajudar a mapear as ervas do jardim..."
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            className="resize-none rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-green-600 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+            className="resize-none rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-500 focus:border-green-600 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
           />
           {error && <p className="text-xs text-red-600 dark:text-red-400">{error}</p>}
           <Button type="submit" loading={sending} className="w-full">
@@ -106,7 +106,7 @@ export default function PermissionRequestForm({ canRegister, initialRequests }: 
             return (
               <div key={r.id} className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
                 <div className="mb-1 flex items-center justify-between gap-2">
-                  <span className="text-xs text-gray-400 dark:text-gray-500">{formatRelativeTime(r.created_at)}</span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">{formatRelativeTime(r.created_at)}</span>
                   <Badge variant={status.variant}>{status.label}</Badge>
                 </div>
                 {r.message && <p className="text-sm text-gray-600 dark:text-gray-300">{r.message}</p>}

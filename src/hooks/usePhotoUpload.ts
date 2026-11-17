@@ -2,10 +2,18 @@
 
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { compressPhoto } from '@/lib/image'
 
 const DEFAULT_BUCKET = 'plant-photos'
 const DEFAULT_FOLDER = 'occurrences'
+/** Teto do arquivo enviado ao Storage (depois da redução). */
 const MAX_SIZE_MB = 10
+/**
+ * Teto do arquivo escolhido, antes da redução. Bem acima do de envio porque
+ * foto de câmera boa passa de 10 MB e, reduzida, cai para algumas centenas
+ * de KB — recusar na escolha barraria justo as melhores fotos.
+ */
+const MAX_PICK_MB = 40
 
 interface UploadResult {
   url: string | null
@@ -39,8 +47,8 @@ export function usePhotoUpload(initialUrl?: string | null, options?: PhotoUpload
 
   /** Atualiza o arquivo e o preview local sem fazer upload ainda. */
   function pickFile(picked: File): string | null {
-    if (picked.size > MAX_SIZE_MB * 1024 * 1024) {
-      return `A foto deve ter no máximo ${MAX_SIZE_MB} MB.`
+    if (picked.size > MAX_PICK_MB * 1024 * 1024) {
+      return `A foto deve ter no máximo ${MAX_PICK_MB} MB.`
     }
     setFile(picked)
     setPreview(URL.createObjectURL(picked))
@@ -55,13 +63,20 @@ export function usePhotoUpload(initialUrl?: string | null, options?: PhotoUpload
     if (!file) return { url: null, error: null }
 
     setUploading(true)
+    // Reduz antes de enviar: é o que faz a foto subir em segundos no 3G.
+    const toSend = await compressPhoto(file)
+    if (toSend.size > MAX_SIZE_MB * 1024 * 1024) {
+      setUploading(false)
+      return { url: null, error: `A foto deve ter no máximo ${MAX_SIZE_MB} MB.` }
+    }
+
     const supabase = createClient()
-    const ext  = file.name.split('.').pop()
+    const ext  = toSend.name.split('.').pop()
     const path = `${folder}/${Date.now()}.${ext}`
 
     const { error: uploadError } = await supabase.storage
       .from(bucket)
-      .upload(path, file)
+      .upload(path, toSend, { contentType: toSend.type || undefined })
 
     setUploading(false)
 

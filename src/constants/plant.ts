@@ -104,3 +104,6 @@ export const PERMISSION_REQUEST_STATUS_CONFIG: Record<
   approved: { label: 'Aprovado',   variant: 'green' },
   rejected: { label: 'Recusado',   variant: 'red' },
 }
+
+/** Opções de condição com a cor do pin, para os botões de escolha dos formulários. */
+export const CONDITION_CHOICES = CONDITION_OPTIONS.map((o) => ({ ...o, color: CONDITION_PIN_COLOR[o.value] }))

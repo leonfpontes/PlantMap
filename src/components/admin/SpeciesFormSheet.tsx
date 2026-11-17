@@ -133,7 +133,7 @@ export default function SpeciesFormSheet({ open, species, onClose, onSaved }: Sp
             {...register('description')}
             rows={3}
             placeholder="Uso ritual, orixá associado, onde costuma ser encontrada..."
-            className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-green-700 resize-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+            className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-green-700 resize-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
           />
         </div>
 

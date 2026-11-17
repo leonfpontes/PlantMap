@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { Heart, Share2, CheckCircle, Leaf, MapPin, Calendar, Edit, Trash2 } from 'lucide-react'
 import dynamic from 'next/dynamic'
 import MobileShell from '@/components/layout/MobileShell'
@@ -100,16 +101,20 @@ export default function PlantDetailPage() {
             {canEdit && (
               <Link
                 href={`/plant/${occurrence.id}/edit`}
-                className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-gray-100 transition-colors text-gray-500 dark:hover:bg-gray-800 dark:text-gray-400"
+                aria-label="Editar registro"
+                className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-gray-100 transition-colors text-gray-500 dark:hover:bg-gray-800 dark:text-gray-400"
               >
                 <Edit className="h-5 w-5" />
               </Link>
             )}
             <button
+              type="button"
               onClick={() => toggle(occurrence.id)}
-              className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-gray-100 transition-colors dark:hover:bg-gray-800"
+              aria-label={isFav ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
+              aria-pressed={isFav}
+              className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-gray-100 transition-colors dark:hover:bg-gray-800"
             >
-              <Heart className={`h-5 w-5 ${isFav ? 'fill-red-500 text-red-500' : 'text-gray-400 dark:text-gray-500'}`} />
+              <Heart className={`h-5 w-5 ${isFav ? 'fill-red-500 text-red-500' : 'text-gray-500 dark:text-gray-400'}`} />
             </button>
           </div>
         }
@@ -134,11 +139,22 @@ export default function PlantDetailPage() {
 
           {occurrence.photo_url && (
             <button
+              type="button"
               onClick={() => setPhotoOpen(true)}
+              aria-label="Ver foto em tela cheia"
               className="w-full block lg:order-1 lg:h-80 lg:overflow-hidden lg:rounded-2xl"
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={occurrence.photo_url} alt="Foto da planta" className="w-full h-48 object-cover lg:h-80" />
+              {/* Passa pelo otimizador: fotos antigas subiram em tamanho
+                  original (vários MB) e baixá-las inteiras pra uma faixa de
+                  192 px pesava no 3G. A foto cheia continua no visualizador. */}
+              <Image
+                src={occurrence.photo_url}
+                alt="Foto da planta"
+                width={860}
+                height={320}
+                sizes="(min-width: 1024px) 50vw, 100vw"
+                className="h-48 w-full object-cover lg:h-80"
+              />
             </button>
           )}
         </div>
@@ -184,6 +200,14 @@ export default function PlantDetailPage() {
               <Badge variant="gray">{occurrence.species.family}</Badge>
             )}
           </div>
+
+          {/* Ação principal da tela: quem abre uma planta quase sempre quer ir até ela —
+              por isso logo abaixo do nome, sem precisar rolar a tela. */}
+          <DirectionsButton
+            latitude={occurrence.latitude}
+            longitude={occurrence.longitude}
+            className="lg:col-span-2"
+          />
 
           {/* Autoria: quem cuidou do registro por último (editou, ou registrou se
               ninguém editou), no mesmo formato do perfil/ranking. Full width
@@ -235,13 +259,6 @@ export default function PlantDetailPage() {
               <p className="text-sm text-gray-600 bg-gray-50 rounded-xl p-3 dark:bg-gray-800/60 dark:text-gray-300">{occurrence.notes}</p>
             </div>
           )}
-
-          {/* Ação principal da tela: quem abre uma planta quase sempre quer ir até ela. */}
-          <DirectionsButton
-            latitude={occurrence.latitude}
-            longitude={occurrence.longitude}
-            className="lg:col-span-2"
-          />
 
           <Button
             variant="secondary"

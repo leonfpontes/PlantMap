@@ -104,7 +104,7 @@ export default function AppearanceSettings({ initialTheme, initialFontScale }: A
             )
           })}
         </div>
-        <p className="mt-2 text-xs text-gray-400 dark:text-gray-500">
+        <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
           No automático, o app segue o tema do seu celular.
         </p>
       </section>

@@ -124,7 +124,7 @@ export default function PrivacySettings({ initialShareExactLocation }: PrivacySe
             </span>
           </button>
         </div>
-        <p className="mt-2 text-xs text-gray-400 dark:text-gray-500">
+        <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
           {shareExact
             ? 'Outros usuários veem o ponto exato dos seus registros no mapa.'
             : 'Outros usuários veem só uma área aproximada (~500m) dos seus registros. Você e os administradores sempre veem o ponto exato.'}

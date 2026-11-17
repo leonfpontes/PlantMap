@@ -148,14 +148,20 @@ export default function SearchPage() {
 
       <div className="flex flex-col gap-4 p-4 flex-shrink-0">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-green-700 dark:text-green-400" />
           <input
-            type="text"
+            type="search"
+            enterKeyHint="search"
+            aria-label="Nome da planta"
+            // Quem chega tocando na barra de busca do mapa espera já poder
+            // digitar. Só com a busca vazia: voltando de uma planta com a
+            // busca preservada, abrir o teclado seria intrusivo.
+            autoFocus={query === ''}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-            placeholder="Nome da espécie..."
-            className="w-full rounded-xl border border-gray-200 bg-white pl-9 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+            placeholder="Nome da planta (ex.: arruda)"
+            className="w-full rounded-xl border border-gray-200 bg-white min-h-12 pl-10 pr-4 py-2.5 text-base focus:outline-none focus:ring-2 focus:ring-green-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
           />
         </div>
 
@@ -176,7 +182,7 @@ export default function SearchPage() {
               onClick={() => setUnlimited((v) => !v)}
               aria-pressed={unlimited}
               className={cn(
-                'flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors',
+                'flex min-h-9 items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors',
                 unlimited
                   ? 'border-green-700 bg-green-700 text-white dark:border-green-600 dark:bg-green-600'
                   : 'border-gray-200 text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800'
@@ -195,16 +201,17 @@ export default function SearchPage() {
             onChange={(e) => setRadius(Number(e.target.value))}
             className={cn('w-full accent-green-700', unlimited && 'opacity-40')}
           />
-          <div className={cn('flex justify-between text-xs text-gray-400 dark:text-gray-500', unlimited && 'opacity-40')}>
+          <div className={cn('flex justify-between text-xs text-gray-500 dark:text-gray-400', unlimited && 'opacity-40')}>
             <span>1 km</span>
             <span>50 km</span>
           </div>
         </div>
 
         <button
+          type="button"
           onClick={handleSearch}
           disabled={loading || locLoading}
-          className="flex items-center justify-center gap-2 rounded-xl bg-green-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-green-800 disabled:opacity-50 transition-colors dark:bg-green-600 dark:hover:bg-green-700"
+          className="flex min-h-12 items-center justify-center gap-2 rounded-xl bg-green-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-green-800 disabled:opacity-50 transition-colors dark:bg-green-600 dark:hover:bg-green-700"
         >
           {loading ? (
             <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
@@ -232,7 +239,7 @@ export default function SearchPage() {
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <Search className="h-12 w-12 text-gray-300 mb-3 dark:text-gray-700" />
             <p className="font-medium text-gray-600 dark:text-gray-300">Nenhuma planta encontrada</p>
-            <p className="text-sm text-gray-400 mt-1 dark:text-gray-500">
+            <p className="text-sm text-gray-500 mt-1 dark:text-gray-400">
               {unlimited
                 ? 'Nenhum registro corresponde à busca, em nenhum lugar'
                 : 'Tente aumentar o raio ou buscar no mundo todo'}

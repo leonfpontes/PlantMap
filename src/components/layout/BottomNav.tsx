@@ -26,7 +26,7 @@ export default function BottomNav() {
   if (!user) {
     return (
       <nav className="flex-shrink-0 border-t border-gray-100 bg-white shadow-[0_-1px_8px_rgba(0,0,0,0.06)] dark:border-gray-800 dark:bg-gray-950 lg:hidden">
-        <div className="flex items-center justify-around px-4 pb-2 pt-1">
+        <div className="flex items-center justify-around px-4 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1">
           <NavItem href="/map"         icon={Map}   label="Mapa"   active={active('/map')} />
           <NavItem href="/search"      icon={Search} label="Buscar" active={active('/search')} />
           <NavItem href="/auth/login"  icon={LogIn}  label="Login"  active={active('/auth/login')} />
@@ -38,7 +38,7 @@ export default function BottomNav() {
   /* ── Autenticado: Mapa | Buscar | Nova planta (FAB) | Ranking | Perfil ── */
   return (
     <nav className="flex-shrink-0 border-t border-gray-100 bg-white shadow-[0_-1px_8px_rgba(0,0,0,0.06)] dark:border-gray-800 dark:bg-gray-950 lg:hidden">
-      <div className="flex items-end justify-around px-1 pb-2 pt-1">
+      <div className="flex items-end justify-around px-1 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1">
 
         <NavItem href="/map"     icon={Map}    label="Mapa"   active={active('/map')} />
         <NavItem href="/search"  icon={Search} label="Buscar" active={active('/search')} />
@@ -48,8 +48,8 @@ export default function BottomNav() {
             <Plus className="h-7 w-7 text-white" strokeWidth={2.5} />
           </span>
           <span className={cn(
-            'text-[10px] font-medium',
-            active('/plant/register') ? 'text-green-700 dark:text-green-400' : 'text-gray-400 dark:text-gray-500'
+            'text-[11px] font-medium',
+            active('/plant/register') ? 'text-green-700 dark:text-green-400' : 'text-gray-600 dark:text-gray-400'
           )}>
             Nova planta
           </span>
@@ -73,19 +73,27 @@ function NavItem({
   badge?: boolean
 }) {
   return (
-    <Link href={href} className="flex flex-col items-center gap-0.5 px-3 py-2">
-      <span className="relative">
+    <Link
+      href={href}
+      aria-current={active ? 'page' : undefined}
+      className="flex min-w-14 flex-col items-center gap-0.5 px-2 py-1.5"
+    >
+      {/* Pílula atrás do ícone ativo: a cor sozinha era sutil demais pra dizer onde se está. */}
+      <span className={cn(
+        'relative flex h-7 w-12 items-center justify-center rounded-full transition-colors',
+        active && 'bg-green-100 dark:bg-green-900/40'
+      )}>
         <Icon className={cn(
           'h-5 w-5 transition-colors',
-          active ? 'text-green-700 dark:text-green-400 stroke-[2.5]' : 'text-gray-400 dark:text-gray-500'
+          active ? 'text-green-700 dark:text-green-400 stroke-[2.5]' : 'text-gray-500 dark:text-gray-400'
         )} />
         {badge && (
-          <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white dark:ring-gray-950" />
+          <span className="absolute right-2.5 top-0.5 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white dark:ring-gray-950" aria-label="Notificações não lidas" />
         )}
       </span>
       <span className={cn(
-        'text-[10px] font-medium',
-        active ? 'text-green-700 dark:text-green-400' : 'text-gray-400 dark:text-gray-500'
+        'text-[11px] font-medium',
+        active ? 'text-green-700 dark:text-green-400' : 'text-gray-600 dark:text-gray-400'
       )}>
         {label}
       </span>

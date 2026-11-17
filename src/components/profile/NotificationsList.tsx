@@ -56,7 +56,7 @@ export default function NotificationsList({ initialNotifications }: Notification
           <BellRing className="h-8 w-8 text-gray-400 dark:text-gray-500" />
         </div>
         <p className="font-medium text-gray-600 dark:text-gray-300">Nenhuma notificação ainda</p>
-        <p className="mt-1 text-sm text-gray-400 dark:text-gray-500">
+        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
           Você é avisado quando uma erva sua for revisada ou um registro seu for verificado
         </p>
       </div>
@@ -103,7 +103,7 @@ export default function NotificationsList({ initialNotifications }: Notification
                 {n.body && (
                   <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400 line-clamp-2">{n.body}</p>
                 )}
-                <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">{formatRelativeTime(n.created_at)}</p>
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{formatRelativeTime(n.created_at)}</p>
               </div>
 
               {unread && <span className="mt-1.5 h-2 w-2 flex-shrink-0 rounded-full bg-green-600 dark:bg-green-400" />}

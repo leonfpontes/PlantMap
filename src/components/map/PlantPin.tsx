@@ -1,5 +1,6 @@
 'use client'
 
+import { memo } from 'react'
 import Image from 'next/image'
 import { Marker } from 'react-map-gl/maplibre'
 import { Check, Leaf } from 'lucide-react'
@@ -13,7 +14,11 @@ interface PlantPinProps {
   selected?: boolean
   /** Realce vindo de fora (ex.: hover na lista da tela desktop), somado ao `selected` por clique. */
   highlighted?: boolean
-  onHover?: (hovering: boolean) => void
+  /**
+   * Recebe o id junto pra que o pai passe sempre a mesma função: com uma
+   * arrow nova por pin, o memo abaixo nunca pouparia redesenho nenhum.
+   */
+  onHover?: (id: string, hovering: boolean) => void
   /**
    * `dot` é a versão de longe: um ponto, barato de desenhar aos montes.
    * `medallion` é a de perto, com a foto da espécie. Quem decide é o zoom,
@@ -47,7 +52,7 @@ const PHOTO_PX = PHOTO_R * 2 * SCALE
 const PHOTO_OFFSET = (50 - PHOTO_R) * SCALE
 const TAIL = `M36 84 L64 84 L50 ${TIP_Y} Z`
 
-export default function PlantPin({
+function PlantPin({
   occurrence,
   onClick,
   selected,
@@ -83,8 +88,8 @@ export default function PlantPin({
         role="button"
         aria-label={rotulo}
         title={rotulo}
-        onMouseEnter={() => onHover?.(true)}
-        onMouseLeave={() => onHover?.(false)}
+        onMouseEnter={() => onHover?.(occurrence.id, true)}
+        onMouseLeave={() => onHover?.(occurrence.id, false)}
       >
         {variant === 'dot' ? (
           <>
@@ -178,3 +183,10 @@ export default function PlantPin({
     </Marker>
   )
 }
+
+/**
+ * Memoizado: o mapa pode ter centenas de pins, e sem isso qualquer mudança no
+ * pai (uma leitura nova do GPS, o hover de outro pin) redesenhava todos eles.
+ * Só redesenha o pin cujas props de fato mudaram.
+ */
+export default memo(PlantPin)

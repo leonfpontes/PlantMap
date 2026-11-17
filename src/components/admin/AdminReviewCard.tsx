@@ -43,7 +43,7 @@ export default function AdminReviewCard({
               {subtitle && <p className="truncate text-xs italic text-gray-500 dark:text-gray-400">{subtitle}</p>}
             </div>
             <div className="flex flex-shrink-0 flex-col items-end gap-1">
-              {meta && <span className="text-xs text-gray-400 dark:text-gray-500">{meta}</span>}
+              {meta && <span className="text-xs text-gray-500 dark:text-gray-400">{meta}</span>}
               {pills && pills.length > 0 && (
                 <div className="flex gap-1">
                   {pills.map((p) => (

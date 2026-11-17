@@ -105,3 +105,52 @@ export function boundsOf<T extends Clusterable>(
   }
   return { west, south, east, north }
 }
+
+/**
+ * Se o grupo continua encavalado mesmo no zoom máximo de abertura — ou seja,
+ * aproximar não vai separar ninguém.
+ *
+ * Acontece com plantas cuja localização é aproximada (a regra de privacidade
+ * encaixa o ponto numa grade, então várias caem na mesmíssima coordenada) e
+ * com plantas a poucos metros uma da outra. Nesses casos tocar na bolha não
+ * pode só aproximar: o usuário ficaria preso numa bolha que nunca abre.
+ */
+export function staysClusteredAt<T extends Clusterable>(
+  items: T[],
+  zoom: number,
+  cellPx: number
+): boolean {
+  if (items.length < 2) return false
+  const escala = TILE_SIZE * Math.pow(2, zoom)
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
+  for (const i of items) {
+    const { x, y } = toWorld(i.longitude, i.latitude)
+    minX = Math.min(minX, x); maxX = Math.max(maxX, x)
+    minY = Math.min(minY, y); maxY = Math.max(maxY, y)
+  }
+  return (maxX - minX) * escala < cellPx && (maxY - minY) * escala < cellPx
+}
+
+/** Retângulo geográfico — o recorte visível do mapa. */
+export interface GeoBounds {
+  west: number
+  south: number
+  east: number
+  north: number
+}
+
+/**
+ * Amplia o recorte em `fraction` da largura/altura para cada lado.
+ *
+ * Os pins fora da tela não são desenhados; a folga é o que garante que, ao
+ * arrastar, os vizinhos já estejam lá antes de entrarem na tela.
+ */
+export function expandBounds(b: GeoBounds, fraction: number): GeoBounds {
+  const dx = (b.east - b.west) * fraction
+  const dy = (b.north - b.south) * fraction
+  return { west: b.west - dx, east: b.east + dx, south: b.south - dy, north: b.north + dy }
+}
+
+export function inBounds(p: Clusterable, b: GeoBounds): boolean {
+  return p.latitude >= b.south && p.latitude <= b.north && p.longitude >= b.west && p.longitude <= b.east
+}

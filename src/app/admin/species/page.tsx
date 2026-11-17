@@ -9,7 +9,7 @@ export default async function SpeciesModerationPage() {
 
   return (
     <div>
-      <p className="mb-1 text-xs uppercase tracking-wide text-gray-400 dark:text-gray-500">Administração</p>
+      <p className="mb-1 text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Administração</p>
       <h1 className="mb-2 font-serif text-2xl text-gray-900 dark:text-gray-100">Ervas sugeridas pelos médiuns</h1>
       <p className="mb-6 max-w-prose text-sm text-gray-500 dark:text-gray-400">
         Aprovar libera a espécie para busca e cadastro de todos; rejeitar exige um motivo e some da fila.

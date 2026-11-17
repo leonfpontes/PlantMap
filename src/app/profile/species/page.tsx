@@ -26,7 +26,7 @@ export default async function MySpeciesSubmissionsPage() {
               <Sprout className="h-8 w-8 text-yellow-500 dark:text-yellow-400" />
             </div>
             <p className="font-medium text-gray-600 dark:text-gray-300">Você ainda não sugeriu nenhuma erva</p>
-            <p className="mt-1 text-sm text-gray-400 dark:text-gray-500">
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
               Ao registrar uma ocorrência, use &quot;Sugerir nova erva&quot; se não encontrar a espécie
             </p>
           </div>
@@ -45,7 +45,7 @@ export default async function MySpeciesSubmissionsPage() {
                     </div>
                     <Badge variant={status.variant}>{status.label}</Badge>
                   </div>
-                  <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">Origem: {ORIGIN_LABEL[sp.origin]}</p>
+                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Origem: {ORIGIN_LABEL[sp.origin]}</p>
                   {sp.status === 'rejected' && sp.rejection_reason && (
                     <p className="mt-2 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-400">
                       Motivo: {sp.rejection_reason}

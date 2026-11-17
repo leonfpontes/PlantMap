@@ -30,7 +30,7 @@ export default async function RankingPage() {
               <Trophy className="h-8 w-8 text-purple-500 dark:text-purple-400" />
             </div>
             <p className="font-medium text-gray-600 dark:text-gray-300">Ninguém pontuou ainda</p>
-            <p className="mt-1 text-sm text-gray-400 dark:text-gray-500">
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
               Registre uma ocorrência e mantenha ela atualizada para começar a pontuar
             </p>
           </div>
