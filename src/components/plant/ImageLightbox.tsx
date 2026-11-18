@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { imageUrl } from '@/lib/imageLoader'
 
 interface ImageLightboxProps {
   src: string
@@ -41,7 +42,7 @@ export default function ImageLightbox({ src, alt, children, className }: ImageLi
           }}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={src} alt={alt} className="max-h-full max-w-full object-contain" />
+          <img src={imageUrl(src, 1280)} alt={alt} className="max-h-full max-w-full object-contain" />
         </div>
       )}
     </>

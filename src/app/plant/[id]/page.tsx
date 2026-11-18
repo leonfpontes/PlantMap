@@ -25,6 +25,7 @@ import { useIsAdmin } from '@/hooks/useIsAdmin'
 import { PlantOccurrence } from '@/types'
 import { CONDITION_CONFIG, STAGE_LABEL, ORIGIN_LABEL, CONDITION_PIN_COLOR } from '@/constants/plant'
 import { cn } from '@/lib/utils'
+import { imageUrl } from '@/lib/imageLoader'
 
 // Card mais largo que o padrão 'comfortable' — mapa e foto lado a lado
 // precisam de mais espaço do que a coluna estreita das outras telas.
@@ -346,7 +347,7 @@ export default function PlantDetailPage() {
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={occurrence.photo_url}
+            src={imageUrl(occurrence.photo_url, 1280)}
             alt="Foto da planta"
             className="max-h-full max-w-full object-contain"
           />

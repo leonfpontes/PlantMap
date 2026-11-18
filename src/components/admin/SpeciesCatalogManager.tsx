@@ -8,6 +8,7 @@ import { SPECIES_STATUS_CONFIG } from '@/constants/plant'
 import Badge from '@/components/ui/Badge'
 import Button from '@/components/ui/Button'
 import SpeciesFormSheet from './SpeciesFormSheet'
+import { imageUrl } from '@/lib/imageLoader'
 
 interface SpeciesCatalogManagerProps {
   initialSpecies: Species[]
@@ -93,7 +94,7 @@ export default function SpeciesCatalogManager({ initialSpecies }: SpeciesCatalog
             <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl bg-green-50 dark:bg-green-900/30">
               {sp.image_url ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={sp.image_url} alt={sp.common_name} className="h-full w-full object-cover" />
+                <img src={imageUrl(sp.image_url, 120)} alt={sp.common_name} loading="lazy" className="h-full w-full object-cover" />
               ) : (
                 <ImageOff className="h-5 w-5 text-gray-300 dark:text-gray-600" />
               )}

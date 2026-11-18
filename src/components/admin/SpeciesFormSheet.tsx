@@ -12,6 +12,7 @@ import { createSpeciesAdmin, updateSpeciesAdmin } from '@/lib/actions/species'
 import { Species, SpeciesOrigin } from '@/types'
 import { ORIGIN_LABEL } from '@/constants/plant'
 import { usePhotoUpload } from '@/hooks/usePhotoUpload'
+import { imageUrl } from '@/lib/imageLoader'
 
 const schema = z.object({
   common_name: z.string().min(2, 'Informe o nome popular ou ritual'),
@@ -144,7 +145,7 @@ export default function SpeciesFormSheet({ open, species, onClose, onSaved }: Sp
           <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-200 p-4 hover:border-green-400 hover:bg-green-50 transition-colors dark:border-gray-700 dark:hover:bg-green-900/20">
             {preview ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={preview} alt="Preview" className="h-32 w-full object-cover rounded-lg" />
+              <img src={imageUrl(preview, 828)} alt="Preview" className="h-32 w-full object-cover rounded-lg" />
             ) : (
               <>
                 <Camera className="h-8 w-8 text-gray-400 dark:text-gray-500" />

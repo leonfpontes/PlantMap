@@ -18,10 +18,6 @@ describe('compressPhoto', () => {
     expect(await compressPhoto(png)).toBe(png)
   })
 
-  it('não reprocessa foto que já é leve', async () => {
-    const leve = new File([new Uint8Array(100_000)], 'foto.jpg', { type: 'image/jpeg' })
-    expect(await compressPhoto(leve)).toBe(leve)
-  })
 
   it('devolve a original quando o navegador não consegue decodificar', async () => {
     const pesada = new File([new Uint8Array(3_000_000)], 'foto.heic', { type: 'image/heic' })

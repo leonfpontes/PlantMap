@@ -14,8 +14,6 @@ export const MAX_PHOTO_DIMENSION = 2048
 /** Qualidade do JPEG gerado (0–1). Alta o bastante para não aparecer artefato. */
 export const PHOTO_QUALITY = 0.85
 
-/** Abaixo disso a foto já é leve: reprocessar só gastaria bateria. */
-const SKIP_BELOW_BYTES = 800 * 1024
 
 /**
  * Formatos que não passam pela redução. PNG pode ter transparência (foto de
@@ -37,7 +35,10 @@ export function fitWithin(width: number, height: number, max: number): { width: 
  * navegador antigo). Nunca falha: no pior caso o envio segue como antes.
  */
 export async function compressPhoto(file: File): Promise<File> {
-  if (KEEP_AS_IS.has(file.type) || file.size < SKIP_BELOW_BYTES) return file
+  // Toda foto passa pelo canvas, mesmo a pequena: regravar é o que apaga os
+  // metadados da câmera — inclusive a posição GPS exata, que vazaria o ponto
+  // certinho de quem escolheu "localização aproximada" na privacidade.
+  if (KEEP_AS_IS.has(file.type)) return file
   if (typeof createImageBitmap !== 'function' || typeof document === 'undefined') return file
 
   try {
@@ -57,8 +58,7 @@ export async function compressPhoto(file: File): Promise<File> {
     const blob = await new Promise<Blob | null>((resolve) =>
       canvas.toBlob(resolve, 'image/jpeg', PHOTO_QUALITY)
     )
-    // Se por algum motivo ficou maior (foto já muito comprimida), manda a original.
-    if (!blob || blob.size >= file.size) return file
+    if (!blob) return file
 
     const nome = file.name.replace(/\.[^.]+$/, '') || 'foto'
     return new File([blob], `${nome}.jpg`, { type: 'image/jpeg', lastModified: Date.now() })

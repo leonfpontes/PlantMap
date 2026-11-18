@@ -15,6 +15,7 @@ import SpeciesCombobox from '@/components/plant/SpeciesCombobox'
 import { usePhotoUpload } from '@/hooks/usePhotoUpload'
 import { CONDITION_CHOICES, STAGE_OPTIONS } from '@/constants/plant'
 import ChoiceChips from '@/components/ui/ChoiceChips'
+import { imageUrl } from '@/lib/imageLoader'
 
 const PlantMap = dynamic(() => import('@/components/map/PlantMap'), { ssr: false })
 
@@ -162,7 +163,7 @@ export default function EditForm({ occurrence }: EditFormProps) {
             <>
               {/* Preview local (blob:), que o otimizador de imagens não alcança. */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={preview} alt="Foto escolhida" className="h-40 w-full rounded-lg object-cover" />
+              <img src={imageUrl(preview, 828)} alt="Foto escolhida" className="h-40 w-full rounded-lg object-cover" />
               <span className="text-xs font-medium text-green-700 dark:text-green-400">Toque para trocar a foto</span>
             </>
           ) : (
