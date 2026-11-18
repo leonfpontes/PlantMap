@@ -78,6 +78,30 @@ interface PlantMapProps {
    * gente negava — e o "perto de mim" deixava de funcionar.
    */
   askLocationFirst?: boolean
+  /**
+   * Na primeira leitura do GPS, leva o mapa até a pessoa (mapa principal).
+   * Não mexe se ela já arrastou ou deu zoom com a mão antes disso.
+   */
+  centerOnUser?: boolean
+  /**
+   * As plantas já chegaram do servidor. A centralização espera por isso para
+   * escolher o zoom pela planta mais próxima (sem elas, não há como saber).
+   */
+  dataReady?: boolean
+  /** Avisa quando o mapa terminou de desenhar pela primeira vez. */
+  onReady?: () => void
+}
+
+/**
+ * Zoom ao centralizar na pessoa: perto o bastante para ver as plantas mais
+ * próximas. Com uma a 500 m dá rua (15, já com as fotos nos pins); com a mais
+ * perto a quilômetros, abre o bastante para ela aparecer — sem passar do
+ * nível de cidade.
+ */
+export function zoomAroundUser(nearestM: number): number {
+  if (!Number.isFinite(nearestM)) return 15
+  const km = Math.max(nearestM, 50) / 1000
+  return Math.min(15, Math.max(11, Math.floor(Math.log2(20000 / km)) - 1))
 }
 
 const LOCATION_OK_KEY = 'plantmap:location-ok'
@@ -110,6 +134,9 @@ export default function PlantMap({
   hoveredOccurrenceId,
   onPinHover,
   askLocationFirst = false,
+  centerOnUser = false,
+  dataReady = true,
+  onReady,
 }: PlantMapProps) {
   const router = useRouter()
   const hasHover = useHasHover()
@@ -275,10 +302,31 @@ export default function PlantMap({
     ))
   }, [])
 
+  const [mapLoaded, setMapLoaded] = useState(false)
   const handleLoad = useCallback(() => {
     aplicarTema()
     updateVisibleBounds()
-  }, [aplicarTema, updateVisibleBounds])
+    setMapLoaded(true)
+    onReady?.()
+  }, [aplicarTema, updateVisibleBounds, onReady])
+
+  // Centraliza na pessoa uma vez, na primeira leitura do GPS. Antes o mapa
+  // abria no centro padrão (Ribeirão Preto) e ficava lá mesmo depois de o GPS
+  // responder, porque a posição chegava depois de o mapa já ter aberto.
+  const centrouNoUsuario = useRef(false)
+  const gestoDoUsuario = useRef(false)
+  useEffect(() => {
+    if (!centerOnUser || centrouNoUsuario.current || !mapLoaded || !dataReady) return
+    if (userLat == null || userLng == null) return
+    centrouNoUsuario.current = true
+    if (gestoDoUsuario.current) return
+    let maisPerto = Infinity
+    for (const o of occurrences) {
+      const d = distanceMeters({ latitude: userLat, longitude: userLng }, o)
+      if (d < maisPerto) maisPerto = d
+    }
+    mapRef.current?.easeTo({ center: [userLng, userLat], zoom: zoomAroundUser(maisPerto), duration: 600 })
+  }, [centerOnUser, mapLoaded, dataReady, userLat, userLng, occurrences])
 
   // Zoom usado no agrupamento: inteiro e só atualizado quando o gesto assenta.
   // Antes o agrupamento usava o zoom fracionado de cada quadro da pinça — as
@@ -344,7 +392,12 @@ export default function PlantMap({
         onMoveEnd={updateVisibleBounds}
         // originalEvent só existe quando o movimento veio de gesto; movimento
         // programático (o próprio follow) não pode desligar o follow.
-        onMoveStart={(e) => { if (e.originalEvent) setFollowing(false) }}
+        onMoveStart={(e) => {
+          if (e.originalEvent) {
+            setFollowing(false)
+            gestoDoUsuario.current = true
+          }
+        }}
         onLoad={handleLoad}
         mapStyle="https://tiles.openfreemap.org/styles/liberty"
         onClick={(e) => {

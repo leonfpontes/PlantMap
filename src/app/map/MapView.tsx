@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import { Leaf, List, LocateOff, Search } from 'lucide-react'
@@ -9,14 +9,32 @@ import { OccurrenceWithDistance } from '@/types'
 import PlantCard from '@/components/plant/PlantCard'
 import MapLegend from '@/components/map/MapLegend'
 import BottomSheet from '@/components/ui/BottomSheet'
-import { useGeolocation } from '@/hooks/useGeolocation'
+import { useGeolocation, useLocationPermission } from '@/hooks/useGeolocation'
+import AppSplash from '@/components/loading/AppSplash'
+import SproutLoader from '@/components/loading/SproutLoader'
 import { distanceMeters } from '@/lib/geo'
 import { cn, DEFAULT_MAP_ZOOM, zoomForDistance } from '@/lib/utils'
 
 const PlantMap = dynamic(() => import('@/components/map/PlantMap'), {
   ssr: false,
-  loading: () => <div className="h-full w-full bg-green-50 animate-pulse dark:bg-green-950/40" />,
+  loading: () => (
+    <div className="flex h-full w-full items-center justify-center bg-gray-100 dark:bg-gray-900">
+      <SproutLoader label="Carregando o mapa..." />
+    </div>
+  ),
 })
+
+/**
+ * A abertura aparece uma vez por abertura do app — voltar ao mapa vindo de
+ * outra tela não deve repetir a tela cheia. Variável de módulo: sobrevive à
+ * navegação interna e zera quando o app é aberto (ou recarregado) de novo.
+ */
+let aberturaJaMostrada = false
+
+/** Teto da espera pelo GPS depois que o mapa está pronto. */
+const SPLASH_GPS_WAIT_MS = 5000
+/** Teto absoluto: a abertura nunca prende a pessoa, nem com rede ruim. */
+const SPLASH_MAX_MS = 12000
 
 // Coordenadas de Ribeirão Preto — usadas só como centro provisório enquanto a
 // geolocalização real do usuário ainda não resolveu (ou se ele negar/não tiver).
@@ -57,8 +75,29 @@ export default function MapView() {
   // Falha de rede no 3G não pode se passar por "mapa vazio".
   const [loadFailed, setLoadFailed] = useState(false)
   const [listOpen, setListOpen] = useState(false)
+  const handleMapReady = useCallback(() => setMapReady(true), [])
   const [hoveredId, setHoveredId] = useState<string | null>(null)
   const { latitude, longitude, error: geoError } = useGeolocation()
+  const permissao = useLocationPermission()
+
+  // ── Tela de abertura ──
+  // Some quando: o mapa desenhou, as plantas chegaram e — se a localização
+  // já está liberada — o GPS respondeu (para o mapa abrir já centrado na
+  // pessoa). Sem permissão, não espera o GPS: o pré-pedido aparece no mapa.
+  const [mostrarAbertura] = useState(() => !aberturaJaMostrada)
+  const [mapReady, setMapReady] = useState(false)
+  const [esperaGpsAcabou, setEsperaGpsAcabou] = useState(false)
+  const [tetoAbertura, setTetoAbertura] = useState(false)
+  useEffect(() => {
+    aberturaJaMostrada = true
+    const t = setTimeout(() => setTetoAbertura(true), SPLASH_MAX_MS)
+    return () => clearTimeout(t)
+  }, [])
+  useEffect(() => {
+    if (!mapReady) return
+    const t = setTimeout(() => setEsperaGpsAcabou(true), SPLASH_GPS_WAIT_MS)
+    return () => clearTimeout(t)
+  }, [mapReady])
 
   // Origem da busca: acompanha o GPS, mas só quando ele se afasta o bastante
   // pra mudar o resultado (ver SEARCH_ORIGIN_THRESHOLD_M).
@@ -105,6 +144,10 @@ export default function MapView() {
     return () => { cancelado = true }
   }, [centerLat, centerLng])
 
+  const esperandoGps = permissao === 'granted' && latitude == null && !geoError && !esperaGpsAcabou
+  const aberturaPronta = tetoAbertura || (mapReady && !loading && !esperandoGps)
+  const rotuloAbertura = mapReady && !loading && esperandoGps ? 'Encontrando você...' : 'Carregando o mapa...'
+
   // A busca já vem ordenada por distância, então a primeira ocorrência é a mais próxima.
   // O mapa abre enquadrando ela: com a busca sem raio, as plantas podem estar a centenas
   // de quilômetros, e no zoom padrão a tela ficaria vazia mesmo com tudo carregado.
@@ -114,6 +157,8 @@ export default function MapView() {
 
   return (
     <div className="flex h-full flex-col lg:flex-row">
+      {mostrarAbertura && <AppSplash ready={aberturaPronta} label={rotuloAbertura} />}
+
       {/* Lista lateral: só em telas largas — no celular o mapa já ocupa a tela toda,
           e um "pin picker" com lista ao lado não faz sentido na largura de um telefone. */}
       <div className="hidden w-[360px] flex-shrink-0 flex-col overflow-y-auto border-r border-gray-100 bg-white lg:flex dark:border-gray-800 dark:bg-gray-950">
@@ -228,19 +273,20 @@ export default function MapView() {
           </div>
         )}
 
-        {loading ? (
-          <div className="h-full w-full bg-green-50 animate-pulse dark:bg-green-950/40" />
-        ) : (
-          <PlantMap
-            occurrences={occurrences}
-            initialLat={centerLat}
-            initialLng={centerLng}
-            initialZoom={initialZoom}
-            hoveredOccurrenceId={hoveredId}
-            onPinHover={setHoveredId}
-            askLocationFirst
-          />
-        )}
+        {/* O mapa monta já, sem esperar as plantas: a biblioteca e o desenho
+            do mapa (o que mais demora) carregam em paralelo com a busca. */}
+        <PlantMap
+          occurrences={occurrences}
+          initialLat={centerLat}
+          initialLng={centerLng}
+          initialZoom={initialZoom}
+          hoveredOccurrenceId={hoveredId}
+          onPinHover={setHoveredId}
+          askLocationFirst
+          centerOnUser
+          dataReady={!loading}
+          onReady={handleMapReady}
+        />
       </div>
     </div>
   )
